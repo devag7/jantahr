@@ -1,0 +1,5 @@
+environment     = "staging"
+web_domain      = "staging.jantahr.example.com"
+api_domain      = "api.staging.jantahr.example.com"
+certificate_arn = "" # set an ACM ARN to enable HTTPS
+smtp_host       = "email-smtp.ap-south-1.amazonaws.com"

@@ -1,0 +1,85 @@
+# JantaHR on self-hosted Supabase (Postgres 17 + OrioleDB, Auth, Storage, Realtime, Edge Functions, PostgREST,
+# Supavisor, Studio). Used together with the official Supabase compose file; paths are relative to ./supabase.
+# Start everything with ./jantahr.sh up  (see README.md in this folder).
+services:
+  functions:
+    volumes:
+      - ../../../supabase/functions/jobs-dispatch:/home/deno/functions/jobs-dispatch:ro,z
+      - ../../../supabase/functions/billing-webhook:/home/deno/functions/billing-webhook:ro,z
+    environment:
+      JANTAHR_API_URL: http://jantahr-api:3002
+      CRON_SECRET: ${CRON_SECRET}
+      JOBS_DISPATCH_SECRET: ${JOBS_DISPATCH_SECRET}
+      RAZORPAY_WEBHOOK_SECRET: ${RAZORPAY_WEBHOOK_SECRET:-}
+
+  jantahr-api:
+    container_name: jantahr-api
+    image: jantahr-api:selfhosted
+    build:
+      context: ../../..
+      dockerfile: packages/backend/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      storage:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: '3002'
+      EDITION: self_hosted
+      JOBS_MODE: inprocess
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD}@db:${POSTGRES_PORT}/${POSTGRES_DB}?schema=public
+      JWT_SECRET: ${JANTAHR_JWT_SECRET:?run ./jantahr.sh setup first}
+      ENCRYPTION_KEY: ${JANTAHR_ENCRYPTION_KEY:?run ./jantahr.sh setup first}
+      CRON_SECRET: ${CRON_SECRET}
+      FRONTEND_URL: ${JANTAHR_WEB_URL}
+      CORS_ORIGINS: ${JANTAHR_WEB_URL}
+      # Documents, receipts, résumés and selfies go to Supabase Storage through its S3-compatible endpoint
+      STORAGE_DRIVER: s3
+      S3_ENDPOINT: http://storage:5000/s3
+      S3_BUCKET: jantahr
+      STORAGE_AUTO_CREATE_BUCKET: 'true'
+      AWS_REGION: ${REGION}
+      AWS_ACCESS_KEY_ID: ${S3_PROTOCOL_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${S3_PROTOCOL_ACCESS_KEY_SECRET}
+      # Supabase Auth signs everyone in (password, email link, Google, TOTP); the API administers accounts with the
+      # service role key and verifies session tokens with the stack's JWT secret. Realtime carries notification pings.
+      SUPABASE_URL: http://api-gw:8000
+      SUPABASE_PUBLIC_URL: ${SUPABASE_PUBLIC_URL}
+      SUPABASE_ANON_KEY: ${ANON_KEY}
+      SUPABASE_SERVICE_ROLE_KEY: ${SERVICE_ROLE_KEY}
+      SUPABASE_JWT_SECRET: ${JWT_SECRET}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASS: ${SMTP_PASS}
+      MAIL_FROM: ${SMTP_ADMIN_EMAIL}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+    ports:
+      - ${JANTAHR_API_PORT:-3002}:3002
+    healthcheck:
+      test: ['CMD', 'wget', '-qO-', 'http://localhost:3002/health']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  jantahr-web:
+    container_name: jantahr-web
+    image: jantahr-web:selfhosted
+    build:
+      context: ../../..
+      dockerfile: packages/frontend/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${JANTAHR_API_PUBLIC_URL}
+        NEXT_PUBLIC_EDITION: self_hosted
+        # Supabase Auth in the browser (Google / magic-link sign-in); the anon key is public by design
+        NEXT_PUBLIC_SUPABASE_URL: ${SUPABASE_PUBLIC_URL}
+        NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${ANON_KEY}
+    restart: unless-stopped
+    depends_on:
+      jantahr-api:
+        condition: service_healthy
+    ports:
+      - ${JANTAHR_WEB_PORT:-3000}:3000

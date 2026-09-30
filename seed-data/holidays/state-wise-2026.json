@@ -1,0 +1,53 @@
+[
+  {"date": "2026-01-14", "name": "Makar Sankranti", "state": "Maharashtra"},
+  {"date": "2026-02-19", "name": "Chhatrapati Shivaji Maharaj Jayanti", "state": "Maharashtra"},
+  {"date": "2026-03-17", "name": "Holi", "state": "Maharashtra"},
+  {"date": "2026-03-28", "name": "Gudi Padwa", "state": "Maharashtra"},
+  {"date": "2026-05-01", "name": "Maharashtra Day", "state": "Maharashtra"},
+  {"date": "2026-08-15", "name": "Independence Day", "state": "Maharashtra"},
+  {"date": "2026-10-03", "name": "Dussehra", "state": "Maharashtra"},
+  {"date": "2026-10-22", "name": "Diwali", "state": "Maharashtra"},
+  {"date": "2026-11-01", "name": "Diwali (Bhau Beej)", "state": "Maharashtra"},
+
+  {"date": "2026-01-14", "name": "Pongal / Sankranti", "state": "Karnataka"},
+  {"date": "2026-03-17", "name": "Holi", "state": "Karnataka"},
+  {"date": "2026-04-14", "name": "Dr. Ambedkar Jayanti / Vishu", "state": "Karnataka"},
+  {"date": "2026-11-01", "name": "Kannada Rajyotsava", "state": "Karnataka"},
+  {"date": "2026-10-03", "name": "Dussehra", "state": "Karnataka"},
+  {"date": "2026-10-22", "name": "Diwali", "state": "Karnataka"},
+
+  {"date": "2026-01-14", "name": "Pongal", "state": "Tamil Nadu"},
+  {"date": "2026-01-15", "name": "Thiruvalluvar Day", "state": "Tamil Nadu"},
+  {"date": "2026-04-14", "name": "Tamil New Year (Puthandu)", "state": "Tamil Nadu"},
+  {"date": "2026-10-03", "name": "Ayudha Pooja", "state": "Tamil Nadu"},
+  {"date": "2026-10-22", "name": "Diwali", "state": "Tamil Nadu"},
+
+  {"date": "2026-01-14", "name": "Lohri", "state": "Delhi"},
+  {"date": "2026-03-17", "name": "Holi", "state": "Delhi"},
+  {"date": "2026-08-21", "name": "Janmashtami", "state": "Delhi"},
+  {"date": "2026-10-03", "name": "Dussehra", "state": "Delhi"},
+  {"date": "2026-10-22", "name": "Diwali", "state": "Delhi"},
+  {"date": "2026-10-24", "name": "Bhai Dooj", "state": "Delhi"},
+
+  {"date": "2026-01-14", "name": "Makar Sankranti / Uttarayan", "state": "Gujarat"},
+  {"date": "2026-01-15", "name": "Uttarayan (Day 2)", "state": "Gujarat"},
+  {"date": "2026-03-17", "name": "Dhuleti (Holi)", "state": "Gujarat"},
+  {"date": "2026-05-01", "name": "Gujarat Day", "state": "Gujarat"},
+  {"date": "2026-10-22", "name": "Diwali", "state": "Gujarat"},
+  {"date": "2026-10-23", "name": "New Year (Bestu Varas)", "state": "Gujarat"},
+  {"date": "2026-10-24", "name": "Bhai Dooj", "state": "Gujarat"},
+
+  {"date": "2026-04-15", "name": "Bengali New Year (Pohela Boishakh)", "state": "West Bengal"},
+  {"date": "2026-05-09", "name": "Rabindra Jayanti", "state": "West Bengal"},
+  {"date": "2026-10-01", "name": "Maha Saptami", "state": "West Bengal"},
+  {"date": "2026-10-02", "name": "Maha Ashtami", "state": "West Bengal"},
+  {"date": "2026-10-03", "name": "Maha Navami", "state": "West Bengal"},
+  {"date": "2026-10-22", "name": "Kali Puja / Diwali", "state": "West Bengal"},
+
+  {"date": "2026-03-28", "name": "Ugadi", "state": "Telangana"},
+  {"date": "2026-04-14", "name": "Dr. Ambedkar Jayanti", "state": "Telangana"},
+  {"date": "2026-06-02", "name": "Telangana Formation Day", "state": "Telangana"},
+  {"date": "2026-08-25", "name": "Vinayaka Chavithi (Ganesh Chaturthi)", "state": "Telangana"},
+  {"date": "2026-10-03", "name": "Dussehra", "state": "Telangana"},
+  {"date": "2026-10-22", "name": "Diwali", "state": "Telangana"}
+]
