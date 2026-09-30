@@ -1,0 +1,15 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "nestjs",
+  "regions": ["bom1"],
+  "installCommand": "cd ../.. && pnpm install --frozen-lockfile",
+  "buildCommand": "pnpm vercel-build",
+  "crons": [
+    { "path": "/internal/jobs/attendance-finalise", "schedule": "40 18 * * *" },
+    { "path": "/internal/jobs/privacy-housekeeping", "schedule": "15 21 * * *" },
+    { "path": "/internal/jobs/billing-sweep", "schedule": "30 21 * * *" },
+    { "path": "/internal/jobs/billing-inbox", "schedule": "0 22 * * *" },
+    { "path": "/internal/jobs/leave-accrual", "schedule": "30 0 1 * *" },
+    { "path": "/internal/jobs/leave-rollover", "schedule": "15 0 1 1 *" }
+  ]
+}

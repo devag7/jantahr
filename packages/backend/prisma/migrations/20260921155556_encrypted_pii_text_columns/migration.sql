@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE "Employee" ALTER COLUMN "bankAccountNumber" SET DATA TYPE TEXT,
+ALTER COLUMN "panNumber" SET DATA TYPE TEXT,
+ALTER COLUMN "aadhaarNumber" SET DATA TYPE TEXT;
