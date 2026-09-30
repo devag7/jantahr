@@ -1,0 +1,24 @@
+{
+  "expo": {
+    "name": "JantaHR",
+    "slug": "jantahr",
+    "scheme": "jantahr",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.jantahr.app",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Your location is used to verify check-ins at office locations.",
+        "NSCameraUsageDescription": "The camera is used to capture a selfie with your attendance."
+      }
+    },
+    "android": {
+      "package": "com.jantahr.app",
+      "permissions": ["ACCESS_FINE_LOCATION", "CAMERA"]
+    },
+    "plugins": ["expo-router", "expo-secure-store", ["expo-location", { "locationWhenInUsePermission": "Used to verify check-ins at office locations." }], ["expo-camera", { "cameraPermission": "Used to capture a selfie with your attendance." }]],
+    "experiments": { "typedRoutes": true }
+  }
+}
