@@ -1,0 +1,14 @@
+name: Feature request
+description: Suggest something JantaHR should do
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes: { label: The problem, description: Who needs this and what do they do today? }
+    validations: { required: true }
+  - type: textarea
+    id: solution
+    attributes: { label: What you would like }
+  - type: textarea
+    id: alternatives
+    attributes: { label: How other HR tools handle it, description: "greytHR, Zoho People, Keka… links or screenshots help." }

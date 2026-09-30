@@ -1,0 +1,19 @@
+name: Statutory rule change
+description: A new or changed PF, ESI, PT, LWF, TDS, labour-code or DPDP rule
+labels: [statutory]
+body:
+  - type: input
+    id: rule
+    attributes: { label: Rule, placeholder: "e.g. Karnataka PT slab revision from 1 April 2027" }
+    validations: { required: true }
+  - type: input
+    id: source
+    attributes: { label: Official source, description: Link to the notification, circular or gazette. }
+    validations: { required: true }
+  - type: input
+    id: effective
+    attributes: { label: Effective from }
+    validations: { required: true }
+  - type: textarea
+    id: detail
+    attributes: { label: What changes, description: Rates, thresholds, due dates, and a worked example if you have one. }

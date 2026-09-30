@@ -1,0 +1,42 @@
+name: Deploy staging
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['packages/**', '.github/workflows/deploy-staging.yml']
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: ap-south-1
+  ENV_NAME: jantahr-staging
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+      - id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+      - name: Build and push images
+        env:
+          REGISTRY: ${{ steps.ecr.outputs.registry }}
+          TAG: ${{ github.sha }}
+        run: |
+          docker build -f packages/backend/Dockerfile -t $REGISTRY/jantahr-api:$TAG -t $REGISTRY/jantahr-api:latest .
+          docker build -f packages/frontend/Dockerfile --build-arg NEXT_PUBLIC_API_URL=${{ vars.PUBLIC_API_URL }} -t $REGISTRY/jantahr-web:$TAG -t $REGISTRY/jantahr-web:latest .
+          docker push --all-tags $REGISTRY/jantahr-api
+          docker push --all-tags $REGISTRY/jantahr-web
+      - name: Roll ECS services (the API applies DB migrations on start)
+        run: |
+          aws ecs update-service --cluster $ENV_NAME --service api --force-new-deployment
+          aws ecs update-service --cluster $ENV_NAME --service web --force-new-deployment
+          aws ecs wait services-stable --cluster $ENV_NAME --services api web

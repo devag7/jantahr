@@ -1,0 +1,22 @@
+name: Bug report
+description: Something works differently from what it should
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes: { label: What happened, description: Include the screen or API endpoint and what you expected instead. }
+    validations: { required: true }
+  - type: textarea
+    id: steps
+    attributes: { label: Steps to reproduce, placeholder: "1. Sign in as HR\n2. Open Payroll > Runs\n3. …" }
+    validations: { required: true }
+  - type: dropdown
+    id: edition
+    attributes: { label: Edition, options: [Self-hosted, Cloud, Local development] }
+    validations: { required: true }
+  - type: input
+    id: version
+    attributes: { label: Version or commit }
+  - type: textarea
+    id: logs
+    attributes: { label: Logs or screenshots, description: Remove salaries, PAN, Aadhaar and other personal data first., render: text }
