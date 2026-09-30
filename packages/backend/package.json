@@ -88,5 +88,8 @@
       "^.+\\.ts$": "ts-jest"
     },
     "testEnvironment": "node"
+  },
+  "engines": {
+    "node": ">=22.0.0"
   }
 }

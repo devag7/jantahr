@@ -1,6 +1,6 @@
 # Build context: repository root  (docker build -f packages/backend/Dockerfile .)
 # --- build ---
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS builder
 RUN apk add --no-cache openssl
 WORKDIR /app
 RUN corepack enable && corepack prepare pnpm@9.6.0 --activate
@@ -16,7 +16,7 @@ RUN npx prisma generate && pnpm build
 RUN pnpm prune --prod
 
 # --- runtime ---
-FROM node:20-alpine AS runner
+FROM node:22-alpine AS runner
 RUN apk add --no-cache openssl wget
 WORKDIR /app/packages/backend
 ENV NODE_ENV=production PORT=3002 UPLOAD_DIR=/data/uploads
