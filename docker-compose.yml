@@ -1,0 +1,72 @@
+# Local stack.  Infra only:      docker compose up -d postgres redis
+#               Whole app too:    JWT_SECRET=… ENCRYPTION_KEY=… docker compose --profile app up -d --build
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: jantahr-postgres
+    environment:
+      POSTGRES_USER: jantahr
+      POSTGRES_PASSWORD: jantahr_dev_2025
+      POSTGRES_DB: jantahr_dev
+    ports:
+      - '5439:5432'
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U jantahr']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Reserved for BullMQ job queues / a shared rate-limit store. The app does not require it yet.
+  redis:
+    image: redis:7-alpine
+    container_name: jantahr-redis
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    profiles: ['app']
+    build:
+      context: .
+      dockerfile: packages/backend/Dockerfile
+    container_name: jantahr-api
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://jantahr:jantahr_dev_2025@postgres:5432/jantahr_dev?schema=public
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET (min 16 chars)}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:?set ENCRYPTION_KEY}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
+      PORT: '3002'
+    ports:
+      - '3002:3002'
+    volumes:
+      - uploads:/data/uploads
+
+  web:
+    profiles: ['app']
+    build:
+      context: .
+      dockerfile: packages/frontend/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${PUBLIC_API_URL:-http://localhost:3002}
+    container_name: jantahr-web
+    depends_on:
+      - api
+    ports:
+      - '3000:3000'
+
+volumes:
+  postgres-data:
+  redis-data:
+  uploads:

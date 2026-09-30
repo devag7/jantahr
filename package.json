@@ -1,0 +1,27 @@
+{
+  "name": "jantahr",
+  "version": "0.1.0",
+  "private": true,
+  "description": "JantaHR — India-first HRMS SaaS Platform",
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "test": "turbo test",
+    "test:unit": "turbo test:unit",
+    "test:e2e": "turbo test:e2e",
+    "db:migrate": "pnpm --filter jantahr-backend prisma:migrate",
+    "db:seed": "pnpm --filter jantahr-backend prisma:seed",
+    "db:studio": "pnpm --filter jantahr-backend prisma:studio",
+    "clean": "turbo clean && rm -rf node_modules"
+  },
+  "devDependencies": {
+    "turbo": "^2.1.0",
+    "typescript": "^5.5.0"
+  },
+  "packageManager": "pnpm@9.6.0",
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  }
+}

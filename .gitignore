@@ -1,0 +1,76 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+.next/
+out/
+build/
+
+# Environment files: secrets never leave the machine (templates are *.example)
+.env
+.env.*
+!.env.example
+!.env.*.example
+*.env.old
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Test coverage
+coverage/
+
+# Prisma
+packages/backend/prisma/*.db
+
+# Turbo
+.turbo/
+
+# Docker
+docker/data/
+
+# Temp files
+*.tmp
+*.bak
+uploads/
+
+# Self-hosted Supabase runtime data (database files, uploaded objects, logs)
+deploy/self-hosted/supabase/volumes/db/data/
+deploy/self-hosted/supabase/volumes/storage/
+deploy/self-hosted/supabase/volumes/snippets/
+deploy/self-hosted/supabase/volumes/functions/*/node_modules/
+
+# Terraform state and variables
+infra/**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+crash.log
+
+# Expo / React Native
+packages/mobile/.expo/
+packages/mobile/ios/
+packages/mobile/android/
+*.jks
+*.p8
+*.p12
+*.mobileprovision
+
+# Local test artefacts
+packages/backend/api.log
+packages/backend/gotrue.log
+*.tsbuildinfo
