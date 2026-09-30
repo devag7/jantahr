@@ -1,0 +1,145 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Design tokens, measured from apple-DESIGN.md (see docs/design-system.md). HSL triplets.
+ * One accent (Action Blue), near-black ink, Parchment canvas, white cards, hairlines, no shadows except shadow-product.
+ */
+@layer base {
+  :root {
+    --background: 240 11% 96%;          /* Parchment #f5f5f7 */
+    --foreground: 240 3% 12%;           /* Ink #1d1d1f */
+
+    --card: 0 0% 100%;                  /* Canvas #ffffff */
+    --card-foreground: 240 3% 12%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 3% 12%;
+
+    --primary: 210 100% 40%;            /* Action Blue #0066cc */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 240 20% 99%;           /* Pearl #fafafc */
+    --secondary-foreground: 0 0% 20%;   /* Ink muted 80 #333333 */
+    --muted: 240 11% 96%;               /* Parchment */
+    --muted-foreground: 240 2% 44%;     /* #6e6e73, 5.07:1 on white */
+    --accent: 210 100% 96%;
+    --accent-foreground: 210 100% 35%;
+
+    --destructive: 354 100% 42%;        /* #d70015 */
+    --destructive-foreground: 0 0% 100%;
+    --success: 122 100% 25%;            /* #008009 */
+    --success-foreground: 0 0% 100%;
+    --warning: 22 100% 36%;             /* #b64400 */
+    --warning-foreground: 0 0% 100%;
+    --info: 210 100% 40%;
+    --info-foreground: 0 0% 100%;
+
+    --border: 0 0% 88%;                 /* Hairline #e0e0e0 */
+    --divider: 0 0% 94%;                /* Divider soft #f0f0f0 */
+    --input: 240 2% 53%;                /* #86868b, 3.6:1 field boundary */
+    --ring: 211 100% 45%;               /* Focus Blue #0071e3 */
+    --radius: 18px;
+
+    /* shell */
+    --nav: 0 0% 0%;                     /* global nav: the only pure black */
+    --nav-foreground: 0 0% 100%;
+    --on-dark-muted: 0 0% 80%;
+    --primary-on-dark: 211 100% 58%;
+    --subnav: 240 11% 96%;
+
+    /* charts: one hue family plus neutrals so the accent stays single */
+    --chart-1: 210 100% 40%;
+    --chart-2: 210 60% 70%;
+    --chart-3: 240 2% 44%;
+    --chart-4: 240 3% 75%;
+    --chart-5: 210 100% 25%;
+    --chart-6: 240 3% 12%;
+
+    /* attendance feature */
+    --color-attendance-present: 122 100% 25%;
+    --color-attendance-absent: 354 100% 42%;
+    --color-attendance-half: 22 100% 36%;
+    --color-attendance-leave: 210 100% 40%;
+    --color-attendance-off: 240 3% 75%;
+  }
+
+  .dark {
+    --background: 240 2% 9%;            /* #161617 */
+    --foreground: 240 11% 96%;
+    --card: 240 3% 16%;                 /* Tile 1 #272729 */
+    --card-foreground: 240 11% 96%;
+    --popover: 240 3% 17%;              /* Tile 2 #2a2a2c */
+    --popover-foreground: 240 11% 96%;
+
+    --primary: 209 100% 58%;            /* Sky Link Blue #2997ff */
+    --primary-foreground: 240 3% 12%;
+    --secondary: 240 3% 15%;
+    --secondary-foreground: 0 0% 80%;
+    --muted: 240 3% 15%;                /* Tile 3 #252527 */
+    --muted-foreground: 240 2% 64%;     /* #a1a1a6 */
+    --accent: 209 60% 20%;
+    --accent-foreground: 209 100% 70%;
+
+    --destructive: 0 100% 67%;
+    --success: 122 55% 55%;
+    --warning: 30 100% 60%;
+    --info: 209 100% 58%;
+
+    --border: 240 2% 22%;               /* #38383a */
+    --divider: 240 3% 17%;
+    --input: 240 2% 44%;
+    --ring: 209 100% 58%;
+    --subnav: 240 2% 9%;
+
+    --chart-1: 209 100% 58%;
+    --chart-2: 209 60% 75%;
+    --chart-3: 240 2% 64%;
+    --chart-4: 240 2% 35%;
+    --chart-5: 209 100% 40%;
+    --chart-6: 240 11% 96%;
+  }
+}
+
+@layer base {
+  * { @apply border-border; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-size: 14px;
+    line-height: 1.43;
+    letter-spacing: -0.224px;
+  }
+  /* SF Symbols-like icon weight across lucide icons */
+  svg.lucide { stroke-width: 1.75; }
+  :focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 2px; }
+  ::selection { background: hsl(var(--primary) / 0.18); }
+}
+
+@layer utilities {
+  /* Frosted layer for sticky bars and menus (reference: saturate(180%) blur(20px) on Parchment 80%) */
+  .frosted {
+    background: hsl(var(--subnav) / 0.8);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    backdrop-filter: saturate(180%) blur(20px);
+  }
+  @media (prefers-reduced-transparency: reduce) {
+    .frosted { background: hsl(var(--subnav)); -webkit-backdrop-filter: none; backdrop-filter: none; }
+  }
+  .tabular { font-variant-numeric: tabular-nums; }
+}
+
+@media print {
+  header, nav, .no-print { display: none !important; }
+}
+
+/* Marketing motion (MOTION_INTENSITY 5): screenshots settle into place as they scroll in; the hero fades up once.
+   Motivation: hierarchy. Disabled entirely under prefers-reduced-motion. */
+@keyframes jh-reveal { from { opacity: 0; transform: translateY(48px) scale(0.98); } to { opacity: 1; transform: none; } }
+@keyframes jh-rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: no-preference) {
+  .rise { animation: jh-rise 0.9s cubic-bezier(0.16, 1, 0.3, 1) both; }
+  .rise-2 { animation: jh-rise 0.9s 0.12s cubic-bezier(0.16, 1, 0.3, 1) both; }
+  @supports (animation-timeline: view()) {
+    .reveal { animation: jh-reveal linear both; animation-timeline: view(); animation-range: entry 0% cover 28%; }
+  }
+}

@@ -1,0 +1,6 @@
+export type ExpenseStatus = 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'REJECTED' | 'REIMBURSED';
+export interface ExpenseItem { id?: string; expenseDate: string; category: string; description: string | null; amount: number; approvedAmount?: number | null; receiptUrl: string | null }
+export interface ExpenseClaim { id: string; title: string; status: ExpenseStatus; totalClaimed: number; totalApproved: number; submittedAt: string | null; approverComment: string | null; createdAt: string; items: ExpenseItem[]; employee: { id: string; employeeCode: string; firstName: string; lastName: string } }
+export interface ExpenseInput { title: string; items: { expenseDate: string; category: string; description?: string; amount: number; receiptUrl?: string }[]; submit?: boolean }
+export interface TravelRequest { id: string; purpose: string; fromLocation: string; toLocation: string; departureDate: string; returnDate: string; estimatedCost: number | null; advanceRequired: number | null; status: 'PENDING' | 'APPROVED' | 'REJECTED'; employee: { firstName: string; lastName: string; employeeCode: string } }
+export interface TravelInput { purpose: string; fromLocation: string; toLocation: string; departureDate: string; returnDate: string; estimatedCost?: number; advanceRequired?: number }

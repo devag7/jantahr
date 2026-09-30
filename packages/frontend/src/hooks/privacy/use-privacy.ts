@@ -1,0 +1,21 @@
+'use client';
+import { useQuery } from '@tanstack/react-query';
+import { useApiMutation } from '@/hooks/common/use-api-mutation';
+import { privacyService } from '@/services/privacy/privacy.service';
+import type { BreachInput, DataBreach, PrivacyRequestStatus, PrivacyRequestType } from '@/types/privacy';
+
+const P = [['privacy']] as const;
+export const useConsents = () => useQuery({ queryKey: ['privacy', 'consents'], queryFn: privacyService.consents });
+export const useSetConsent = () => useApiMutation((v: { purpose: string; granted: boolean }) => privacyService.setConsent(v.purpose, v.granted), { invalidate: [...P], success: 'Preference saved' });
+export const useMyPrivacyRequests = () => useQuery({ queryKey: ['privacy', 'requests', 'mine'], queryFn: privacyService.myRequests });
+export const useCreatePrivacyRequest = () => useApiMutation((v: { type: PrivacyRequestType; details: string }) => privacyService.createRequest(v), { invalidate: [...P], success: 'Request submitted: HR will respond within 90 days' });
+export const usePrivacyRequests = (status?: string) => useQuery({ queryKey: ['privacy', 'requests', 'all', status], queryFn: () => privacyService.requests(status) });
+export const useUpdatePrivacyRequest = () => useApiMutation((v: { id: string; status?: PrivacyRequestStatus; resolution?: string }) => privacyService.updateRequest(v.id, v), { invalidate: [...P], success: 'Request updated' });
+export const usePrivacyOverview = () => useQuery({ queryKey: ['privacy', 'overview'], queryFn: privacyService.overview });
+export const useRetention = () => useQuery({ queryKey: ['privacy', 'retention'], queryFn: privacyService.retention });
+export const useErase = () => useApiMutation((v: { employeeId: string; confirmEmployeeCode: string; requestId?: string }) => privacyService.erase(v.employeeId, v), { invalidate: [...P, ['employees']] });
+export const useAnonymiseApplicants = () => useApiMutation((months: number) => privacyService.anonymiseApplicants(months), { invalidate: [...P], success: (r) => `${r.anonymised} applicant record(s) anonymised` });
+export const useBreaches = () => useQuery({ queryKey: ['privacy', 'breaches'], queryFn: privacyService.breaches });
+export const useCreateBreach = () => useApiMutation((v: BreachInput) => privacyService.createBreach(v), { invalidate: [...P], success: 'Breach logged' });
+export const useUpdateBreach = () => useApiMutation((v: { id: string; status?: DataBreach['status']; boardNotified?: boolean; containmentActions?: string }) => privacyService.updateBreach(v.id, v), { invalidate: [...P], success: 'Breach updated' });
+export const useNotifyBreach = () => useApiMutation((id: string) => privacyService.notifyBreach(id), { invalidate: [...P], success: 'All employees have been notified' });

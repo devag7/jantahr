@@ -1,0 +1,10 @@
+{
+  "name": "JantaHR",
+  "short_name": "JantaHR",
+  "description": "India-first HR & payroll",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#f2f4f7",
+  "theme_color": "#1260bd",
+  "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}
