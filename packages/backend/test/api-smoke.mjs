@@ -26,6 +26,29 @@ const pay = (await login('payroll@jantahr.com', 'Demo@1234')).accessToken;
 const mgr = (await login('manager@jantahr.com', 'Demo@1234')).accessToken;
 const emp = (await login('employee@jantahr.com', 'Demo@1234')).accessToken;
 const aud = (await login('auditor@jantahr.com', 'Demo@1234')).accessToken;
+
+// ---- dates: relative to today in India, matching the seed (which pays the last 6 completed months) ----
+const PAID_MONTHS = 6;
+const istNow = new Date(Date.now() + 5.5 * 3600e3);
+const cur = { y: istNow.getUTCFullYear(), m: istNow.getUTCMonth() + 1 };
+const addMonths = ({ y, m }, n) => { const t = y * 12 + m - 1 + n; return { y: Math.floor(t / 12), m: (t % 12) + 1 }; };
+const last = addMonths(cur, -1); // latest paid month
+const fyOf = ({ y, m }) => (m >= 4 ? y : y - 1);
+const iso = (d) => d.toISOString().slice(0, 10);
+const day = ({ y, m }, d) => iso(new Date(Date.UTC(y, m - 1, d)));
+const today = iso(istNow);
+const plusDays = (isoDate, n) => iso(new Date(Date.parse(`${isoDate}T00:00:00Z`) + n * 86400e3));
+// EPF wage ceiling: ₹15,000, ₹25,000 from 17-Sep-2026 (September 2026 pro-rated: 16 days + 14 days)
+const pfCeiling = ({ y, m }) => (y * 12 + m < 2026 * 12 + 9 ? 15000 : y === 2026 && m === 9 ? 19667 : 25000);
+const holidays = new Set();
+for (const y of [cur.y, cur.y + 1]) for (const h of (await call('GET', `/holidays/calendar?year=${y}`, emp)).data || []) holidays.add(h.date);
+const working = (d) => ![0, 6].includes(new Date(`${d}T00:00:00Z`).getUTCDay()) && !holidays.has(d);
+/** Mondays (from the start of `from`) whose Mon–Fri and following Monday are all working days: clean weeks for leave maths. */
+const cleanWeeks = (from) => { const out = []; for (let d = day(from, 1); out.length < 6; d = plusDays(d, 1)) if (new Date(`${d}T00:00:00Z`).getUTCDay() === 1 && [0, 1, 2, 3, 4, 7].every((i) => working(plusDays(d, i)))) out.push(d); return out; };
+const wk = cleanWeeks(addMonths(cur, 2)); // future, never payroll-locked
+const nextWk = cleanWeeks(addMonths(cur, 1));
+// leave years are calendar years: when those dates reach into next year, open it first (HR does this each December)
+if ([...wk, ...nextWk].some((d) => Number(d.slice(0, 4)) > cur.y)) ok('leave rollover into next year', (await call('POST', `/leave/rollover/${cur.y + 1}`, A)).status === 201);
 ok('all role logins work', [hr, pay, mgr, emp, aud].every(Boolean));
 
 // ---- auth (Supabase Auth signs in; the API verifies its tokens) ----
@@ -70,11 +93,11 @@ ok('org chart root is CEO', org.data?.[0]?.name?.startsWith('Aarav') && org.data
 ok('employee cannot open other employee', (await call('GET', `/employees/${list.data.items[0].id}`, emp)).status === 403);
 ok('employee me', (await call('GET', '/employees/me', emp)).data?.bankAccountNumber?.length > 8);
 
-const newEmp = await call('POST', '/employees', hr, { firstName: 'Test', lastName: 'Joiner', email: 'test.joiner@jantahr.com', gender: 'MALE', dateOfJoining: '2026-09-01', panNumber: 'ZZZZZ9999Z', ctc: 1500000, state: 'Maharashtra' });
+const newEmp = await call('POST', '/employees', hr, { firstName: 'Test', lastName: 'Joiner', email: 'test.joiner@jantahr.com', gender: 'MALE', dateOfJoining: day(cur, 1), panNumber: 'ZZZZZ9999Z', ctc: 1500000, state: 'Maharashtra' });
 ok('create employee', newEmp.status === 201 && !!newEmp.data.temporaryPassword, newEmp);
-ok('duplicate email rejected', (await call('POST', '/employees', hr, { firstName: 'T', lastName: 'J', email: 'test.joiner@jantahr.com', gender: 'MALE', dateOfJoining: '2026-09-01' })).status === 400);
-ok('invalid PAN rejected', (await call('POST', '/employees', hr, { firstName: 'T', lastName: 'J', email: 'x1@jantahr.com', gender: 'MALE', dateOfJoining: '2026-09-01', panNumber: 'bad' })).status === 400);
-ok('HR cannot create super admin', (await call('POST', '/employees', hr, { firstName: 'T', lastName: 'J', email: 'x2@jantahr.com', gender: 'MALE', dateOfJoining: '2026-09-01', role: 'SUPER_ADMIN' })).status === 403);
+ok('duplicate email rejected', (await call('POST', '/employees', hr, { firstName: 'T', lastName: 'J', email: 'test.joiner@jantahr.com', gender: 'MALE', dateOfJoining: day(cur, 1) })).status === 400);
+ok('invalid PAN rejected', (await call('POST', '/employees', hr, { firstName: 'T', lastName: 'J', email: 'x1@jantahr.com', gender: 'MALE', dateOfJoining: day(cur, 1), panNumber: 'bad' })).status === 400);
+ok('HR cannot create super admin', (await call('POST', '/employees', hr, { firstName: 'T', lastName: 'J', email: 'x2@jantahr.com', gender: 'MALE', dateOfJoining: day(cur, 1), role: 'SUPER_ADMIN' })).status === 403);
 ok('new employee gets leave allocated + onboarding', (await call('GET', `/leave/balance?employeeId=${newEmp.data.id}`, hr)).data?.length >= 3 && (await call('GET', `/lifecycle/onboarding/employee/${newEmp.data.id}`, hr)).data?.tasks?.length >= 5);
 const newLogin = await signIn('test.joiner@jantahr.com', newEmp.data.temporaryPassword);
 ok('new employee can sign in with the temporary password, must change it', newLogin.status === 200 && (await call('GET', '/auth/me', newLogin.accessToken)).data?.mustChangePassword === true, newLogin);
@@ -86,12 +109,13 @@ const joinerSession = await signIn('test.joiner@jantahr.com', 'Newpass123');
 await new Promise((r) => setTimeout(r, 1100)); // token iat has 1 s resolution
 const reset = await call('POST', `/employees/${newEmp.data.id}/reset-password`, hr);
 ok('HR reset issues a new temporary password', reset.status === 201 && !!reset.data?.temporaryPassword, reset.data);
-ok('HR reset signs the employee out everywhere', (await call('GET', '/auth/me', joinerSession.accessToken)).status === 401);
+const afterReset = await call('GET', '/auth/me', joinerSession.accessToken);
+ok('HR reset signs the employee out everywhere', afterReset.status === 401, afterReset.data);
 ok('HR-issued password signs in', (await signIn('test.joiner@jantahr.com', reset.data.temporaryPassword)).status === 200);
 const susp = await call('POST', `/employees/${newEmp.data.id}/status`, hr, { status: 'SUSPENDED' });
 ok('suspended employee is refused by Supabase and the API', susp.status === 201 && (await signIn('test.joiner@jantahr.com', reset.data.temporaryPassword)).status === 400, susp.data);
 ok('reactivated employee signs in again', (await call('POST', `/employees/${newEmp.data.id}/status`, hr, { status: 'ACTIVE' })).status === 201 && (await signIn('test.joiner@jantahr.com', reset.data.temporaryPassword)).status === 200);
-const importCsv = await call('POST', '/employees/import', hr, { csv: 'firstName,lastName,email,gender,dateOfJoining,department,designation,ctc\nCsv,One,csv.one@jantahr.com,FEMALE,2026-09-15,Sales,Account Executive,600000\nBad,Row,not-an-email,MALE,2026-09-15,,,' });
+const importCsv = await call('POST', '/employees/import', hr, { csv: `firstName,lastName,email,gender,dateOfJoining,department,designation,ctc\nCsv,One,csv.one@jantahr.com,FEMALE,${day(cur, 1)},Sales,Account Executive,600000\nBad,Row,not-an-email,MALE,${day(cur, 1)},,,` });
 ok('CSV import 1 ok 1 failed', importCsv.data?.createdCount === 1 && importCsv.data?.failedCount === 1, importCsv.data);
 
 const depts = await call('GET', '/departments', hr);
@@ -100,7 +124,7 @@ const newDept = await call('POST', '/departments', hr, { name: 'Legal' });
 ok('create dept', newDept.status === 201);
 ok('dept cycle rejected', (await call('PATCH', `/departments/${newDept.data.id}`, hr, { parentDepartmentId: newDept.data.id })).status === 400);
 ok('company get', (await call('GET', '/company', emp)).data?.name === 'Sahyadri Softworks');
-ok('holiday calendar', (await call('GET', '/holidays/calendar?year=2026', emp)).data?.length >= 5);
+ok('holiday calendar', (await call('GET', `/holidays/calendar?year=${cur.y}`, emp)).data?.length >= 5);
 ok('announcements', (await call('GET', '/announcements', emp)).data?.length >= 2);
 const pols = await call('GET', '/policies', emp);
 ok('policies', pols.data?.length === 4);
@@ -110,38 +134,42 @@ ok('ack policy', (await call('POST', `/policies/${pols.data[0].id}/acknowledge`,
 const bal = await call('GET', '/leave/balance', emp);
 const cl = bal.data?.find((b) => b.leaveType === 'Casual Leave');
 const plb = bal.data?.find((b) => b.leaveType === 'Privilege Leave');
-ok('leave balances exist (CL, PL accrued)', !!cl && !!plb && plb.available > 5, bal.data);
+ok('leave balances exist (CL, PL accrued)', !!cl && !!plb && plb.available > 0, bal.data);
 const types = await call('GET', '/leave/types', emp);
 const clType = types.data.find((t) => t.name === 'Casual Leave');
 const lop = types.data.find((t) => t.name === 'Leave Without Pay');
-const prev = await call('POST', '/leave/preview', emp, { leaveTypeId: clType.id, fromDate: '2026-11-02', toDate: '2026-11-04' });
+const prev = await call('POST', '/leave/preview', emp, { leaveTypeId: clType.id, fromDate: wk[0], toDate: plusDays(wk[0], 2) });
 ok('leave preview', prev.data?.totalDays === 3, prev.data);
-// Diwali Sunday 2026-11-08: sandwich CL Fri 6 -> Mon 9
-const sand = await call('POST', '/leave/preview', emp, { leaveTypeId: clType.id, fromDate: '2026-11-06', toDate: '2026-11-09' });
+// sandwich rule: Fri -> Mon counts the weekend in between
+const sand = await call('POST', '/leave/preview', emp, { leaveTypeId: clType.id, fromDate: plusDays(wk[1], 4), toDate: plusDays(wk[1], 7) });
 ok('sandwich rule: Fri..Mon CL = 4 days', sand.data?.totalDays === 4, sand.data);
-const apply = await call('POST', '/leave/applications', emp, { leaveTypeId: clType.id, fromDate: '2026-12-14', toDate: '2026-12-15', reason: 'smoke' });
+const empId = (await call('GET', '/auth/me', emp)).data.employee.id;
+const clUsedIn = async (y) => Number((await call('GET', `/leave/allocations?employeeId=${empId}`, A)).data?.find((a) => a.leaveType.name === 'Casual Leave' && a.fromDate.startsWith(String(y)))?.usedLeaves ?? NaN);
+const clUsedBefore = await clUsedIn(wk[2].slice(0, 4));
+const apply = await call('POST', '/leave/applications', emp, { leaveTypeId: clType.id, fromDate: wk[2], toDate: plusDays(wk[2], 1), reason: 'smoke' });
 ok('apply leave', apply.status === 201, apply.data);
-ok('overlapping leave rejected', (await call('POST', '/leave/applications', emp, { leaveTypeId: clType.id, fromDate: '2026-12-15', toDate: '2026-12-16' })).status === 400);
-ok('insufficient balance rejected', (await call('POST', '/leave/applications', emp, { leaveTypeId: clType.id, fromDate: '2027-02-01', toDate: '2027-03-30' })).status === 400);
+ok('overlapping leave rejected', (await call('POST', '/leave/applications', emp, { leaveTypeId: clType.id, fromDate: plusDays(wk[2], 1), toDate: plusDays(wk[2], 2) })).status === 400);
+ok('insufficient balance rejected', (await call('POST', '/leave/applications', emp, { leaveTypeId: clType.id, fromDate: day(addMonths(cur, 4), 1), toDate: day(addMonths(cur, 5), 28) })).status === 400);
 ok('employee cannot approve own', (await call('POST', `/leave/applications/${apply.data.id}/approve`, emp, {})).status === 403);
 const other = (await call('GET', '/leave/applications?scope=team&status=OPEN', mgr)).data;
 ok('manager sees team leave', other.items?.some((l) => l.id === apply.data.id), other.total);
 const appr = await call('POST', `/leave/applications/${apply.data.id}/approve`, mgr, { comment: 'ok' });
 ok('manager approves', appr.data?.status === 'APPROVED', appr.data);
-const bal2 = await call('GET', '/leave/balance', emp);
-ok('balance reduced by 2', bal2.data.find((b) => b.leaveType === 'Casual Leave').used === cl.used + 2, bal2.data.find((b) => b.leaveType === 'Casual Leave'));
+const clUsedAfter = await clUsedIn(wk[2].slice(0, 4));
+ok('balance reduced by 2', clUsedAfter === clUsedBefore + 2, { before: clUsedBefore, after: clUsedAfter });
 const cancel = await call('POST', `/leave/applications/${apply.data.id}/cancel`, emp);
 ok('cancel approved future leave restores balance', cancel.data?.status === 'CANCELLED' && (await call('GET', '/leave/balance', emp)).data.find((b) => b.leaveType === 'Casual Leave').used === cl.used);
-ok('leave calendar', (await call('GET', '/leave/calendar?year=2026&month=10', mgr)).status === 200);
-ok('maternity not for male', (await call('POST', '/leave/applications', emp, { leaveTypeId: types.data.find((t) => t.name === 'Maternity Leave').id, fromDate: '2027-01-04', toDate: '2027-01-06' })).status === 400);
-ok('leave encashment request', (await call('POST', '/leave/encashments', emp, { leaveTypeId: types.data.find((t) => t.name === 'Privilege Leave').id, days: 2 })).status === 201);
+ok('leave calendar', (await call('GET', `/leave/calendar?year=${cur.y}&month=${cur.m}`, mgr)).status === 200);
+ok('maternity not for male', (await call('POST', '/leave/applications', emp, { leaveTypeId: types.data.find((t) => t.name === 'Maternity Leave').id, fromDate: wk[3], toDate: plusDays(wk[3], 2) })).status === 400);
+const encash = await call('POST', '/leave/encashments', emp, { leaveTypeId: types.data.find((t) => t.name === 'Privilege Leave').id, days: 2 });
+ok('leave encashment request', encash.status === 201, encash.data);
 
 // ---- approvals follow the reporting line, not the MANAGER role ----
 // Rohan (payroll@, PAYROLL_ADMIN) is the reporting manager of EMP012 (Pooja) and EMP015 (the auditor).
 const pooja = (await login('pooja.desai@jantahr.com', 'Demo@1234')).accessToken;
 const me = async (t) => (await call('GET', '/auth/me', t)).data?.hasReportees;
 ok('auth/me hasReportees follows the reporting line', (await me(pay)) === true && (await me(mgr)) === true && (await me(emp)) === false && (await me(aud)) === false);
-const pLeave = await call('POST', '/leave/applications', pooja, { leaveTypeId: clType.id, fromDate: '2026-12-21', toDate: '2026-12-21', reason: 'smoke: reporting line' });
+const pLeave = await call('POST', '/leave/applications', pooja, { leaveTypeId: clType.id, fromDate: wk[4], toDate: wk[4], reason: 'smoke: reporting line' });
 ok('EMP012 applies leave', pLeave.status === 201, pLeave.data);
 const payQueue = await call('GET', '/leave/applications/pending', pay);
 ok('payroll admin sees only their reportees in the leave queue', payQueue.data?.some((l) => l.id === pLeave.data.id) && payQueue.data.every((l) => ['EMP012', 'EMP015'].includes(l.employee.employeeCode)), payQueue.data?.map?.((l) => l.employee.employeeCode));
@@ -152,7 +180,7 @@ ok('manager of another line cannot approve EMP012', (await call('POST', `/leave/
 ok('EMP012 cannot approve own leave', (await call('POST', `/leave/applications/${pLeave.data.id}/approve`, pooja, {})).status === 403);
 const pAppr = await call('POST', `/leave/applications/${pLeave.data.id}/approve`, pay, { comment: 'ok' });
 ok('payroll@ approves leave for EMP012 (reporting manager)', pAppr.data?.status === 'APPROVED', pAppr.data);
-const pReq = await call('POST', '/attendance/requests', pooja, { fromDate: '2026-09-16', requestType: 'WFH', reason: 'smoke: reporting line' });
+const pReq = await call('POST', '/attendance/requests', pooja, { fromDate: plusDays(nextWk[0], 1), requestType: 'WFH', reason: 'smoke: reporting line' });
 ok('EMP012 raises attendance request', pReq.status === 201, pReq.data);
 const payAtt = await call('GET', '/attendance/requests?status=PENDING&scope=approvals', pay);
 ok('approvals-scoped attendance queue: reportees only', payAtt.data?.some((r) => r.id === pReq.data.id) && payAtt.data.every((r) => ['EMP012', 'EMP015'].includes(r.employee.employeeCode)), payAtt.data?.length);
@@ -173,7 +201,7 @@ const myLog = await call('GET', '/attendance/me', emp);
 ok('month log has today present', myLog.data?.days?.some((d) => d.status === 'PRESENT' && d.inTime), myLog.data?.summary);
 ok('daily view (manager)', (await call('GET', '/attendance/daily', mgr)).data?.items?.length === 5);
 ok('summary (hr)', (await call('GET', '/attendance/summary', hr)).data?.length >= 15);
-const reg = await call('POST', '/attendance/requests', emp, { fromDate: '2026-09-15', requestType: 'WFH', reason: 'Internet repair visit' });
+const reg = await call('POST', '/attendance/requests', emp, { fromDate: nextWk[0], requestType: 'WFH', reason: 'Internet repair visit' });
 ok('WFH request', reg.status === 201, reg.data);
 ok('manager approves request', (await call('POST', `/attendance/requests/${reg.data.id}/approve`, mgr, {})).data?.status === 'APPROVED');
 ok('geo-fence create + block', await (async () => {
@@ -191,17 +219,17 @@ ok('biometric push', push.status === 200 && pushData.stored === 1 && pushData.un
 ok('biometric bad key rejected', (await fetch(BASE + '/attendance/biometric/push', { method: 'POST', headers: { 'content-type': 'application/json', 'x-device-serial': 'ZK123456', 'x-device-key': 'x' }, body: JSON.stringify({ punches: [{ employeeCode: 'EMP008', time: new Date().toISOString() }] }) })).status === 401);
 const shifts = await call('GET', '/attendance/shifts', hr);
 ok('shifts', shifts.data?.length >= 1);
-const csvImp = await call('POST', '/attendance/import', hr, { csv: 'employeeCode,date,status,inTime,outTime\nEMP013,2026-09-18,PRESENT,09:30,18:30\nEMP999,2026-09-18,PRESENT,,' });
+const csvImp = await call('POST', '/attendance/import', hr, { csv: `employeeCode,date,status,inTime,outTime\nEMP013,${today},PRESENT,09:30,18:30\nEMP999,${today},PRESENT,,` });
 ok('attendance import 1 ok 1 fail', csvImp.data?.imported === 1 && csvImp.data?.failed === 1, csvImp.data);
 
 // ---- payroll ----
 const runs = await call('GET', '/payroll/runs', pay);
-ok('5 processed payroll runs', runs.data?.length === 5 && runs.data.every((r) => r.status === 'PAID'), runs.data?.map((r) => r.status));
+ok(`${PAID_MONTHS} processed payroll runs`, runs.data?.length === PAID_MONTHS && runs.data.every((r) => r.status === 'PAID'), runs.data?.map((r) => r.status));
 const runDetail = await call('GET', `/payroll/runs/${runs.data[0].id}`, pay);
 ok('run detail has slips', runDetail.data?.slips?.length >= 13, runDetail.data?.slips?.length);
 const s5 = runDetail.data.slips.find((s) => s.employee.employeeCode === 'EMP005');
 ok('EMP005 slip: earnings/deductions reconcile', s5 && Math.abs(s5.grossPay - s5.totalDeductions - s5.netPay) < 1 && s5.earnings.length >= 3, s5);
-ok('PF capped 1800, PT 200 (MH)', s5?.pfEmployee === 1800 && s5?.professionalTax === 200, { pf: s5?.pfEmployee, pt: s5?.professionalTax });
+ok('PF at 12% of the wage ceiling, PT 200 (MH)', s5?.pfEmployee === Math.round(0.12 * pfCeiling(last)) && s5?.professionalTax === 200, { pf: s5?.pfEmployee, pt: s5?.professionalTax });
 const s13 = runDetail.data.slips.find((s) => s.employee.employeeCode === 'EMP013');
 ok('EMP013 (₹2.4L CTC) ESI applies, no TDS', s13?.esiEmployee > 0 && s13?.tds === 0, s13);
 const s6 = runDetail.data.slips.find((s) => s.employee.employeeCode === 'EMP006');
@@ -211,12 +239,12 @@ ok('loan EMI deducted', s12?.loanDeduction === 10000, s12?.loanDeduction);
 const s1 = runDetail.data.slips.find((s) => s.employee.employeeCode === 'EMP001');
 ok('CEO pays TDS', s1?.tds > 0, s1?.tds);
 const mySlips = await call('GET', '/payroll/payslips/me', emp);
-ok('employee sees own payslips', mySlips.data?.length === 5, mySlips.data?.length);
+ok('employee sees own payslips', mySlips.data?.length === PAID_MONTHS, mySlips.data?.length);
 const pdf = await fetch(`${BASE}/payroll/payslips/${mySlips.data[0].id}/pdf`, { headers: { authorization: `Bearer ${emp}` } });
 const pdfBuf = Buffer.from(await pdf.arrayBuffer());
 ok('payslip PDF', pdf.status === 200 && pdfBuf.slice(0, 4).toString() === '%PDF' && pdfBuf.length > 2000, pdf.status);
 ok('other employee slip forbidden', (await call('GET', `/payroll/payslips/${s1.id}`, emp)).status === 403);
-const prevw = await call('GET', '/payroll/preview?employeeId=' + s5.employeeId + '&month=9&year=2026', pay);
+const prevw = await call('GET', '/payroll/preview?employeeId=' + s5.employeeId + `&month=${cur.m}&year=${cur.y}`, pay);
 ok('payroll preview current month', prevw.status === 200 && prevw.data.grossPay > 0, prevw.data);
 const comps = await call('GET', '/payroll/components', pay);
 ok('components incl statutory', comps.data?.some((c) => c.abbr === 'PF' && c.isStatutory));
@@ -227,18 +255,18 @@ const badStruct = await call('POST', '/payroll/structures', pay, { name: 'Bad', 
 ok('bad formula rejected', badStruct.status === 400, badStruct.data);
 const badStruct2 = await call('POST', '/payroll/structures', pay, { name: 'Bad2', components: [{ componentId: comps.data.find((c) => c.abbr === 'BASIC').id, formula: 'NOPE * 2' }] });
 ok('unknown variable rejected', badStruct2.status === 400 && /Unknown variable/.test(JSON.stringify(badStruct2.data)));
-const q24 = await call('GET', '/payroll/reports/ecr?month=8&year=2026&format=json', pay);
+const q24 = await call('GET', `/payroll/reports/ecr?month=${last.m}&year=${last.y}&format=json`, pay);
 ok('ECR json', q24.data?.rows?.length >= 12 && q24.data.text.includes('#~#'), q24.data?.rows?.length);
-const ecrTxt = await fetch(`${BASE}/payroll/reports/ecr?month=8&year=2026`, { headers: { authorization: `Bearer ${pay}` } });
+const ecrTxt = await fetch(`${BASE}/payroll/reports/ecr?month=${last.m}&year=${last.y}`, { headers: { authorization: `Bearer ${pay}` } });
 ok('ECR txt download', (await ecrTxt.text()).split('\n').length >= 12);
-ok('ESI report', (await call('GET', '/payroll/reports/esi?month=8&year=2026&format=json', pay)).data?.rows?.length >= 1);
-ok('PT report', (await call('GET', '/payroll/reports/pt?month=8&year=2026&format=json', pay)).data?.total > 0);
-const bank = await call('GET', '/payroll/reports/bank-advice?month=8&year=2026&format=json', pay);
+ok('ESI report', (await call('GET', `/payroll/reports/esi?month=${last.m}&year=${last.y}&format=json`, pay)).data?.rows?.length >= 1);
+ok('PT report', (await call('GET', `/payroll/reports/pt?month=${last.m}&year=${last.y}&format=json`, pay)).data?.total > 0);
+const bank = await call('GET', `/payroll/reports/bank-advice?month=${last.m}&year=${last.y}&format=json`, pay);
 ok('bank advice has accounts', bank.data?.rows?.length >= 12 && bank.data.rows[0].account_number.length >= 8 && bank.data.missingBankDetails.length <= 1, bank.data?.missingBankDetails);
-ok('salary register', (await call('GET', '/payroll/reports/register?month=8&year=2026&format=json', pay)).data?.rows?.length >= 12);
-ok('24Q extract', (await call('GET', '/payroll/reports/24q?fy=2026&quarter=1&format=json', pay)).data?.totalTds > 0);
-ok('bonus report', (await call('GET', '/payroll/reports/bonus?fy=2026&rate=8.33&format=json', pay)).status === 200);
-const f16 = await fetch(`${BASE}/payroll/tax/form16?fy=2026`, { headers: { authorization: `Bearer ${emp}` } });
+ok('salary register', (await call('GET', `/payroll/reports/register?month=${last.m}&year=${last.y}&format=json`, pay)).data?.rows?.length >= 12);
+ok('24Q extract', (await call('GET', `/payroll/reports/24q?fy=${fyOf(last)}&quarter=${Math.floor(((last.m + 8) % 12) / 3) + 1}&format=json`, pay)).data?.totalTds > 0);
+ok('bonus report', (await call('GET', `/payroll/reports/bonus?fy=${fyOf(last)}&rate=8.33&format=json`, pay)).status === 200);
+const f16 = await fetch(`${BASE}/payroll/tax/form16?fy=${fyOf(last)}`, { headers: { authorization: `Bearer ${emp}` } });
 ok('Form 16 summary PDF', f16.status === 200 && Buffer.from(await f16.arrayBuffer()).slice(0, 4).toString() === '%PDF', f16.status);
 ok('default components include exempt allowances (Rules 2026)', ['CEA', 'HOSTEL', 'MEAL'].every((a) => comps.data?.find((c) => c.abbr === a)?.exemptionCode), comps.data?.map((c) => [c.abbr, c.exemptionCode]));
 ok('invalid exemption code rejected', (await call('POST', '/payroll/components', pay, { name: 'Odd', abbr: 'ODD', type: 'EARNING', exemptionCode: 'FUEL' })).status === 400);
@@ -251,19 +279,19 @@ ok('approved declaration locked', (await call('PUT', '/payroll/tax/declaration/m
 const cats = await call('GET', '/payroll/tax/categories', emp);
 ok('tax categories', cats.data?.length >= 6);
 const loanList = await call('GET', '/payroll/loans', pay);
-ok('loans', loanList.data?.length === 1 && loanList.data[0].paidInstallments === 5 && Number(loanList.data[0].outstanding) === 10000, loanList.data?.[0]);
-// new run for Sept -> generate; approve; then locked
-const sepRun = await call('POST', '/payroll/runs', pay, { month: 9, year: 2026 });
-ok('create Sept run', sepRun.status === 201 && sepRun.data.generated >= 13, { s: sepRun.status, g: sepRun.data?.generated, sk: sepRun.data?.skipped });
-const sepId = sepRun.data?.run?.id;
-const sepSkipped = (sepRun.data?.skipped || []).map((x) => `${x.employeeCode}:${x.reason}`);
-console.log('  (Sept skipped:', sepSkipped.join(' | ') || 'none', ')');
-ok('duplicate run just regenerates', (await call('POST', '/payroll/runs', pay, { month: 9, year: 2026 })).data?.run?.id === sepId);
-ok('cannot mark paid before approve', (await call('POST', `/payroll/runs/${sepId}/paid`, pay)).status === 400);
-ok('approve Sept', (await call('POST', `/payroll/runs/${sepId}/approve`, pay)).data?.status === 'APPROVED');
-ok('leave apply blocked after payroll approval', (await call('POST', '/leave/applications', emp, { leaveTypeId: clType.id, fromDate: '2026-09-28', toDate: '2026-09-28' })).status === 400);
-ok('reopen Sept', (await call('POST', `/payroll/runs/${sepId}/reopen`, pay)).data?.status === 'GENERATED');
-ok('delete Sept run', (await call('DELETE', `/payroll/runs/${sepId}`, pay)).data?.ok === true);
+ok('loans (6 EMIs, all recovered in the paid months)', loanList.data?.length === 1 && loanList.data[0].paidInstallments === 6 && Number(loanList.data[0].outstanding) === 0, loanList.data?.[0]);
+// new run for the current month -> generate; approve; then locked
+const curRun = await call('POST', '/payroll/runs', pay, { month: cur.m, year: cur.y });
+ok('create current-month run', curRun.status === 201 && curRun.data.generated >= 13, { s: curRun.status, g: curRun.data?.generated, sk: curRun.data?.skipped });
+const curId = curRun.data?.run?.id;
+const curSkipped = (curRun.data?.skipped || []).map((x) => `${x.employeeCode}:${x.reason}`);
+console.log('  (current month skipped:', curSkipped.join(' | ') || 'none', ')');
+ok('duplicate run just regenerates', (await call('POST', '/payroll/runs', pay, { month: cur.m, year: cur.y })).data?.run?.id === curId);
+ok('cannot mark paid before approve', (await call('POST', `/payroll/runs/${curId}/paid`, pay)).status === 400);
+ok('approve current month', (await call('POST', `/payroll/runs/${curId}/approve`, pay)).data?.status === 'APPROVED');
+ok('leave apply blocked after payroll approval', (await call('POST', '/leave/applications', emp, { leaveTypeId: clType.id, fromDate: day(cur, 28), toDate: day(cur, 28) })).status === 400);
+ok('reopen current month', (await call('POST', `/payroll/runs/${curId}/reopen`, pay)).data?.status === 'GENERATED');
+ok('delete current-month run', (await call('DELETE', `/payroll/runs/${curId}`, pay)).data?.ok === true);
 
 // ---- lifecycle / performance / expenses / helpdesk / recruitment ----
 ok('onboarding list (new joiners only open)', (await call('GET', '/lifecycle/onboarding', hr)).data?.length >= 2);
@@ -298,7 +326,7 @@ ok('funnel', (await call('GET', '/recruitment/funnel', hr)).data?.APPLIED >= 1);
 
 // ---- dashboards / reports / AI / notifications ----
 const dAdmin = await call('GET', '/reports/dashboard/admin', hr);
-ok('admin dashboard', dAdmin.data?.headcount?.active >= 15 && dAdmin.data.payrollTrend.length === 5, dAdmin.data?.headcount);
+ok('admin dashboard', dAdmin.data?.headcount?.active >= 15 && dAdmin.data.payrollTrend.length === PAID_MONTHS, dAdmin.data?.headcount);
 const dMgr = await call('GET', '/reports/dashboard/manager', mgr);
 ok('manager dashboard', dMgr.data?.teamSize === 4, dMgr.data?.teamSize);
 const dEss = await call('GET', '/reports/dashboard/ess', emp);
@@ -446,7 +474,7 @@ const upcomingTds = cal.data.items.find((i) => i.key.startsWith('tds-') && i.sta
 ok('an upcoming TDS deposit exists', !!upcomingTds, cal.data.items.map((i) => i.key));
 ok('mark TDS deposited', (await call('PUT', `/compliance/filings/${upcomingTds.key}`, pay, { reference: 'CIN12345' })).data?.reference === 'CIN12345');
 ok('marked item is done', (await call('GET', '/compliance/calendar', pay)).data.items.find((i) => i.key === upcomingTds.key)?.status === 'DONE');
-ok('wage items cannot be marked by hand', (await call('PUT', `/compliance/filings/wages-2026-9`, pay, {})).status === 400);
+ok('wage items cannot be marked by hand', (await call('PUT', `/compliance/filings/wages-${cur.y}-${cur.m}`, pay, {})).status === 400);
 ok('unmark filing', (await call('DELETE', `/compliance/filings/${upcomingTds.key}`, pay)).data?.ok === true);
 ok('employee cannot see compliance', (await call('GET', '/compliance/calendar', emp)).status === 403);
 ok('auditor reads but cannot mark', (await call('GET', '/compliance/calendar', aud)).status === 200 && (await call('PUT', `/compliance/filings/${upcomingTds.key}`, aud, {})).status === 403);

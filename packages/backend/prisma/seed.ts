@@ -85,6 +85,10 @@ async function main() {
 
   const today = todayIST();
   const fyStart = fiscalYearStartYear(today);
+  // Payroll history: the last PAID_MONTHS completed months, whatever today's date (so the demo and the e2e suite
+  // look the same in April as in March).
+  const PAID_MONTHS = 6;
+  const historyStart = utcDate(today.getUTCFullYear(), today.getUTCMonth() + 1 - PAID_MONTHS, 1);
   const fy = fiscalYearRange(fyStart);
 
   await app.get(CompanySetupService).ensureGlobalMasterData();
@@ -174,14 +178,14 @@ async function main() {
     await setup.assign(admin, { employeeId: emp.id, salaryStructureId: structure.id, fromDate: isoDate(from), base: p.ctc, taxRegime: p.regime || 'NEW' });
   }
   // a mid-year revision for one employee (exercises split-segment payroll)
-  const revisedFrom = addDays(fy.start, 45);
+  const revisedFrom = addDays(historyStart, 45);
   const revised = PEOPLE.find((p) => p.code === 'EMP005')!;
   await setup.assign(admin, { employeeId: ids.get('EMP005')!, salaryStructureId: structure.id, fromDate: isoDate(revisedFrom), base: Math.round(revised.ctc * 1.12), taxRegime: 'OLD' });
   log('salary structure assignments (+1 mid-year revision)');
 
   // ---- attendance history ---------------------------------------------------
   const cal = app.get(CalendarService);
-  const histFrom = utcDate(fyStart, 4, 1);
+  const histFrom = historyStart;
   const yesterday = addDays(today, -1);
   const shift = await prisma.shiftType.findFirstOrThrow({ where: { companyId: company.id } });
   const nw = await cal.nonWorkingDays(company.id, 'Maharashtra', histFrom, yesterday);
@@ -209,16 +213,19 @@ async function main() {
     }
   }
   await prisma.attendance.createMany({ data: rows, skipDuplicates: true });
-  // keep leave balances consistent with the casual leave shown in attendance history
+  // keep leave balances consistent with the casual leave shown in attendance history (leave years are calendar
+  // years, so only this year's days count against this year's allocation)
   const clDays = new Map<string, number>();
-  rows.filter((r) => r.status === 'ON_LEAVE').forEach((r) => clDays.set(r.employeeId, (clDays.get(r.employeeId) || 0) + 1));
+  rows
+    .filter((r) => r.status === 'ON_LEAVE' && (r.attendanceDate as Date).getUTCFullYear() === today.getUTCFullYear())
+    .forEach((r) => clDays.set(r.employeeId, (clDays.get(r.employeeId) || 0) + 1));
   for (const [employeeId, days] of clDays) {
     await prisma.leaveAllocation.updateMany({ where: { employeeId, leaveTypeId: casual.id, fromDate: utcDate(today.getUTCFullYear(), 1, 1) }, data: { usedLeaves: days } });
     await prisma.leaveLedgerEntry.create({ data: { employeeId, leaveTypeId: casual.id, transactionType: 'LEAVE', leaves: -days, fromDate: histFrom } });
   }
   log(`attendance: ${rows.length} daily records since ${isoDate(histFrom)}`);
 
-  // ---- payroll: every completed month of the FY ------------------------------
+  // ---- payroll: the last PAID_MONTHS completed months --------------------------
   const payroll = app.get(PayrollService);
   const payrollRuns = app.get(PayrollRunService);
   // employees' first tax declaration (old regime) — used by TDS projection and Form 16
@@ -237,27 +244,26 @@ async function main() {
   await declFor('EMP004', 35000, 'OLD');
 
   const loanTarget = ids.get('EMP012')!;
-  await setup.createLoan(company.id, { employeeId: loanTarget, loanType: 'ADVANCE', principal: 60000, totalInstallments: 6, startDate: isoDate(utcDate(fyStart, 4, 1)), reason: 'Salary advance' });
+  await setup.createLoan(company.id, { employeeId: loanTarget, loanType: 'ADVANCE', principal: 60000, totalInstallments: 6, startDate: isoDate(historyStart), reason: 'Salary advance' });
   const bonusComp = await prisma.salaryComponent.findFirstOrThrow({ where: { companyId: company.id, abbr: 'BONUS' } });
 
   let runs = 0;
-  for (let m = 4; m <= 12 + 3; m++) {
-    const month = ((m - 1) % 12) + 1;
-    const year = m > 12 ? fyStart + 1 : fyStart;
-    const start = utcDate(year, month, 1);
-    if (addDays(utcDate(year, month + 1, 1), -1) >= today) break; // only completed months
-    if (month === 8) await setup.createAdditional(company.id, { employeeId: ids.get('EMP005')!, salaryComponentId: bonusComp.id, amount: 50000, payrollDate: isoDate(addDays(start, 10)), reason: 'Spot award' });
+  for (let k = PAID_MONTHS; k >= 1; k--) {
+    const start = utcDate(today.getUTCFullYear(), today.getUTCMonth() + 1 - k, 1);
+    const year = start.getUTCFullYear();
+    const month = start.getUTCMonth() + 1;
+    if (k === 2) await setup.createAdditional(company.id, { employeeId: ids.get('EMP005')!, salaryComponentId: bonusComp.id, amount: 50000, payrollDate: isoDate(addDays(start, 10)), reason: 'Spot award' });
     const res = await payrollRuns.createRun(admin, month, year, {});
     await payrollRuns.approve(admin, res.run.id);
     await payrollRuns.markPaid(admin, res.run.id);
     runs++;
     // demo: statutory filings for paid months were made on time
-    for (const i of monthlyDueDates(year, month, { pf: true, esi: true, tdsForms: salaryTdsLaw(fyStart) }).filter((x) => x.category !== 'WAGES')) {
+    for (const i of monthlyDueDates(year, month, { pf: true, esi: true, tdsForms: salaryTdsLaw(fiscalYearStartYear(start)) }).filter((x) => x.category !== 'WAGES')) {
       await prisma.complianceFiling.create({ data: { companyId: company.id, key: i.key, reference: `CHL${year}${String(month).padStart(2, '0')}${i.category}`, filedById: admin.userId, filedAt: new Date(`${i.dueDate}T06:00:00Z`) } });
     }
   }
   for (const fy of [fyStart - 1, fyStart]) {
-    for (const i of annualDueDates(fy, salaryTdsLaw(fy)).filter((x) => new Date(`${x.dueDate}T00:00:00Z`) < today && x.category === 'TAX')) {
+    for (const i of annualDueDates(fy, salaryTdsLaw(fy)).filter((x) => new Date(`${x.dueDate}T00:00:00Z`) < today && x.category !== 'WAGES')) {
       await prisma.complianceFiling.create({ data: { companyId: company.id, key: i.key, reference: `ACK-${i.key.toUpperCase()}`, filedById: admin.userId, filedAt: new Date(`${i.dueDate}T06:00:00Z`) } });
     }
   }
