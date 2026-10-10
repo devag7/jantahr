@@ -1,0 +1,60 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "regions": [
+    "bom1"
+  ],
+  "services": {
+    "backend": {
+      "root": "packages/backend",
+      "framework": "nestjs",
+      "installCommand": "cd ../.. && pnpm install --frozen-lockfile",
+      "buildCommand": "pnpm vercel-build"
+    },
+    "frontend": {
+      "root": "packages/frontend",
+      "framework": "nextjs",
+      "installCommand": "npm ci",
+      "buildCommand": "npm run build"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": {
+        "service": "backend"
+      }
+    },
+    {
+      "source": "/(.*)",
+      "destination": {
+        "service": "frontend"
+      }
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/internal/jobs/attendance-finalise",
+      "schedule": "40 18 * * *"
+    },
+    {
+      "path": "/api/internal/jobs/privacy-housekeeping",
+      "schedule": "15 21 * * *"
+    },
+    {
+      "path": "/api/internal/jobs/billing-sweep",
+      "schedule": "30 21 * * *"
+    },
+    {
+      "path": "/api/internal/jobs/billing-inbox",
+      "schedule": "0 22 * * *"
+    },
+    {
+      "path": "/api/internal/jobs/leave-accrual",
+      "schedule": "30 0 1 * *"
+    },
+    {
+      "path": "/api/internal/jobs/leave-rollover",
+      "schedule": "15 0 1 1 *"
+    }
+  ]
+}

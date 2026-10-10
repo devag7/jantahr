@@ -20,6 +20,11 @@ async function bootstrap() {
   // selfie data-URLs and CSV imports; keep the raw bytes for webhook signature checks
   app.use(json({ limit: '6mb', verify: (req: IncomingMessage & { rawBody?: Buffer }, _res, buf) => { req.rawBody = buf; } }));
 
+  // Path prefix for every route. On Vercel the API shares a domain with the web app and is routed at /api (see the
+  // root vercel.json), and it receives the original path, so it must mount there. Elsewhere it stays at the root.
+  const prefix = (process.env.API_PREFIX ?? (process.env.VERCEL ? 'api' : '')).replace(/^\/+|\/+$/g, '');
+  if (prefix) app.setGlobalPrefix(prefix);
+
   const origins = (process.env.CORS_ORIGINS || process.env.FRONTEND_URL || 'http://localhost:3000').split(',').map((s) => s.trim());
   app.enableCors({ origin: origins, credentials: true, methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'], exposedHeaders: ['Content-Disposition'] });
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true, transformOptions: { enableImplicitConversion: false } }));
@@ -27,11 +32,11 @@ async function bootstrap() {
 
   if (process.env.NODE_ENV !== 'production') {
     const config = new DocumentBuilder().setTitle('JantaHR API').setDescription('India-first HRMS').setVersion('1.0').addBearerAuth().build();
-    SwaggerModule.setup('docs', app, SwaggerModule.createDocument(app, config));
+    SwaggerModule.setup('docs', app, SwaggerModule.createDocument(app, config), { useGlobalPrefix: true });
   }
 
   const port = Number(process.env.PORT || 3002);
   await app.listen(port);
-  logger.log(`API listening on http://localhost:${port}${process.env.NODE_ENV !== 'production' ? ` (docs at /docs)` : ''}`);
+  logger.log(`API listening on http://localhost:${port}${prefix ? `/${prefix}` : ''}${process.env.NODE_ENV !== 'production' ? ' (docs at /docs)' : ''}`);
 }
 bootstrap();

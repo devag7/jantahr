@@ -5,15 +5,16 @@ trial, per-seat billing through Razorpay and GST invoices. Everything below fits
 for a pilot; move to paid tiers before real payroll (backups, no project pausing, longer function limits).
 
 ```
-browser ──► Vercel: web (Next.js)          packages/frontend
-   │    └─► Vercel: API (NestJS, bom1)     packages/backend ──► Supabase Postgres (pooler)
+browser ──► Vercel project (one domain, root vercel.json)
+   │    ├─► /       web service (Next.js)       packages/frontend
+   │    └─► /api/*  API service (NestJS, bom1)  packages/backend ──► Supabase Postgres (pooler)
    │                                                        ├─► Supabase Storage (S3 protocol)
    │                                                        └─► Supabase Realtime (broadcast pings)
    ├──────► Supabase Storage  (direct uploads and downloads with presigned URLs)
    ├──────► Supabase Auth     (all sign-in: password, email link, Google, TOTP; the API verifies its tokens)
    └──────► Supabase Realtime (notification badge)
 Supabase pg_cron ──► Edge Function jobs-dispatch ──► API /internal/jobs/*
-Razorpay ──► API /billing/webhooks/razorpay  (or Edge Function billing-webhook)
+Razorpay ──► API /api/billing/webhooks/razorpay  (or Edge Function billing-webhook)
 ```
 
 ## 1. Supabase project
@@ -28,7 +29,7 @@ Razorpay ──► API /billing/webhooks/razorpay  (or Edge Function billing-web
 4. **Storage → Settings → S3 connection**: enable it and create an access key pair. The API creates the private
    `jantahr` bucket at first boot (`STORAGE_AUTO_CREATE_BUCKET=true`).
 5. **Authentication** (Supabase Auth is the only sign-in: passwords, sessions, email links, Google, TOTP)
-   - *URL configuration*: Site URL = the web URL; Redirect URLs: `https://<web>/auth/callback`.
+   - *URL configuration*: Site URL = the site URL; Redirect URLs: `https://<site>/auth/callback`.
    - *Policies*: minimum password length 8. *Multi-factor*: TOTP enabled (the default).
    - *Providers → Email*: keep "Confirm email" on, so a new workspace owner proves their address before the company
      is created.
@@ -42,19 +43,29 @@ Razorpay ──► API /billing/webhooks/razorpay  (or Edge Function billing-web
 6. **Scheduled jobs** (free tier friendly):
    ```bash
    supabase functions deploy jobs-dispatch --no-verify-jwt
-   supabase secrets set JANTAHR_API_URL=https://<api> CRON_SECRET=<same as API> JOBS_DISPATCH_SECRET=<random 48 chars>
+   supabase secrets set JANTAHR_API_URL=https://<site>/api CRON_SECRET=<same as API> JOBS_DISPATCH_SECRET=<random 48 chars>
    ```
    Then in the SQL editor create the two Vault secrets named at the top of `supabase/sql/cron.sql` and run the file.
    pg_cron then drives attendance finalisation, leave accrual and rollover, privacy housekeeping, the billing sweep and
    the Razorpay inbox (every 10 minutes).
 
-## 2. Vercel projects
+## 2. Vercel project
 
-Create two projects from the same repository.
+One Vercel project serves both applications on one domain, using [Vercel Services](https://vercel.com/docs/services)
+(beta). The root `vercel.json` defines them:
 
-**API**: root directory `packages/backend`. `vercel.json` sets the NestJS framework, the Mumbai region (`bom1`, next
-to the database) and daily Vercel Cron jobs. The build runs `prisma generate`, applies migrations through
-`DIRECT_URL` and compiles.
+| Service | Folder | Public path | Notes |
+|---|---|---|---|
+| `frontend` | `packages/frontend` | `/` (everything else) | Next.js web app |
+| `backend` | `packages/backend` | `/api/*` | NestJS API in Mumbai (`bom1`). Its build runs `prisma generate`, applies migrations through `DIRECT_URL` and compiles |
+
+A service receives the original request path, so on Vercel the API mounts every route under `/api` (it does this by
+itself when the `VERCEL` variable is present; `API_PREFIX` overrides it). The browser calls `/api/...` on the same
+domain, so there is no cross-origin setup and no service binding: nothing calls another service from server code.
+The six daily jobs in `vercel.json` call `/api/internal/jobs/*` with `CRON_SECRET`.
+
+Import the repository with **Root Directory** `./` and the **Services** preset, then add these variables (they are
+shared by both services; the web app only ever reads the public ones):
 
 | Variable | Value |
 |---|---|
@@ -63,8 +74,7 @@ to the database) and daily Vercel Cron jobs. The build runs `prisma generate`, a
 | `DATABASE_URL`, `DIRECT_URL` | from step 1.2 |
 | `JWT_SECRET`, `ENCRYPTION_KEY` | 48+ random characters each (`JWT_SECRET` only signs internal HMACs; sessions are Supabase's). **Back up `ENCRYPTION_KEY`**: PAN, Aadhaar and bank numbers cannot be decrypted without it |
 | `CRON_SECRET` | 32+ random characters; Vercel Cron sends it automatically as a bearer token |
-| `FRONTEND_URL`, `CORS_ORIGINS` | the web URL |
-| `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY` | from step 1.3; required, the API verifies every request against Supabase Auth and administers employee sign-ins with the secret key |
+| `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY` | from step 1.3; required, the API verifies every request against Supabase Auth and administers employee sign-ins with the secret key. The web app reads the URL and the publishable key from these same variables |
 | `STORAGE_DRIVER=s3`, `S3_ENDPOINT` | `https://<ref>.storage.supabase.co/storage/v1/s3` |
 | `S3_BUCKET`, `AWS_REGION` | `jantahr`, `ap-south-1` |
 | `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` | from step 1.4 |
@@ -74,15 +84,12 @@ to the database) and daily Vercel Cron jobs. The build runs `prisma generate`, a
 | `PLATFORM_ADMIN_EMAILS` | comma-separated operator logins for the tenant list (`/billing/platform/tenants`) |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `MAIL_FROM` | transactional mail |
 | `ANTHROPIC_API_KEY` | optional, for LLM answers in the assistant |
+| `NEXT_PUBLIC_SHOW_DEMO_LOGINS` | optional, `false` by default; `true` shows one-click demo sign-ins on the sign-in page |
 
-**Web**: root directory `packages/frontend`.
-
-| Variable | Value |
-|---|---|
-| `NEXT_PUBLIC_API_URL` | the API URL |
-| `NEXT_PUBLIC_EDITION` | `cloud` (turns on the marketing site, pricing and billing pages) |
-| `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | from step 1.3 (both are public by design) |
-| `NEXT_PUBLIC_SHOW_DEMO_LOGINS` | `false` |
+The web app needs no variables of its own: on Vercel it defaults to `/api` for the API and takes the edition, the
+Supabase URL and the publishable key from the variables above (`next.config.mjs`). Set `NEXT_PUBLIC_API_URL` only when
+the API lives on a different origin, for example two separate Vercel projects or the mobile app's `EXPO_PUBLIC_API_URL`,
+which is `https://<site>/api`.
 
 ### Vercel limits and how JantaHR handles them
 
@@ -108,7 +115,7 @@ to the database) and daily Vercel Cron jobs. The build runs `prisma generate`, a
    `RAZORPAY_PLAN_IDS={"STANDARD_MONTHLY":"plan_…","STANDARD_ANNUAL":"plan_…","PROFESSIONAL_MONTHLY":"plan_…","PROFESSIONAL_ANNUAL":"plan_…"}`
    Prices live in `packages/backend/src/modules/billing/plans.ts`; after changing them run `pnpm --filter jantahr-backend plans:sync` so the
    marketing site shows the same numbers, and create new Razorpay plans.
-2. **Webhook**: URL `https://<api>/billing/webhooks/razorpay` (or the `billing-webhook` Edge Function, which stores the
+2. **Webhook**: URL `https://<site>/api/billing/webhooks/razorpay` (or the `billing-webhook` Edge Function, which stores the
    event in Postgres even when the API is cold). Events: `subscription.activated`, `subscription.charged`,
    `subscription.resumed`, `subscription.pending`, `subscription.halted`, `subscription.cancelled`,
    `subscription.completed`, `subscription.updated`. Secret = `RAZORPAY_WEBHOOK_SECRET`.
@@ -119,7 +126,7 @@ to the database) and daily Vercel Cron jobs. The build runs `prisma generate`, a
 
 - Run `pnpm --filter jantahr-backend doctor` with the API's environment: it checks every setting above and prints
   the fix for anything missing.
-- `GET https://<api>/health` returns ok; `GET /meta/runtime` shows `"edition":"cloud"` and `"directUploads":true`.
+- `GET https://<site>/api/health` returns ok; `GET /api/meta/runtime` shows `"edition":"cloud"` and `"directUploads":true`.
 - Sign up a company: it starts on the Professional trial with a countdown banner.
 - Upload a document larger than 4.5 MB under *My work → Profile → Documents* and download it again.
 - A notification (for example a leave request) updates the bell without a page refresh.
