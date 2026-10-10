@@ -35,7 +35,7 @@ export class SupabaseService implements OnModuleInit {
     this.topicSecret = config.get<string>('JWT_SECRET') || 'jantahr';
   }
 
-  /** Re-apply RLS lock-down + Realtime policy at boot (idempotent) so tables from later migrations are covered. */
+  /** Re-apply the RLS lock-down and privilege revokes at boot (idempotent) so tables from later migrations are covered. */
   async onModuleInit() {
     if (process.env.SUPABASE_HARDEN_ON_BOOT === 'false') return;
     try {
