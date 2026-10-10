@@ -48,7 +48,7 @@ export default function SelfHostingPage() {
                 </li>
               ))}
             </ol>
-            <p className="mt-10 text-body text-on-dark-muted">Needs Docker with about 8 GB of free disk. Back up <code className="text-white">JANTAHR_ENCRYPTION_KEY</code>: without it, encrypted PAN, Aadhaar and bank numbers cannot be read. The full guide is in <code className="text-white">deploy/self-hosted/README.md</code>.</p>
+            <p className="mt-10 text-body text-on-dark-muted">Needs Docker with about 15 GB of free disk. Back up <code className="text-white">JANTAHR_ENCRYPTION_KEY</code>: without it, encrypted PAN, Aadhaar and bank numbers cannot be read. The full guide is in <code className="text-white">deploy/self-hosted/README.md</code>.</p>
           </div>
         </section>
       </main>

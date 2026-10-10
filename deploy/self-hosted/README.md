@@ -18,7 +18,9 @@ and web app.
 ## Requirements
 
 - Docker Engine 24+ with the Compose plugin, 4 vCPU / 8 GB RAM for up to about 500 employees.
-- About 8 GB of free disk for images, plus room for data and uploaded files.
+- About 15 GB of free disk for the Supabase and JantaHR images and the first build, plus room for data and uploaded files.
+- Ports 5432 and 6543 free on the host (the Supabase pooler publishes them). If a local PostgreSQL already uses 5432,
+  set `POSTGRES_PORT` in `.env` to another port before `./jantahr.sh up`.
 - A domain and TLS in front of ports 3000 (web), 3002 (API) and 8000 (Supabase gateway) for production.
 
 ## Install
