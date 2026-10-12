@@ -7,8 +7,8 @@
     "backend": {
       "root": "packages/backend",
       "framework": "nestjs",
-      "installCommand": "cd ../.. && pnpm install --frozen-lockfile",
-      "buildCommand": "pnpm vercel-build"
+      "installCommand": "npm ci",
+      "buildCommand": "npm run vercel-build"
     },
     "frontend": {
       "root": "packages/frontend",

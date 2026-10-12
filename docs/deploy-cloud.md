@@ -64,6 +64,11 @@ itself when the `VERCEL` variable is present; `API_PREFIX` overrides it). The br
 domain, so there is no cross-origin setup and no service binding: nothing calls another service from server code.
 The six daily jobs in `vercel.json` call `/api/internal/jobs/*` with `CRON_SECRET`.
 
+Each service installs with `npm ci` from the lockfile in its own folder. A service's function only contains files from
+its folder, and pnpm keeps the real packages in the repository root, so the API has a `package-lock.json` beside the
+workspace's `pnpm-lock.yaml`. After changing API dependencies, refresh it with
+`npm install --package-lock-only --ignore-scripts` in `packages/backend`.
+
 Import the repository with **Root Directory** `./` and the **Services** preset, then add these variables (they are
 shared by both services; the web app only ever reads the public ones):
 
