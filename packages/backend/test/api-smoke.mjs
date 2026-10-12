@@ -295,6 +295,11 @@ ok('reopen current month', (await call('POST', `/payroll/runs/${curId}/reopen`, 
 ok('delete current-month run', (await call('DELETE', `/payroll/runs/${curId}`, pay)).data?.ok === true);
 
 // ---- lifecycle / performance / expenses / helpdesk / recruitment ----
+// read-only roles can open every screen their menu links to; bank advice (full account numbers) stays with payroll staff
+ok('auditor reads the recruitment funnel and pending tax declarations', (await call('GET', '/recruitment/funnel', aud)).status === 200 && (await call('GET', '/payroll/tax/declarations?status=PENDING', aud)).status === 200);
+ok('auditor cannot approve a tax declaration or download bank advice', (await call('POST', '/payroll/tax/declarations/x/approve', aud)).status === 403 && (await call('GET', `/payroll/reports/bank-advice?month=${last.m}&year=${last.y}&format=json`, aud)).status === 403);
+const cyclesForAud = await call('GET', '/performance/cycles', aud);
+ok('auditor and payroll admin read an appraisal cycle summary', cyclesForAud.data?.length >= 1 && (await call('GET', `/performance/cycles/${cyclesForAud.data[0].id}/summary`, aud)).status === 200 && (await call('GET', `/performance/appraisals/cycle/${cyclesForAud.data[0].id}`, pay)).status === 200);
 ok('receipt download without a key is a 400, not a server error', (await call('GET', '/expenses/receipts/download', hr)).status === 400);
 ok('onboarding list (new joiners only open)', (await call('GET', '/lifecycle/onboarding', hr)).data?.length >= 2);
 const seps = await call('GET', '/lifecycle/separations', hr);

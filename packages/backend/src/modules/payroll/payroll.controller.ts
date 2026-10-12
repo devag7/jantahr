@@ -93,7 +93,7 @@ export class PayrollController {
   @Get('tax/declaration/me') myDeclaration(@CurrentUser() u: AuthUser, @Query('fy') fy?: string) { return this.tax.getMine(u, fy ? Number(fy) : undefined); }
   @Put('tax/declaration/me') saveDeclaration(@CurrentUser() u: AuthUser, @Body() dto: DeclarationDto) { return this.tax.saveMine(u, dto); }
   @Get('tax/compare') compare(@CurrentUser() u: AuthUser, @Query('fy') fy?: string) { return this.tax.compareRegimes(u, fy ? Number(fy) : undefined); }
-  @Roles(...PAYROLL_ROLES) @Get('tax/declarations') declarations(@CurrentUser() u: AuthUser, @Query('fy') fy?: string, @Query('status') status?: string) { return this.tax.list(u.companyId, fy ? Number(fy) : undefined, status); }
+  @Roles(...READ_ALL_ROLES) @Get('tax/declarations') declarations(@CurrentUser() u: AuthUser, @Query('fy') fy?: string, @Query('status') status?: string) { return this.tax.list(u.companyId, fy ? Number(fy) : undefined, status); }
   @Roles(...PAYROLL_ROLES) @Post('tax/declarations/:id/approve') approveDecl(@CurrentUser() u: AuthUser, @Param('id') id: string) { return this.tax.decide(u, id, true); }
   @Roles(...PAYROLL_ROLES) @Post('tax/declarations/:id/reject') rejectDecl(@CurrentUser() u: AuthUser, @Param('id') id: string) { return this.tax.decide(u, id, false); }
 

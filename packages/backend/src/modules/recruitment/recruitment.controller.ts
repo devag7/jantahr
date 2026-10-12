@@ -23,7 +23,7 @@ export class RecruitmentController {
 
   @Roles(...ADMIN_ROLES, ...READ_ALL_ROLES) @Get('applicants') applicants(@CurrentUser() u: AuthUser, @Query('jobId') jobId?: string, @Query('stage') stage?: string) { return this.service.applicants(u.companyId, jobId, stage); }
   @Roles(...ADMIN_ROLES) @Patch('applicants/:id/stage') stage(@CurrentUser() u: AuthUser, @Param('id') id: string, @Body() dto: StageDto) { return this.service.moveStage(u.companyId, id, dto); }
-  @Roles(...ADMIN_ROLES) @Get('funnel') funnel(@CurrentUser() u: AuthUser, @Query('jobId') jobId?: string) { return this.service.funnel(u.companyId, jobId); }
+  @Roles(...ADMIN_ROLES, ...READ_ALL_ROLES) @Get('funnel') funnel(@CurrentUser() u: AuthUser, @Query('jobId') jobId?: string) { return this.service.funnel(u.companyId, jobId); }
 
   @Roles(...ADMIN_ROLES)
   @Get('applicants/:id/resume')

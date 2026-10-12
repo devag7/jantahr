@@ -48,7 +48,7 @@ export default function PayrollPage() {
             { key: 'e', header: 'Employee', cell: (d) => `${d.employee?.firstName} ${d.employee?.lastName} (${d.employee?.employeeCode})` }, { key: 'r', header: 'Regime', cell: (d) => (d.taxRegime === 'NEW' ? 'New' : 'Old') },
             { key: 'a', header: 'Declared', cell: (d) => formatINR(d.totalDeclaredAmount), align: 'right' }, { key: 'rent', header: 'Rent / month', cell: (d) => (d.monthlyRent ? formatINR(d.monthlyRent) : '-'), align: 'right', hideOnMobile: true },
             { key: 'd', header: 'Sections', cell: (d) => <span className="text-fine text-muted-foreground">{d.details.map((x) => `${x.subCategory.name}: ${formatINR(x.declaredAmount)}`).join(' · ') || '-'}</span>, hideOnMobile: true },
-            { key: 'x', header: '', cell: (d) => <DecisionButtons subject={`${d.employee?.firstName}: ${formatINR(d.totalDeclaredAmount)} declared`} busy={decide.isPending} onApprove={() => decide.mutate({ id: d.id, action: 'approve' })} onReject={() => decide.mutate({ id: d.id, action: 'reject' })} /> },
+            ...(canRun ? [{ key: 'x', header: '', cell: (d: NonNullable<typeof decls.data>[number]) => <DecisionButtons subject={`${d.employee?.firstName}: ${formatINR(d.totalDeclaredAmount)} declared`} busy={decide.isPending} onApprove={() => decide.mutate({ id: d.id, action: 'approve' })} onReject={() => decide.mutate({ id: d.id, action: 'reject' })} /> }] : []),
           ]} />
         </TabsContent>
       </Tabs>

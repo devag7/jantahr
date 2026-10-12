@@ -13,15 +13,17 @@ import { MonthPicker } from '@/components/common/month-picker';
 import { PageHeader } from '@/components/common/page-header';
 import { ErrorState, LoadingBlock } from '@/components/common/states';
 import { fiscalYearOptions } from '@/components/payroll/fy';
+import { useAuth } from '@/hooks/auth/use-auth';
 import { formatINR, MONTH_SHORT } from '@/lib/format';
+import { PAYROLL } from '@/lib/permissions';
 import { payrollService } from '@/services/payroll/payroll.service';
 import type { StatutoryReport } from '@/types/payroll';
 
 interface EcrPreview { rows: unknown[]; warnings: string[]; totals: { wages: number; ee: number; eps: number; epf: number; edli: number; admin: number; members: number } }
 interface CsvPreview { rows: unknown[]; total?: number; missingBankDetails?: string[] }
 
-function useReport<T>(name: StatutoryReport, params: object) {
-  return useQuery({ queryKey: ['payroll', 'report', name, params], queryFn: () => payrollService.reportJson<T>(name, params), retry: false });
+function useReport<T>(name: StatutoryReport, params: object, enabled = true) {
+  return useQuery({ queryKey: ['payroll', 'report', name, params], queryFn: () => payrollService.reportJson<T>(name, params), retry: false, enabled });
 }
 
 function ReportCard({ title, description, children, action }: { title: string; description: string; children?: React.ReactNode; action: React.ReactNode }) {
@@ -44,7 +46,10 @@ export default function StatutoryPage() {
   const ecr = useReport<EcrPreview>('ecr', period);
   const esi = useReport<CsvPreview>('esi', period);
   const pt = useReport<CsvPreview>('pt', period);
-  const bank = useReport<CsvPreview>('bank-advice', period);
+  // bank advice lists full account numbers: payroll staff only, so an auditor is not shown the card at all
+  const { hasRole } = useAuth();
+  const canPay = hasRole(PAYROLL);
+  const bank = useReport<CsvPreview>('bank-advice', period, canPay);
 
   return (
     <>
@@ -61,9 +66,9 @@ export default function StatutoryPage() {
         <ReportCard title="Professional tax" description={`State-wise professional tax deducted in ${tag}.`} action={<DownloadButton variant="outline" onDownload={() => payrollService.downloadReport('pt', period, `PT_${tag}.csv`)}>Download CSV</DownloadButton>}>
           {pt.isLoading ? <LoadingBlock rows={1} /> : pt.error ? <ErrorState error={pt.error} /> : <p className="text-caption">{pt.data?.rows.length ?? 0} employee(s) · total <b>{formatINR(pt.data?.total ?? 0)}</b></p>}
         </ReportCard>
-        <ReportCard title="Bank advice (NEFT/IMPS)" description={`Net salary payments for ${tag}: approved payroll only.`} action={<DownloadButton variant="outline" onDownload={() => payrollService.downloadReport('bank-advice', period, `BankAdvice_${tag}.csv`)}>Download CSV</DownloadButton>}>
+        {canPay && <ReportCard title="Bank advice (NEFT/IMPS)" description={`Net salary payments for ${tag}: approved payroll only.`} action={<DownloadButton variant="outline" onDownload={() => payrollService.downloadReport('bank-advice', period, `BankAdvice_${tag}.csv`)}>Download CSV</DownloadButton>}>
           {bank.isLoading ? <LoadingBlock rows={1} /> : bank.error ? <ErrorState error={bank.error} /> : (<><p className="text-caption">{bank.data?.rows.length ?? 0} payment(s) · total <b>{formatINR(bank.data?.total ?? 0)}</b></p><Warn items={(bank.data?.missingBankDetails ?? []).map((n) => `Missing bank details: ${n}`)} /></>)}
-        </ReportCard>
+        </ReportCard>}
         <ReportCard title="Salary register" description={`Component-wise register of all salary slips for ${tag}.`} action={<DownloadButton variant="outline" onDownload={() => payrollService.downloadReport('register', period, `SalaryRegister_${tag}.csv`)}>Download CSV</DownloadButton>} />
         <ReportCard title={`${taxForms(fy).quarterlyReturn}: salary TDS extract`} description={`Quarterly deductee-wise TDS on salary for ${taxForms(fy).yearLabel.toLowerCase()} ${fy}-${String(fy + 1).slice(2)}. Validate in the RPU before filing.`} action={<DownloadButton variant="outline" onDownload={() => payrollService.downloadReport('24q', { fy: fy, quarter }, `${taxForms(fy).quarterlyReturn.replace(' ', '')}_${fy}_Q${quarter}.csv`)}>Download CSV</DownloadButton>}>
           <div className="flex gap-2"><NativeSelect aria-label="Financial year" value={fy} onChange={(e) => setFy(Number(e.target.value))}>{fys.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</NativeSelect><NativeSelect aria-label="Quarter" value={quarter} onChange={(e) => setQuarter(Number(e.target.value))} className="w-36">{[1, 2, 3, 4].map((q) => <option key={q} value={q}>Q{q}</option>)}</NativeSelect></div>
