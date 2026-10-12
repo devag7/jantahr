@@ -85,20 +85,18 @@ export class AttendanceService {
   /** Nightly: finalise yesterday (closes days that were provisional PRESENT with no check-out). */
   @Cron('10 0 * * *', { timeZone: 'Asia/Kolkata' })
   async nightlyFinaliseTick() {
-    if (inProcessJobs()) await this.nightlyFinalise();
+    if (inProcessJobs()) await this.nightlyFinalise().catch((e) => this.logger.error(`nightly attendance failed: ${errorMessage(e)}`));
   }
 
-  async nightlyFinalise() {
-    try {
-      const yesterday = addDays(todayIST(), -1);
-      const ran = await runExclusive(this.prisma, 'attendance-nightly-finalise', async () => {
-        const companies = await this.prisma.company.findMany({ select: { id: true } });
-        for (const c of companies) await this.processRange(c.id, yesterday, yesterday);
-      });
-      if (ran) this.logger.log(`Attendance finalised for ${isoDate(yesterday)}`);
-    } catch (e) {
-      this.logger.error(`nightly attendance failed: ${errorMessage(e)}`);
-    }
+  /** Returns whether this instance ran the job (false: another one holds the lock). Errors reach the caller. */
+  async nightlyFinalise(): Promise<boolean> {
+    const yesterday = addDays(todayIST(), -1);
+    const ran = await runExclusive(this.prisma, 'attendance-nightly-finalise', async () => {
+      const companies = await this.prisma.company.findMany({ select: { id: true } });
+      for (const c of companies) await this.processRange(c.id, yesterday, yesterday);
+    });
+    if (ran) this.logger.log(`Attendance finalised for ${isoDate(yesterday)}`);
+    return ran;
   }
 
   /** HR tool: mark working days with no record as ABSENT over a range (skips future dates, holidays, leave). */

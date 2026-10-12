@@ -7,6 +7,7 @@ import { addDays, diffDays, todayIST, utcDate } from '../../common/utils/dates';
 import { runExclusive } from '../../common/utils/cron-lock';
 import { PrismaService } from '../../prisma/prisma.service';
 
+import { errorMessage } from '../../common/utils/errors';
 type Db = PrismaService | Prisma.TransactionClient;
 
 const roundHalf = (n: number) => Math.round(n * 2) / 2;
@@ -150,20 +151,21 @@ export class LeaveAllocationService {
   // ---- scheduled ----
   @Cron('30 0 1 * *', { timeZone: 'Asia/Kolkata' })
   async monthlyAccrualTick() {
-    if (inProcessJobs()) await this.monthlyAccrualJob();
+    if (inProcessJobs()) await this.monthlyAccrualJob().catch((e) => this.logger.error(`accrual failed: ${errorMessage(e)}`));
   }
 
-  async monthlyAccrualJob() {
-    await runExclusive(this.prisma, 'leave-monthly-accrual', () => this.accrueEarnedLeaves()).catch((e) => this.logger.error(`accrual failed: ${e.message}`));
+  /** Scheduled jobs return whether this instance ran them and let errors reach the caller (timer or HTTP trigger). */
+  monthlyAccrualJob(): Promise<boolean> {
+    return runExclusive(this.prisma, 'leave-monthly-accrual', () => this.accrueEarnedLeaves());
   }
 
   @Cron('15 0 1 1 *', { timeZone: 'Asia/Kolkata' })
   async yearlyRolloverTick() {
-    if (inProcessJobs()) await this.yearlyRolloverJob();
+    if (inProcessJobs()) await this.yearlyRolloverJob().catch((e) => this.logger.error(`rollover failed: ${errorMessage(e)}`));
   }
 
-  async yearlyRolloverJob() {
-    await runExclusive(this.prisma, 'leave-yearly-rollover', () => this.rolloverYear(todayIST().getUTCFullYear())).catch((e) => this.logger.error(`rollover failed: ${e.message}`));
+  yearlyRolloverJob(): Promise<boolean> {
+    return runExclusive(this.prisma, 'leave-yearly-rollover', () => this.rolloverYear(todayIST().getUTCFullYear()));
   }
 
   /** Manual/one-off credit (e.g. comp-off, HR adjustment). */

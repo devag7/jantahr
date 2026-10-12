@@ -52,6 +52,7 @@ export class JobsController {
     if (!job) throw new NotFoundException(`Unknown job ${name}. Known: ${Object.keys(this.jobs).join(', ')}`);
     const started = Date.now();
     const result = await job();
+    // a job that throws surfaces as a 500, so the scheduler's log shows the failure instead of a false "ok"
     return { job: name, ok: true, ms: Date.now() - started, result: result ?? null };
   }
 

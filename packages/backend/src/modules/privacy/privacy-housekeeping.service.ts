@@ -5,6 +5,7 @@ import { inProcessJobs } from '../../common/utils/jobs-mode';
 import { PrismaService } from '../../prisma/prisma.service';
 import { ErasureService } from './erasure.service';
 
+import { errorMessage } from '../../common/utils/errors';
 const DAY = 86_400_000;
 
 /** Data minimisation: drop credentials and notifications that no longer serve a purpose and anonymise stale job applicants (the careers page promises 12 months). Statutory employee records are never touched here. */
@@ -16,11 +17,12 @@ export class PrivacyHousekeepingService {
   @Cron('45 2 * * *', { timeZone: 'Asia/Kolkata' })
   async nightly() {
     if (!inProcessJobs()) return;
-    await this.run();
+    await this.run().catch((e) => this.logger.error(`housekeeping failed: ${errorMessage(e)}`));
   }
 
-  async run() {
-    return runExclusive(this.prisma, 'privacy-housekeeping', () => this.sweep()).catch((e) => this.logger.error(`housekeeping failed: ${e.message}`));
+  /** Returns whether this instance ran the sweep; errors reach the caller (timer or HTTP trigger). */
+  run(): Promise<boolean> {
+    return runExclusive(this.prisma, 'privacy-housekeeping', () => this.sweep());
   }
 
   async sweep(now = new Date()) {

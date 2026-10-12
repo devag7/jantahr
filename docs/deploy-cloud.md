@@ -21,7 +21,8 @@ Razorpay ──► API /api/billing/webhooks/razorpay  (or Edge Function billing
 
 1. Create a project in **Mumbai (ap-south-1)** so personal data stays in India, as the privacy notice states.
 2. **Database → Connect**:
-   - `DATABASE_URL` = *Transaction pooler* (port 6543) + `?pgbouncer=true&connection_limit=1`
+   - `DATABASE_URL` = *Transaction pooler* (port 6543) + `?pgbouncer=true&connection_limit=5` (a scheduled job holds one connection for its lock
+     while it works on others, so a limit below 5 is raised to 5 at start-up)
    - `DIRECT_URL` = *Session pooler* (port 5432). Migrations need it; the direct host is IPv6-only and Vercel is not.
 3. **Settings → API keys**: copy the publishable key (`sb_publishable_…`) and create a secret key (`sb_secret_…`).
    The secret key is server-only: the API uses it to create, disable and reset employee sign-ins and to broadcast
