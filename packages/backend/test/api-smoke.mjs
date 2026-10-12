@@ -124,6 +124,7 @@ const newDept = await call('POST', '/departments', hr, { name: 'Legal' });
 ok('create dept', newDept.status === 201);
 ok('dept cycle rejected', (await call('PATCH', `/departments/${newDept.data.id}`, hr, { parentDepartmentId: newDept.data.id })).status === 400);
 ok('company get', (await call('GET', '/company', emp)).data?.name === 'Sahyadri Softworks');
+ok('states list is public (the sign-up form loads it before sign-in)', (await call('GET', '/masters/states', null)).data?.length >= 28);
 ok('holiday calendar', (await call('GET', `/holidays/calendar?year=${cur.y}`, emp)).data?.length >= 5);
 ok('announcements', (await call('GET', '/announcements', emp)).data?.length >= 2);
 const pols = await call('GET', '/policies', emp);
@@ -294,6 +295,7 @@ ok('reopen current month', (await call('POST', `/payroll/runs/${curId}/reopen`, 
 ok('delete current-month run', (await call('DELETE', `/payroll/runs/${curId}`, pay)).data?.ok === true);
 
 // ---- lifecycle / performance / expenses / helpdesk / recruitment ----
+ok('receipt download without a key is a 400, not a server error', (await call('GET', '/expenses/receipts/download', hr)).status === 400);
 ok('onboarding list (new joiners only open)', (await call('GET', '/lifecycle/onboarding', hr)).data?.length >= 2);
 const seps = await call('GET', '/lifecycle/separations', hr);
 ok('pending resignation from seed', seps.data?.length === 1 && seps.data[0].status === 'PENDING', seps.data);

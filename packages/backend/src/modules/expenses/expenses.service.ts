@@ -133,6 +133,8 @@ export class ExpensesService {
   }
 
   async downloadReceipt(user: AuthUser, key: string) {
+    // an absent key would drop the filter below and match any receipt in the company
+    if (!key) throw new BadRequestException('key is required');
     const claim = await this.prisma.expenseClaimItem.findFirst({ where: { receiptUrl: key, claim: { companyId: user.companyId } }, include: { claim: true } });
     if (!claim) throw new NotFoundException('Receipt not found');
     if (claim.claim.employeeId !== user.employeeId && !(await this.access.canApproveFor(user, claim.claim.employeeId)) && !['PAYROLL_ADMIN', 'SUPER_ADMIN', 'HR_ADMIN'].includes(user.role)) throw new ForbiddenException();

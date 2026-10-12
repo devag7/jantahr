@@ -13,6 +13,9 @@ const nextConfig = {
   reactStrictMode: true,
   output: 'standalone',
   poweredByHeader: false,
+  // Product screenshots are pre-sized WebP files in public/. Serve them as they are: the image optimiser route
+  // (/_next/image) is not available when the app runs as a Vercel service, and self-hosted installs need no sharp.
+  images: { unoptimized: true },
   env: Object.fromEntries(Object.entries(fromShared).filter(([, value]) => value !== undefined)),
 };
 
