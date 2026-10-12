@@ -20,7 +20,9 @@ function fail(error: AuthError | null): void {
     user_banned: 'Your account is disabled. Contact your HR team.',
     mfa_verification_failed: 'That code did not match. Check the time on your phone and try again.',
     over_request_rate_limit: 'Too many attempts. Wait a minute and try again.',
-    over_email_send_rate_limit: 'Too many emails were sent. Wait a few minutes and try again.',
+    over_email_send_rate_limit: 'Too many emails were sent in the last hour. Try again later.',
+    // Supabase's built-in sender only delivers to the project team's own addresses; a custom SMTP server lifts this
+    email_address_not_authorized: 'We cannot send email to this address yet: email delivery for this site is still being set up. Please contact us.',
     user_already_exists: 'An account with this email already exists. Sign in instead.',
     weak_password: error.message,
   };

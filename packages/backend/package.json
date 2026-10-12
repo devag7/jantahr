@@ -25,6 +25,7 @@
     "vercel-build": "prisma generate && node scripts/migrate-deploy.js",
     "test:billing": "node test/billing-smoke.mjs",
     "plans:sync": "ts-node scripts/plans-sync.ts",
+    "razorpay:plans": "ts-node scripts/razorpay-plans.ts",
     "auth:link": "ts-node scripts/auth-link.ts",
     "doctor": "node --env-file=.env scripts/doctor.mjs",
     "gotrue:stub": "node test/support/gotrue-stub.mjs"

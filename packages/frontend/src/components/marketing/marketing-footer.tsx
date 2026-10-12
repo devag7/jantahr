@@ -1,10 +1,10 @@
 import Link from 'next/link';
-import { SALES_EMAIL } from '@/lib/edition';
+import { OPERATOR } from '@/lib/operator';
 
 const COLS: { title: string; links: { label: string; href: string }[] }[] = [
   { title: 'Product', links: [{ label: 'Payroll', href: '/#payroll' }, { label: 'Compliance calendar', href: '/#compliance' }, { label: 'Pricing', href: '/pricing' }, { label: 'Self-hosting', href: '/self-hosting' }] },
   { title: 'Account', links: [{ label: 'Sign in', href: '/login' }, { label: 'Start free trial', href: '/signup' }, { label: 'Reset password', href: '/forgot-password' }] },
-  { title: 'Legal', links: [{ label: 'Privacy notice', href: '/legal/privacy' }, { label: 'Terms of service', href: '/legal/terms' }] },
+  { title: 'Legal', links: [{ label: 'Terms of service', href: '/legal/terms' }, { label: 'Privacy notice', href: '/legal/privacy' }, { label: 'Cancellation and refunds', href: '/legal/refunds' }, { label: 'Shipping and delivery', href: '/legal/shipping' }] },
 ];
 
 /** Reference `footer`: Parchment, dense link columns at 17px with 2.41 leading on desktop, 12px legal row. */
@@ -20,12 +20,15 @@ export function MarketingFooter() {
             </div>
           ))}
           <div>
-            <p className="text-caption font-semibold">Sales</p>
-            <a href={`mailto:${SALES_EMAIL}`} className="mt-2 block text-dense-link text-secondary-foreground hover:underline">{SALES_EMAIL}</a>
+            <p className="text-caption font-semibold">Contact</p>
+            <ul className="mt-2">
+              <li><Link href="/contact" className="text-dense-link text-secondary-foreground hover:underline">Contact us</Link></li>
+              <li><a href={`mailto:${OPERATOR.email}`} className="break-all text-dense-link text-secondary-foreground hover:underline">{OPERATOR.email}</a></li>
+            </ul>
           </div>
         </div>
         <p className="mt-6 text-fine text-muted-foreground">Prices exclude 18% GST. Statutory rules are kept current with central and state notifications; payroll outputs should be reviewed by your chartered accountant.</p>
-        <p className="mt-3 text-fine text-muted-foreground">Copyright {new Date().getFullYear()} JantaHR. Data hosted in India.</p>
+        <p className="mt-3 text-fine text-muted-foreground">Copyright {new Date().getFullYear()} {OPERATOR.name}{OPERATOR.address ? `, ${OPERATOR.address}` : ''}. Data hosted in India.</p>
       </div>
     </footer>
   );

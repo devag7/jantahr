@@ -120,8 +120,44 @@ which is `https://<site>/api`.
 
 ## 3. Razorpay
 
-1. Create four **plans** (Subscriptions → Plans). Amounts are per seat and include 18% GST, because Razorpay charges
-   the plan amount and JantaHR's invoice splits the tax back out:
+### 3.1 Website details Razorpay checks before activating live payments
+
+Razorpay reviews the live website before it issues live keys. It asks for these pages; the cloud edition ships all of
+them, linked from the footer of every public page:
+
+| Razorpay asks for | URL |
+|---|---|
+| Pricing details | `https://<site>/pricing` |
+| Terms and conditions | `https://<site>/legal/terms` |
+| Privacy policy | `https://<site>/legal/privacy` |
+| Cancellation and refunds policy | `https://<site>/legal/refunds` |
+| Shipping policy | `https://<site>/legal/shipping` (software: nothing is shipped; says when access is delivered) |
+| Contact us | `https://<site>/contact` |
+
+The contact page, the policies and the footer name the business that runs the site. Set these variables (they are not
+secret) so they match the legal name and address on your Razorpay account and GST registration, then redeploy:
+
+| Variable | Shown as |
+|---|---|
+| `BILLING_SELLER_NAME` | legal business name (also the seller on GST invoices) |
+| `BILLING_SELLER_ADDRESS` | registered address, one line (also on invoices) |
+| `SUPPORT_EMAIL` | contact email, a mailbox you read |
+| `SUPPORT_PHONE` | contact phone, with country code |
+
+Read the four policy pages before submitting and adjust anything that is not how you intend to trade (the refund
+terms and the response times are commitments to your customers). They are not legal advice.
+
+### 3.2 Keys, plans and webhook
+
+Do this with **test-mode** keys first (`rzp_test_…`); live keys (`rzp_live_…`) arrive after Razorpay approves the
+account, and test and live mode have separate plans and webhooks.
+
+1. Put `RAZORPAY_KEY_ID` and `RAZORPAY_KEY_SECRET` in `packages/backend/.env`, then create the four **plans**:
+   ```bash
+   pnpm --filter jantahr-backend razorpay:plans
+   ```
+   It creates what is missing and prints the `RAZORPAY_PLAN_IDS=…` line for the API. Amounts are per seat and
+   include 18% GST, because Razorpay charges the plan amount and JantaHR's invoice splits the tax back out:
 
    | Key | Period | Amount per seat |
    |---|---|---|
@@ -130,15 +166,18 @@ which is `https://<site>/api`.
    | `PROFESSIONAL_MONTHLY` | monthly | ₹140.42 (₹119 + GST) |
    | `PROFESSIONAL_ANNUAL` | yearly | ₹1,401.84 (₹99 × 12 + GST) |
 
-   `RAZORPAY_PLAN_IDS={"STANDARD_MONTHLY":"plan_…","STANDARD_ANNUAL":"plan_…","PROFESSIONAL_MONTHLY":"plan_…","PROFESSIONAL_ANNUAL":"plan_…"}`
-   Prices live in `packages/backend/src/modules/billing/plans.ts`; after changing them run `pnpm --filter jantahr-backend plans:sync` so the
-   marketing site shows the same numbers, and create new Razorpay plans.
-2. **Webhook**: URL `https://<site>/api/billing/webhooks/razorpay` (or the `billing-webhook` Edge Function, which stores the
-   event in Postgres even when the API is cold). Events: `subscription.activated`, `subscription.charged`,
-   `subscription.resumed`, `subscription.pending`, `subscription.halted`, `subscription.cancelled`,
-   `subscription.completed`, `subscription.updated`. Secret = `RAZORPAY_WEBHOOK_SECRET`.
-3. Test end to end with test-mode keys first: sign up, buy Standard for 10 seats, confirm the GST invoice
-   (`JH/2026-27/000001`), then switch to live keys.
+   Prices live in `packages/backend/src/modules/billing/plans.ts`; after changing them run
+   `pnpm --filter jantahr-backend plans:sync` so the pricing page shows the same numbers, and run `razorpay:plans` again.
+   Subscriptions must be enabled on the Razorpay account.
+2. **Webhook** (Razorpay dashboard → Account & Settings → Webhooks): URL `https://<site>/api/billing/webhooks/razorpay`
+   (or the `billing-webhook` Edge Function, which stores the event in Postgres even when the API is cold). Events:
+   `subscription.activated`, `subscription.charged`, `subscription.resumed`, `subscription.pending`,
+   `subscription.halted`, `subscription.cancelled`, `subscription.completed`, `subscription.updated`. The secret you
+   type there is `RAZORPAY_WEBHOOK_SECRET`.
+3. Set `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET` and `RAZORPAY_PLAN_IDS` on the deployment
+   and redeploy.
+4. Test end to end in test mode: sign up, buy Standard for 10 seats with a Razorpay test card, confirm the plan turns
+   active and the GST invoice (`JH/2026-27/000001`) downloads. Then repeat steps 1 to 3 with the live keys.
 
 ## 4. Check the deployment
 
