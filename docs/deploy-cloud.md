@@ -57,7 +57,7 @@ One Vercel project serves both applications on one domain, using [Vercel Service
 | Service | Folder | Public path | Notes |
 |---|---|---|---|
 | `frontend` | `packages/frontend` | `/` (everything else) | Next.js web app |
-| `backend` | `packages/backend` | `/api/*` | NestJS API in Mumbai (`bom1`). Its build runs `prisma generate`, applies migrations through `DIRECT_URL` and compiles |
+| `backend` | `packages/backend` | `/api/*` | NestJS API in Mumbai (`bom1`). Its build step runs `prisma generate` and applies migrations through `DIRECT_URL`; Vercel then compiles `src/main.ts` itself |
 
 A service receives the original request path, so on Vercel the API mounts every route under `/api` (it does this by
 itself when the `VERCEL` variable is present; `API_PREFIX` overrides it). The browser calls `/api/...` on the same
@@ -68,6 +68,10 @@ Each service installs with `npm ci` from the lockfile in its own folder. A servi
 its folder, and pnpm keeps the real packages in the repository root, so the API has a `package-lock.json` beside the
 workspace's `pnpm-lock.yaml`. After changing API dependencies, refresh it with
 `npm install --package-lock-only --ignore-scripts` in `packages/backend`.
+
+The API's Vercel build step must not run `nest build`. If a `dist/main.js` exists after the build command, Vercel ships
+that folder as the function and resolves packages from the repository root, where there are none, so every request
+fails with `Cannot find module '@nestjs/common'`.
 
 Import the repository with **Root Directory** `./` and the **Services** preset, then add these variables (they are
 shared by both services; the web app only ever reads the public ones):

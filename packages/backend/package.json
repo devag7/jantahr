@@ -22,7 +22,7 @@
     "test:unit": "jest",
     "test:e2e": "node test/api-smoke.mjs",
     "migrate:deploy": "node scripts/migrate-deploy.js",
-    "vercel-build": "prisma generate && node scripts/migrate-deploy.js && nest build",
+    "vercel-build": "prisma generate && node scripts/migrate-deploy.js",
     "test:billing": "node test/billing-smoke.mjs",
     "plans:sync": "ts-node scripts/plans-sync.ts",
     "auth:link": "ts-node scripts/auth-link.ts",
