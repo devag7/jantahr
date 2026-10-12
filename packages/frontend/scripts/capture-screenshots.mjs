@@ -10,6 +10,8 @@ import puppeteer from 'puppeteer-core';
 const WEB = process.env.WEB || 'http://localhost:3000';
 const API = process.env.API || 'http://localhost:3010';
 const CHROME = process.env.CHROME || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+// the seed's demo password; set DEMO_PASSWORD when the demo logins were rotated
+const DEMO_PASSWORD = process.env.DEMO_PASSWORD || 'Demo@1234';
 const here = path.dirname(fileURLToPath(import.meta.url));
 const outDirs = [path.join(here, '../public/marketing'), path.join(here, '../../../website/assets')];
 
@@ -42,17 +44,17 @@ async function capture(page, url, text, name) {
   console.log(`  ${name}.webp ${Math.round(image.length / 1024)} KB`);
 }
 
-const hr = await signedIn('hr@jantahr.com', 'Demo@1234', 1440, 900);
+const hr = await signedIn('hr@jantahr.com', DEMO_PASSWORD, 1440, 900);
 await capture(hr, '/dashboard', 'Statutory deadlines', 'overview');
 await capture(hr, '/hr/compliance', 'Compliance calendar', 'compliance');
 
-const payroll = await signedIn('payroll@jantahr.com', 'Demo@1234', 1200, 750);
+const payroll = await signedIn('payroll@jantahr.com', DEMO_PASSWORD, 1200, 750);
 await payroll.goto(`${WEB}/hr/payroll`, { waitUntil: 'networkidle0' });
 await payroll.waitForSelector('tbody tr', { timeout: 60000 });
 await Promise.all([payroll.waitForFunction(() => location.pathname.startsWith('/hr/payroll/runs/'), { timeout: 60000 }), payroll.click('tbody tr')]);
 await capture(payroll, null, 'Net pay', 'payroll');
 
-const phone = await signedIn('employee@jantahr.com', 'Demo@1234', 390, 780);
+const phone = await signedIn('employee@jantahr.com', DEMO_PASSWORD, 390, 780);
 await capture(phone, '/dashboard', 'Vikram', 'mobile');
 await browser.close();
 console.log('done');

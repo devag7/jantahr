@@ -1,6 +1,6 @@
 // Live check against a real Supabase project (no emails are sent; everything created is removed at the end).
 // Needs the API running with that project, and SUPABASE_URL / SUPABASE_PUBLISHABLE_KEY / SUPABASE_SECRET_KEY:
-//   node --env-file=.env test/live-supabase-check.mjs
+//   node --env-file=.env test/live-supabase-check.mjs        (HR_PASSWORD=… if the demo password was changed)
 import { createClient } from '@supabase/supabase-js';
 import { enrollTotp, refresh, signIn, verifyTotp } from './support/supabase-auth.mjs';
 
@@ -14,7 +14,8 @@ const call = async (method, path, token, body) => {
 };
 const alg = (jwt) => JSON.parse(Buffer.from(jwt.split('.')[0], 'base64url').toString()).alg;
 
-const hr = await signIn('hr@jantahr.com', 'Demo@1234');
+// HR_PASSWORD: the HR demo login's password when it is no longer the seed default (for example after rotating it)
+const hr = await signIn('hr@jantahr.com', process.env.HR_PASSWORD || 'Demo@1234');
 ok(`HR signs in with Supabase (token ${hr.accessToken ? alg(hr.accessToken) : '-'})`, hr.status === 200, hr.error);
 ok('API verifies the Supabase token and maps the account', (await call('GET', '/auth/me', hr.accessToken)).data?.role === 'HR_ADMIN');
 ok('wrong password refused by Supabase', (await signIn('hr@jantahr.com', 'wrong-password-1')).status === 400);
