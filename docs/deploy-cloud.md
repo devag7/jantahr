@@ -43,14 +43,23 @@ Razorpay ──► API /api/billing/webhooks/razorpay  (or Edge Function billing
      sign-in links and sign-up confirmations.
    - HR creates employee sign-ins through the API (Supabase admin API, secret key); employees cannot sign themselves
      up into a company, and an address that already has an account cannot be registered again.
-6. **Scheduled jobs** (free tier friendly):
+6. **Scheduled jobs** (free tier friendly). After the API is deployed, in the SQL editor create two Vault secrets and
+   run `supabase/sql/cron-direct.sql`:
+   ```sql
+   select vault.create_secret('https://<site>/api/internal/jobs', 'jantahr_api_jobs_url');
+   select vault.create_secret('<same value as the API''s CRON_SECRET>', 'jantahr_cron_secret');
+   ```
+   pg_cron then calls the API's job endpoints directly: attendance finalisation, leave accrual and rollover, privacy
+   housekeeping, the billing sweep and the Razorpay inbox (every 10 minutes). Check with
+   `select * from cron.job_run_details order by start_time desc limit 5;` and `select * from net._http_response;`.
+
+   Alternative: route the jobs through the `jobs-dispatch` Edge Function instead (`supabase/sql/cron.sql`):
    ```bash
    supabase functions deploy jobs-dispatch --no-verify-jwt
    supabase secrets set JANTAHR_API_URL=https://<site>/api CRON_SECRET=<same as API> JOBS_DISPATCH_SECRET=<random 48 chars>
    ```
-   Then in the SQL editor create the two Vault secrets named at the top of `supabase/sql/cron.sql` and run the file.
-   pg_cron then drives attendance finalisation, leave accrual and rollover, privacy housekeeping, the billing sweep and
-   the Razorpay inbox (every 10 minutes).
+   then create the two Vault secrets named at the top of that file and run it. Both files use the same schedule
+   names, so applying one replaces the other.
 
 ## 2. Vercel project
 
