@@ -4,6 +4,7 @@ import { BadRequestException, Injectable, Logger, NotFoundException, OnModuleIni
 import { ConfigService } from '@nestjs/config';
 import * as crypto from 'crypto';
 import * as fs from 'fs';
+import * as os from 'os';
 import * as path from 'path';
 import type { Request, Response } from 'express';
 import { errorMessage } from '../utils/errors';
@@ -62,7 +63,8 @@ export class StorageService implements OnModuleInit {
   readonly directUploads: boolean;
 
   constructor(config: ConfigService) {
-    this.root = path.resolve(config.get<string>('UPLOAD_DIR') || './uploads');
+    // Vercel's filesystem is read-only apart from the temp directory, and that is wiped between invocations
+    this.root = path.resolve(config.get<string>('UPLOAD_DIR') || (process.env.VERCEL ? path.join(os.tmpdir(), 'jantahr-uploads') : './uploads'));
     this.bucket = config.get<string>('S3_BUCKET') || '';
     this.ticketSecret = config.get<string>('UPLOAD_SIGNING_SECRET') || config.get<string>('JWT_SECRET') || '';
     if (config.get('STORAGE_DRIVER') === 's3') {
@@ -80,7 +82,13 @@ export class StorageService implements OnModuleInit {
       this.s3 = null;
       this.presigner = null;
       this.directUploads = false;
-      fs.mkdirSync(this.root, { recursive: true });
+      if (process.env.VERCEL) this.logger.warn('STORAGE_DRIVER is not s3: uploaded files are kept in temporary storage and will be lost. Set the S3 variables (docs/deploy-cloud.md) before real use.');
+      try {
+        fs.mkdirSync(this.root, { recursive: true });
+      } catch (e) {
+        // an unusable upload folder must not stop the API from starting; uploads fail with a clear error instead
+        this.logger.error(`Upload folder ${this.root} is not writable: ${errorMessage(e)}`);
+      }
     }
   }
 
