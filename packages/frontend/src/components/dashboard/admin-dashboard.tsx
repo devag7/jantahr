@@ -1,10 +1,12 @@
 'use client';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { CalendarCheck, ClipboardList, FileWarning, LifeBuoy, TrendingDown, UserMinus, UserPlus, Users } from 'lucide-react';
 import { DonutChart, GroupedBarChart, HBarChart } from '@/components/charts/charts';
 import { QueryBoundary } from '@/components/common/states';
 import { StatCard } from '@/components/common/stat-card';
 import { CelebrationsCard, SectionCard } from '@/components/dashboard/widgets';
+import { SetupGuide } from '@/components/onboarding/setup-guide';
 import { useComplianceCalendar } from '@/hooks/compliance/use-compliance';
 import { useAdminDashboard } from '@/hooks/reports/use-reports';
 import { formatDate, formatINRCompact } from '@/lib/format';
@@ -17,9 +19,12 @@ export function AdminDashboard() {
       {(d) => {
         const a = d.attendanceToday;
         const pending = d.pending;
+        // a company of one has nothing to chart yet: say what will appear and where to start instead of drawing empty axes
+        const solo = d.headcount.active <= 1;
         const totalPending = pending.leave + pending.attendanceRequests + pending.expenses + pending.taxDeclarations + pending.separations;
         return (
           <div className="space-y-4">
+            <SetupGuide />
             <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
               <StatCard label="Active employees" value={d.headcount.active} icon={Users} onClick={() => router.push('/hr/employees')} />
               <StatCard label="Joined this month" value={d.headcount.joinersThisMonth} icon={UserPlus} tone="success" />
@@ -54,22 +59,30 @@ export function AdminDashboard() {
 
             <div className="grid gap-4 lg:grid-cols-2">
               <SectionCard title="Payroll cost trend">
-                {d.payrollTrend.length === 0 ? <p className="text-caption text-muted-foreground">No payroll processed yet.</p> : (
+                {d.payrollTrend.length === 0 ? <Hint text="Gross pay, net pay and employer contributions for each month appear here after your first payroll run." href="/hr/payroll" cta="Go to payroll" /> : (
                   <GroupedBarChart data={d.payrollTrend} xKey="label" keys={[{ key: 'gross', label: 'Gross' }, { key: 'net', label: 'Net pay' }, { key: 'employerCost', label: 'Employer contributions' }]} formatValue={formatINRCompact} />
                 )}
               </SectionCard>
-              <SectionCard title="Headcount by department"><HBarChart data={d.byDepartment} /></SectionCard>
+              <SectionCard title="Headcount by department">{solo ? <Hint text="Add employees and assign them to departments to see how your headcount is spread." href="/hr/employees" cta="Add employees" /> : <HBarChart data={d.byDepartment} />}</SectionCard>
             </div>
 
             <div className="grid gap-4 lg:grid-cols-3">
-              <SectionCard title="Gender split"><DonutChart data={d.byGender} /></SectionCard>
-              <SectionCard title="Employment type"><DonutChart data={d.byEmploymentType} /></SectionCard>
+              <SectionCard title="Gender split">{solo ? <Hint text="Shown once you have more than one employee." /> : <DonutChart data={d.byGender} />}</SectionCard>
+              <SectionCard title="Employment type">{solo ? <Hint text="Permanent, contract, intern and fixed-term headcount, once you have more than one employee." /> : <DonutChart data={d.byEmploymentType} />}</SectionCard>
               <CelebrationsCard data={d.celebrations} />
             </div>
           </div>
         );
       }}
     </QueryBoundary>
+  );
+}
+
+function Hint({ text, href, cta }: { text: string; href?: string; cta?: string }) {
+  return (
+    <p className="text-caption text-muted-foreground">
+      {text}{href && cta && <> <Link href={href} className="font-semibold text-primary hover:underline">{cta}</Link></>}
+    </p>
   );
 }
 

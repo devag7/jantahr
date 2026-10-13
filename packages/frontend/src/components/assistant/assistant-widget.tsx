@@ -58,7 +58,7 @@ export function AssistantWidget() {
           </form>
         </div>
       )}
-      <button onClick={() => setOpen((o) => !o)} aria-label={open ? 'Close help' : 'Open help'} aria-expanded={open}
+      <button onClick={() => setOpen((o) => !o)} aria-label={open ? 'Close help' : 'Open help'} aria-expanded={open} data-tour="assistant"
         className="frosted fixed bottom-4 right-4 z-40 flex h-11 w-11 items-center justify-center gap-1.5 rounded-full border text-caption text-foreground transition-transform active:scale-[0.95] sm:h-9 sm:w-auto sm:px-4">
         {/* phones: the 44px round control chip; wider screens add the label */}
         <LifeBuoy className="h-5 w-5 text-primary sm:h-4 sm:w-4" /><span className="sr-only sm:not-sr-only">Help</span>

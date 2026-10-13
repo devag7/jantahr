@@ -21,12 +21,20 @@ import { formatDate } from '@/lib/format';
 import { INDIAN_STATES, WEEKDAYS } from '@/lib/india';
 import type { CompanyProfile, HolidayItem } from '@/types/org';
 
+const TABS = ['company', 'org', 'holidays', 'announcements', 'policies'];
+
 export default function SettingsPage() {
   const { user } = useAuth();
+  // the setup guide links straight to a tab (?tab=org); read once on mount so the page stays statically renderable
+  const [tab, setTab] = React.useState('company');
+  React.useEffect(() => {
+    const wanted = new URLSearchParams(window.location.search).get('tab');
+    if (wanted && TABS.includes(wanted)) setTab(wanted);
+  }, []);
   return (
     <>
       <PageHeader title="Settings" description={`${user?.company.name}: company profile, statutory configuration, organisation and communication.`} />
-      <Tabs defaultValue="company">
+      <Tabs value={tab} onValueChange={setTab}>
         <TabsList className="h-auto flex-wrap justify-start"><TabsTrigger value="company">Company & statutory</TabsTrigger><TabsTrigger value="org">Departments & designations</TabsTrigger><TabsTrigger value="holidays">Holidays</TabsTrigger><TabsTrigger value="announcements">Announcements</TabsTrigger><TabsTrigger value="policies">Policies</TabsTrigger></TabsList>
         <TabsContent value="company" className="mt-4"><CompanyTab /></TabsContent>
         <TabsContent value="org" className="mt-4"><OrgTab /></TabsContent>

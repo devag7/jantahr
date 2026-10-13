@@ -8,3 +8,6 @@ export interface CompanyProfile {
 export interface HolidayItem { id?: string; name: string; date: string; isOptional: boolean }
 export interface HolidayList { id: string; name: string; year: number; state: string | null; isDefault: boolean; holidays: HolidayItem[] }
 export interface CalendarHoliday { date: string; name: string; isOptional: boolean }
+
+export type SetupStepKey = 'company' | 'org' | 'holidays' | 'employees' | 'salary' | 'payroll';
+export interface SetupStatus { steps: { key: SetupStepKey; done: boolean }[]; done: number; total: number; complete: boolean; companyCreatedAt: string }

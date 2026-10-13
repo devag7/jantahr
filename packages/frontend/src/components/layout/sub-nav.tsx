@@ -19,7 +19,7 @@ export function SubNav() {
     <div className="no-print frosted sticky top-nav z-30 border-b">
       <div className="mx-auto flex h-subnav max-w-[1440px] items-center gap-6 px-4 lg:px-6">
         <p className="hidden shrink-0 text-tagline font-semibold sm:block">{section.label}</p>
-        <nav aria-label={section.label} className="-mx-1 flex min-w-0 flex-1 items-center justify-start gap-1 overflow-x-auto [scrollbar-width:none] sm:justify-end">
+        <nav aria-label={section.label} data-tour="subnav" className="-mx-1 flex min-w-0 flex-1 items-center justify-start gap-1 overflow-x-auto [scrollbar-width:none] sm:justify-end">
           {section.items.map((i) => {
             const active = isNavActive(pathname, i.href, hrefs);
             const locked = !!i.feature && ent.data && !ent.data.features.includes(i.feature) && !ent.data.readOnlyFeatures.includes(i.feature);

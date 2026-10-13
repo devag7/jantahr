@@ -1,15 +1,21 @@
 'use client';
 import { useRouter } from 'next/navigation';
-import { KeyRound, LogOut, Moon, Sun, UserRound } from 'lucide-react';
+import { Compass, KeyRound, ListChecks, LogOut, Moon, Sun, UserRound } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { UserAvatar } from '@/components/common/user-avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/hooks/auth/use-auth';
+import { useSetupStatus } from '@/hooks/org/use-org';
+import { ADMIN } from '@/lib/permissions';
+import { useOnboardingStore } from '@/stores/onboarding/onboarding-store';
 import { useAuthStore } from '@/stores/auth/auth-store';
 
 export function UserMenu() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, hasRole } = useAuth();
+  const startTour = useOnboardingStore((s) => s.startTour);
+  const setGuideHidden = useOnboardingStore((s) => s.setGuideHidden);
+  const setup = useSetupStatus(hasRole(ADMIN));
   const logout = useAuthStore((s) => s.logout);
   const { resolvedTheme, setTheme } = useTheme();
   if (!user) return null;
@@ -29,6 +35,12 @@ export function UserMenu() {
         <DropdownMenuItem className="cursor-pointer" onSelect={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}>
           {resolvedTheme === 'dark' ? <Sun className="mr-2 h-4 w-4" /> : <Moon className="mr-2 h-4 w-4" />}{resolvedTheme === 'dark' ? 'Light mode' : 'Dark mode'}
         </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        {/* opened after the menu has closed, so focus is not pulled back to the trigger under the tour */}
+        <DropdownMenuItem className="cursor-pointer" onSelect={() => window.setTimeout(startTour, 150)}><Compass className="mr-2 h-4 w-4" />Take the tour</DropdownMenuItem>
+        {setup.data && !setup.data.complete && (
+          <DropdownMenuItem className="cursor-pointer" onSelect={() => { setGuideHidden(user.company.id, false); router.push('/dashboard'); }}><ListChecks className="mr-2 h-4 w-4" />Setup guide ({setup.data.done}/{setup.data.total})</DropdownMenuItem>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem className="cursor-pointer text-destructive focus:text-destructive" onSelect={async () => { await logout(); router.replace('/login'); }}><LogOut className="mr-2 h-4 w-4" />Sign out</DropdownMenuItem>
       </DropdownMenuContent>

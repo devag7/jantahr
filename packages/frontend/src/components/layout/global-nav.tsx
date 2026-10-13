@@ -37,7 +37,7 @@ export function GlobalNav() {
         <div className="mx-auto flex h-nav max-w-[1440px] items-center gap-6 px-4 lg:px-6">
           <Sheet open={menu} onOpenChange={setMenu}>
             <SheetTrigger asChild>
-              <button className="-ml-1 rounded-sm p-1.5 text-white/80 hover:text-white min-[834px]:hidden" aria-label="Open menu"><Menu className="h-5 w-5" /></button>
+              <button className="-ml-1 rounded-sm p-1.5 text-white/80 hover:text-white min-[834px]:hidden" aria-label="Open menu" data-tour="nav-menu"><Menu className="h-5 w-5" /></button>
             </SheetTrigger>
             <SheetContent side="left" className="w-80 overflow-y-auto border-0 bg-nav p-0 text-white">
               <SheetTitle className="sr-only">Menu</SheetTitle>
@@ -59,7 +59,7 @@ export function GlobalNav() {
             {sections.map((s) => {
               const active = current?.key === s.key;
               return (
-                <li key={s.key}>
+                <li key={s.key} data-tour={`nav-${s.key}`}>
                   <Link href={s.items[0].href} aria-current={active ? 'true' : undefined}
                     className={cn('text-fine transition-colors', active ? 'text-white' : 'text-white/70 hover:text-white')}>{s.label}</Link>
                 </li>
@@ -68,10 +68,10 @@ export function GlobalNav() {
           </ul>
 
           <div className="ml-auto flex items-center gap-1 min-[834px]:ml-0">
-            <button onClick={() => setSearching((s) => !s)} aria-label="Search employees (⌘K)" aria-expanded={searching}
+            <button onClick={() => setSearching((s) => !s)} aria-label="Search employees (⌘K)" aria-expanded={searching} data-tour="search"
               className="rounded-sm p-2 text-white/80 hover:text-white">{searching ? <X className="h-[17px] w-[17px]" /> : <Search className="h-[17px] w-[17px]" />}</button>
-            <NotificationBell />
-            <UserMenu />
+            <span data-tour="notifications" className="inline-flex"><NotificationBell /></span>
+            <span data-tour="account" className="inline-flex"><UserMenu /></span>
           </div>
         </div>
       </nav>

@@ -4,7 +4,7 @@ export const ENDPOINTS = {
     me: '/auth/me', provision: '/auth/provision', changePassword: '/auth/change-password', setPassword: '/auth/set-password', mfaSync: '/auth/mfa/sync',
   },
   notifications: { list: '/notifications', readAll: '/notifications/read-all', read: (id: string) => `/notifications/${id}/read` },
-  company: { get: '/company', states: '/masters/states' },
+  company: { get: '/company', setupStatus: '/company/setup-status', states: '/masters/states' },
   org: {
     departments: '/departments', department: (id: string) => `/departments/${id}`, designations: '/designations', designation: (id: string) => `/designations/${id}`,
   },

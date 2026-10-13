@@ -124,6 +124,9 @@ const newDept = await call('POST', '/departments', hr, { name: 'Legal' });
 ok('create dept', newDept.status === 201);
 ok('dept cycle rejected', (await call('PATCH', `/departments/${newDept.data.id}`, hr, { parentDepartmentId: newDept.data.id })).status === 400);
 ok('company get', (await call('GET', '/company', emp)).data?.name === 'Sahyadri Softworks');
+const setup = await call('GET', '/company/setup-status', hr);
+ok('setup status: established company is complete', setup.status === 200 && setup.data.complete === true && setup.data.done === setup.data.total && setup.data.steps.length === 6, JSON.stringify(setup.data?.steps));
+ok('setup status is admin-only', (await call('GET', '/company/setup-status', emp)).status === 403);
 ok('states list is public (the sign-up form loads it before sign-in)', (await call('GET', '/masters/states', null)).data?.length >= 28);
 ok('holiday calendar', (await call('GET', `/holidays/calendar?year=${cur.y}`, emp)).data?.length >= 5);
 ok('announcements', (await call('GET', '/announcements', emp)).data?.length >= 2);
@@ -488,6 +491,10 @@ ok('auditor reads but cannot mark', (await call('GET', '/compliance/calendar', a
 const ot = await call('GET', '/compliance/overtime', hr);
 ok('overtime cap report (125 h/quarter)', ot.data?.cap === 125 && Array.isArray(ot.data.employees), ot.data);
 ok('tenant B calendar has no tenant A exits', !(await call('GET', '/compliance/calendar', O)).data?.items?.some((i) => i.category === 'EXIT'));
+const calB = (await call('GET', '/compliance/calendar', O)).data;
+ok('a new company has nothing overdue from before it existed', calB.summary.OVERDUE === 0 && calB.items.length > 0, JSON.stringify(calB.summary));
+const setupB = (await call('GET', '/company/setup-status', O)).data;
+ok('setup status: new company still has steps to do', setupB.complete === false && setupB.steps.find((x) => x.key === 'employees')?.done === false && setupB.steps.find((x) => x.key === 'payroll')?.done === false, JSON.stringify(setupB.steps));
 
 // ---- validation hardening ----
 ok('mass-assignment stripped (companyId ignored)', (await call('POST', '/departments', hr, { name: 'Sneaky', companyId: 'other' })).data?.companyId === admin.user.company.id);

@@ -4,6 +4,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { AssistantWidget } from '@/components/assistant/assistant-widget';
 import { PlanGate } from '@/components/billing/plan-gate';
 import { TrialBanner } from '@/components/billing/trial-banner';
+import { ProductTour } from '@/components/onboarding/product-tour';
 import { GlobalNav } from '@/components/layout/global-nav';
 import { SubNav } from '@/components/layout/sub-nav';
 import { Spinner } from '@/components/common/states';
@@ -32,6 +33,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <TrialBanner />
       <main className="mx-auto max-w-[1440px] px-4 pb-24 pt-8 lg:px-6"><PlanGate>{children}</PlanGate></main>
       <AssistantWidget />
+      <ProductTour />
     </div>
   );
 }

@@ -47,6 +47,12 @@ export class ComplianceService {
 
     // wages: done when the month's payroll run is marked paid
     const runs = await this.prisma.payrollEntry.findMany({ where: { companyId, status: 'PAID' }, select: { month: true, year: true, updatedAt: true } });
+
+    // Nothing was due from a company before it existed here: statutory items start at sign-up, or at the first
+    // payroll period on record when history was brought in.
+    const firstRun = await this.prisma.payrollEntry.findFirst({ where: { companyId }, orderBy: { startDate: 'asc' }, select: { startDate: true } });
+    const trackedFrom = isoDate(firstRun && firstRun.startDate < company.createdAt ? firstRun.startDate : company.createdAt);
+    for (let n = due.length - 1; n >= 0; n--) if (due[n].dueDate < trackedFrom) due.splice(n, 1);
     for (const i of due) {
       if (i.category !== 'WAGES') continue;
       const [, y, m] = i.key.split('-').map(Number);

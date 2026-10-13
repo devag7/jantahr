@@ -7,6 +7,8 @@ import type { CompanyProfile, HolidayList } from '@/types/org';
 export const useDepartments = () => useQuery({ queryKey: ['org', 'departments'], queryFn: orgService.departments, staleTime: 60_000 });
 export const useDesignations = () => useQuery({ queryKey: ['org', 'designations'], queryFn: orgService.designations, staleTime: 60_000 });
 export const useCompany = () => useQuery({ queryKey: ['org', 'company'], queryFn: orgService.company, staleTime: 60_000 });
+/** First-run checklist; lives under the `org` key so saving settings refreshes it. */
+export const useSetupStatus = (enabled = true) => useQuery({ queryKey: ['org', 'setup-status'], queryFn: orgService.setupStatus, enabled, staleTime: 30_000 });
 export const useStates = () => useQuery({ queryKey: ['org', 'states'], queryFn: orgService.states, staleTime: Infinity });
 export const useHolidayCalendar = (year: number) => useQuery({ queryKey: ['org', 'holiday-calendar', year], queryFn: () => orgService.holidayCalendar(year) });
 export const useHolidayLists = (year?: number) => useQuery({ queryKey: ['org', 'holiday-lists', year], queryFn: () => orgService.holidayLists(year) });

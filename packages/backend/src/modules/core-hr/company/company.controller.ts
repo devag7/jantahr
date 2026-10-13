@@ -16,6 +16,12 @@ export class CompanyController {
   }
 
   @Roles(...ADMIN_ROLES)
+  @Get('company/setup-status')
+  setupStatus(@CurrentUser() user: AuthUser) {
+    return this.service.setupStatus(user.companyId);
+  }
+
+  @Roles(...ADMIN_ROLES)
   @Patch('company')
   update(@CurrentUser() user: AuthUser, @Body() dto: UpdateCompanyDto) {
     return this.service.update(user.companyId, dto);

@@ -1,6 +1,6 @@
 import { del, get, patch, post } from '@/lib/api/client';
 import { ENDPOINTS as E } from '@/lib/api/endpoints';
-import type { CalendarHoliday, CompanyProfile, Department, Designation, HolidayList } from '@/types/org';
+import type { CalendarHoliday, CompanyProfile, Department, Designation, HolidayList, SetupStatus } from '@/types/org';
 import type { Ok } from '@/types/common';
 
 export const orgService = {
@@ -13,6 +13,7 @@ export const orgService = {
   deleteDesignation: (id: string) => del<Ok>(E.org.designation(id)),
   company: () => get<CompanyProfile>(E.company.get),
   updateCompany: (d: Partial<CompanyProfile>) => patch<CompanyProfile>(E.company.get, d),
+  setupStatus: () => get<SetupStatus>(E.company.setupStatus),
   states: () => get<string[]>(E.company.states),
   holidayCalendar: (year: number) => get<CalendarHoliday[]>(E.holidays.calendar, { year }),
   holidayLists: (year?: number) => get<HolidayList[]>(E.holidays.lists, { year }),

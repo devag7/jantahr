@@ -22,6 +22,8 @@ async function signedIn(email, password, width, height) {
   const context = await browser.createBrowserContext();
   const page = await context.newPage();
   await page.setViewport({ width, height, deviceScaleFactor: 2 });
+  // the first-run product tour would cover the page being captured
+  await page.evaluateOnNewDocument(() => { try { localStorage.setItem('jantahr:tour:off', '1'); } catch { /* opaque origin before navigation */ } });
   await page.goto(`${WEB}/login`, { waitUntil: 'networkidle0' });
   await page.type('#email', email);
   await page.type('#password', password);

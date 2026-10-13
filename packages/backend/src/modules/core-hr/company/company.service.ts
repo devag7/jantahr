@@ -41,6 +41,31 @@ export class CompanyService {
     return c;
   }
 
+  /**
+   * First-run checklist: each step is derived from what the company has actually set up, so it ticks itself off
+   * and never asks an established company to redo anything.
+   */
+  async setupStatus(companyId: string) {
+    const c = await this.get(companyId);
+    const year = new Date().getUTCFullYear();
+    const [departments, holidayLists, employees, salaries, payrollRuns] = await Promise.all([
+      this.prisma.department.count({ where: { companyId } }),
+      this.prisma.holidayList.count({ where: { companyId, year: { gte: year } } }),
+      this.prisma.employee.count({ where: { companyId } }),
+      this.prisma.salaryStructureAssignment.count({ where: { companyId } }),
+      this.prisma.payrollEntry.count({ where: { companyId } }),
+    ]);
+    const steps = [
+      { key: 'company', done: !!(c.pan && c.tan && c.address) },
+      { key: 'org', done: departments > 0 },
+      { key: 'holidays', done: holidayLists > 0 },
+      { key: 'employees', done: employees > 1 },
+      { key: 'salary', done: salaries > 0 },
+      { key: 'payroll', done: payrollRuns > 0 },
+    ];
+    return { steps, done: steps.filter((s) => s.done).length, total: steps.length, complete: steps.every((s) => s.done), companyCreatedAt: c.createdAt };
+  }
+
   update(companyId: string, dto: UpdateCompanyDto) {
     return this.prisma.company.update({ where: { id: companyId }, data: dto });
   }
