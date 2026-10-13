@@ -3,7 +3,7 @@ import { MarketingNav } from '@/components/marketing/marketing-nav';
 import { PricingPlans } from '@/components/marketing/pricing-plans';
 import { CHARGES_GST } from '@/lib/operator';
 
-export const metadata: Metadata = { title: 'Pricing', description: 'Per-employee pricing for JantaHR Cloud, and the free self-hosted edition.' };
+export const metadata: Metadata = { title: 'Pricing', description: 'Per-employee pricing for JantaHR Cloud, and the free self-hosted edition.', alternates: { canonical: '/pricing' } };
 
 const FAQ = [
   ['Is GST included?', CHARGES_GST ? 'Prices exclude GST. We add 18% on the invoice: CGST and SGST within our state, IGST for other states. Add your GSTIN under Settings to claim input credit.' : 'No GST is added: the price shown is the price you pay. We are not registered under GST yet, so invoices carry no tax.'],

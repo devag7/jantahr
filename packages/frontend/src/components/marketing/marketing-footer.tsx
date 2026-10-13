@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { CHARGES_GST, OPERATOR } from '@/lib/operator';
 
 const COLS: { title: string; links: { label: string; href: string }[] }[] = [
-  { title: 'Product', links: [{ label: 'Payroll', href: '/#payroll' }, { label: 'Compliance calendar', href: '/#compliance' }, { label: 'Pricing', href: '/pricing' }, { label: 'Self-hosting', href: '/self-hosting' }] },
+  { title: 'Product', links: [{ label: 'Payroll', href: '/#payroll' }, { label: 'Compliance calendar', href: '/#compliance' }, { label: 'Pricing', href: '/pricing' }, { label: 'Self-hosting', href: '/self-hosting' }, { label: 'Developers', href: '/developers' }] },
   { title: 'Account', links: [{ label: 'Sign in', href: '/login' }, { label: 'Start free trial', href: '/signup' }, { label: 'Reset password', href: '/forgot-password' }] },
   { title: 'Legal', links: [{ label: 'Terms of service', href: '/legal/terms' }, { label: 'Privacy notice', href: '/legal/privacy' }, { label: 'Cancellation and refunds', href: '/legal/refunds' }, { label: 'Shipping and delivery', href: '/legal/shipping' }] },
 ];
@@ -22,6 +22,7 @@ export function MarketingFooter() {
           <div>
             <p className="text-caption font-semibold">Contact</p>
             <ul className="mt-2">
+              <li><Link href="/about" className="text-dense-link text-secondary-foreground hover:underline">About</Link></li>
               <li><Link href="/contact" className="text-dense-link text-secondary-foreground hover:underline">Contact us</Link></li>
               <li><a href={`mailto:${OPERATOR.email}`} className="break-all text-dense-link text-secondary-foreground hover:underline">{OPERATOR.email}</a></li>
             </ul>

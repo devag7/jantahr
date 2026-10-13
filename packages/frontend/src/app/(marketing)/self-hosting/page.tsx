@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { MarketingNav } from '@/components/marketing/marketing-nav';
 
-export const metadata: Metadata = { title: 'Self-hosting', description: 'Run JantaHR on your own servers with Supabase and OrioleDB Postgres.' };
+export const metadata: Metadata = { title: 'Self-hosting', description: 'Run JantaHR on your own servers with Supabase and OrioleDB Postgres.', alternates: { canonical: '/self-hosting' } };
 
 const STACK = [
   ['Postgres 17 with OrioleDB', 'Supabase’s Postgres image with the OrioleDB storage engine as the default for every table.'],

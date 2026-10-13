@@ -1,6 +1,9 @@
 // One Vercel project serves the web app and the API (root vercel.json), so they share one set of environment
 // variables. The web app reads the public values the API already has; nothing secret is mapped here.
 const fromShared = {
+  // the public address of the web app, for canonical links, the sitemap and structured data; Vercel knows its own
+  NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL ?? process.env.FRONTEND_URL
+    ?? (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : undefined),
   // the API is routed at /api on the same domain; elsewhere it is a separate origin
   NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL ?? (process.env.VERCEL ? '/api' : undefined),
   NEXT_PUBLIC_EDITION: process.env.NEXT_PUBLIC_EDITION ?? process.env.EDITION,
