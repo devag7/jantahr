@@ -5,7 +5,7 @@ import { REPO_URL } from '@/lib/site';
 
 export const metadata: Metadata = {
   title: 'JantaHR developer resources',
-  description: 'JantaHR for developers and AI agents: source code, the REST API and its authentication, the MCP server, and the machine-readable files this site publishes.',
+  description: 'JantaHR for developers and AI agents: source code, the REST API with its OpenAPI specification and authentication, the MCP server, and the machine-readable files this site publishes.',
   alternates: { canonical: '/developers' },
 };
 
@@ -24,7 +24,10 @@ export default function DevelopersPage() {
           <p>The API (NestJS, Prisma, Postgres), the web app (Next.js) and the mobile app (Expo) are in one repository under AGPL-3.0: <a className={link} href={REPO_URL}>github.com/devag7/jantahr</a>. Contribution notes are in <a className={link} href={`${REPO_URL}/blob/main/CONTRIBUTING.md`}>CONTRIBUTING.md</a>, and the legal basis for each statutory rule is in <a className={link} href={`${REPO_URL}/blob/main/docs/legal-2026.md`}>docs/legal-2026.md</a>.</p>
         )],
         ['JantaHR API', (
-          <p>The web and mobile apps use a JSON REST API, served on this site under <code className={code}>/api</code>. <a className={link} href="/api/health">/api/health</a> reports whether it is up. An OpenAPI (Swagger) reference is generated from the code: run the API locally and open <code className={code}>/docs</code>, or <code className={code}>/docs-json</code> for the OpenAPI document. It is not published on the hosted service.</p>
+          <p>The web and mobile apps use a JSON REST API, served on this site under <code className={code}>/api</code>. <a className={link} href="/api/health">/api/health</a> reports whether it is up. Requests and responses are JSON, and every error has the same shape. Calls are limited to 300 a minute from one address.</p>
+        )],
+        ['JantaHR OpenAPI specification', (
+          <p>The API is described in OpenAPI 3.0 at <a className={link} href="/openapi.json">/openapi.json</a>. It is generated from the routes and their validation rules, so it always matches the running API: each operation has an operationId, typed parameters, a request schema and the role or plan feature it needs. Handlers do not declare what they return, so success responses are described as JSON without a fixed shape. Running the API locally also gives a browsable Swagger page at <code className={code}>/docs</code>.</p>
         )],
         ['JantaHR API authentication', (
           <p>Every API call carries a Supabase Auth access token as a bearer token: <code className={code}>Authorization: Bearer &lt;access token&gt;</code>. A person signs in with email and password, a magic link or Google, with two-factor where they have enrolled it, and the API maps that sign-in to their JantaHR account, company and role. There are no long-lived API keys, so an integration acts as a signed-in user and can do only what that user&apos;s role allows.</p>

@@ -54,6 +54,12 @@ ok('all role logins work', [hr, pay, mgr, emp, aud].every(Boolean));
 // ---- auth (Supabase Auth signs in; the API verifies its tokens) ----
 ok('bad password refused by Supabase', (await signIn('admin@jantahr.com', 'nope1234')).status === 400);
 ok('no token -> 401', (await call('GET', '/employees')).status === 401);
+const spec = await call('GET', '/openapi.json');
+const specOps = Object.values(spec.data?.paths ?? {}).flatMap((item) => Object.values(item));
+ok('openapi.json is public, OpenAPI 3.0, with a unique operationId and a description on every operation',
+  spec.status === 200 && /^3\.0\./.test(spec.data?.openapi) && specOps.length > 150 && new Set(specOps.map((o) => o.operationId)).size === specOps.length && specOps.every((o) => o.description && o.responses),
+  { status: spec.status, operations: specOps.length });
+ok('openapi.json lists a real route and hides scheduler hooks', !!spec.data?.paths?.['/leave/applications']?.post && !Object.keys(spec.data?.paths ?? {}).some((p) => p.startsWith('/internal')));
 const forged = await call('GET', '/employees', `${A.split('.').slice(0, 2).join('.')}.forged-signature`);
 ok('forged token -> 401', forged.status === 401 && forged.data?.code === 'SESSION_INVALID', forged.data);
 ok('auth/me', (await call('GET', '/auth/me', emp)).data?.employee?.employeeCode === 'EMP005');

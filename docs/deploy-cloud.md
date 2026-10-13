@@ -204,7 +204,8 @@ on the deployment the same day. Plans and the webhook stay valid as long as the 
 - A notification (for example a leave request) updates the bell without a page refresh.
 - What AI agents and crawlers read: `BASE=https://<site> STRICT_VARY=1 npm run test:agents` in `packages/frontend`
   checks the Markdown version of every public page (`Accept: text/markdown`), the Markdown 404, `/llms.txt`,
-  `/sitemap.xml`, `/robots.txt`, the home page's metadata and JSON-LD, and the public MCP server at `/mcp`
+  `/sitemap.xml`, `/robots.txt`, the home page's metadata and JSON-LD, the API's OpenAPI document at `/openapi.json`
+  (built by the API from its own routes, see `packages/backend/src/openapi`), and the public MCP server at `/mcp`
   (discovery at `/.well-known/mcp`). Add `EXPECT_ADDRESS=1` once `BILLING_SELLER_ADDRESS` is set. A new public page
   is listed once, in `packages/frontend/src/lib/site/site.ts`.
 

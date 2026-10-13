@@ -5,8 +5,9 @@ import { Prisma } from '@prisma/client';
 import { json } from 'express';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
+import { openApiDocument } from './openapi/openapi';
 
-import type { IncomingMessage } from 'http';
+import type { IncomingMessage, ServerResponse } from 'http';
 // Serialise Prisma Decimals as JSON numbers (amounts are < 2^53 with 2 dp).
 (Prisma.Decimal.prototype as unknown as { toJSON(this: Prisma.Decimal): number }).toJSON = function (this: Prisma.Decimal) {
   return Number(this);
@@ -29,6 +30,19 @@ async function bootstrap() {
   app.enableCors({ origin: origins, credentials: true, methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'], exposedHeaders: ['Content-Disposition'] });
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true, transformOptions: { enableImplicitConversion: false } }));
   app.enableShutdownHooks();
+
+  // The OpenAPI description of the API, public and built on first request from the routes themselves (src/openapi).
+  // Registered on the HTTP adapter so it sits outside the guards; it describes the API and holds no data.
+  let openApi: unknown;
+  app.getHttpAdapter().get(`${prefix ? `/${prefix}` : ''}/openapi.json`, (_req: IncomingMessage, res: ServerResponse) => {
+    try {
+      openApi ??= openApiDocument(AppModule, prefix);
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'public, max-age=300' }).end(JSON.stringify(openApi));
+    } catch (e) {
+      logger.error('OpenAPI document could not be built', (e as Error)?.stack);
+      res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' }).end(JSON.stringify({ statusCode: 500, error: 'Internal Server Error', message: 'The API description is unavailable.' }));
+    }
+  });
 
   if (process.env.NODE_ENV !== 'production') {
     const config = new DocumentBuilder().setTitle('JantaHR API').setDescription('India-first HRMS').setVersion('1.0').addBearerAuth().build();
