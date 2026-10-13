@@ -47,7 +47,7 @@ await check('home: canonical, lang, og:image, og:type and a title that names the
   assert.match(html, /<link rel="canonical" href="https?:\/\/[^"]+\/?"/);
   assert.match(html, /<meta property="og:type" content="website"/);
   assert.match(html, /<meta property="og:image" content="https?:\/\/[^"]+overview\.webp"/);
-  assert.match(html, /<title>JantaHR: HR and payroll software for India<\/title>/);
+  assert.match(html, /<title>JantaHR: HRMS and payroll software for India<\/title>/);
 });
 
 await check('home: JSON-LD with Organization (contactPoint) and SoftwareApplication (offers)', async () => {
@@ -114,6 +114,7 @@ await check('/llms.txt: summary, when-to-use guidance and links', async () => {
   assert.equal(res.status, 200);
   assert.ok(/^text\/(markdown|plain)/.test(type(res)));
   assert.match(body, /^# JantaHR\n\n> /);
+  assert.match(body, /\/openapi\.json\)/);
   for (const heading of ['## When to use JantaHR', '## When not to use JantaHR', '## How an agent should use JantaHR', '## Developer resources', '## Optional']) assert.ok(body.includes(heading), `missing ${heading}`);
   assert.match(body, /\/mcp\b/);
   assert.match(body, /- \[JantaHR pricing\]\(https?:\/\/[^)]+\/pricing\): /);
@@ -135,6 +136,30 @@ await check('/robots.txt: allows crawling, keeps the API out, names the sitemap'
   assert.match(body, /User-Agent: \*/i);
   assert.match(body, /Disallow: \/api\//);
   assert.match(body, /Sitemap: https?:\/\/\S+\/sitemap\.xml/);
+});
+
+await check('/openapi.json: OpenAPI 3 with a unique operationId, description and responses on every operation', async () => {
+  const res = await get('/openapi.json', 'application/json');
+  // the document comes from the API; a web app started on its own (CI's frontend job) has none to pass on
+  if (res.status === 503 && !process.env.EXPECT_OPENAPI) { console.log('note  no API behind this site, /openapi.json not checked'); return; }
+  assert.equal(res.status, 200);
+  assert.ok(type(res).startsWith('application/json'), `content-type ${type(res)}`);
+  const doc = await res.json();
+  assert.match(doc.openapi, /^3\.0\.\d+$/);
+  assert.ok(doc.info.title && doc.info.version && doc.servers[0].url);
+  assert.equal(doc.components.securitySchemes.bearerAuth.scheme, 'bearer');
+  const ops = Object.values(doc.paths).flatMap((item) => Object.values(item));
+  assert.ok(ops.length > 150, `only ${ops.length} operations`);
+  assert.equal(new Set(ops.map((o) => o.operationId)).size, ops.length, 'operationIds repeat');
+  for (const op of ops) {
+    assert.match(op.operationId, /^[A-Za-z0-9_-]{1,64}$/);
+    assert.ok(op.description.length > 20 && Object.keys(op.responses).length > 0, op.operationId);
+    for (const p of op.parameters ?? []) assert.ok(p.schema, `${op.operationId} ${p.name}`);
+  }
+  assert.ok(!Object.keys(doc.paths).some((p) => p.startsWith('/internal') || p.includes('webhook')));
+  // where the API is a path on this site, the server URL in the document must lead to it
+  const server = doc.servers[0].url.replace(/\/$/, '');
+  if (server.startsWith('/')) assert.equal((await get(`${server}/health`)).status, 200, 'the server URL in the document does not reach the API');
 });
 
 await check('/.well-known/mcp: discovery document', async () => {
