@@ -31,6 +31,24 @@ for (const [k, why] of Object.entries(need)) {
 if (env.JWT_SECRET && env.JWT_SECRET.length < 32) warn('JWT_SECRET is shorter than 32 characters', 'use 48+ random characters in production');
 console.log(`  · edition: ${env.EDITION || 'self_hosted'}${env.EDITION === 'cloud' ? `, billing: ${env.BILLING_PROVIDER === 'mock' ? 'mock (development only)' : env.RAZORPAY_KEY_ID ? 'Razorpay' : 'not configured'}` : ''}`);
 
+// A rejected key or a plan from another account/mode makes every checkout fail, so prove both before going live.
+if (env.EDITION === 'cloud' && env.RAZORPAY_KEY_ID && env.RAZORPAY_KEY_SECRET) {
+  section('Payments (Razorpay)');
+  const auth = `Basic ${Buffer.from(`${env.RAZORPAY_KEY_ID}:${env.RAZORPAY_KEY_SECRET}`).toString('base64')}`;
+  let plans = {};
+  try { plans = JSON.parse(env.RAZORPAY_PLAN_IDS || '{}'); } catch { fail('RAZORPAY_PLAN_IDS is not valid JSON', 'run `pnpm razorpay:plans` and paste the line it prints'); }
+  for (const key of ['STANDARD_MONTHLY', 'STANDARD_ANNUAL', 'PROFESSIONAL_MONTHLY', 'PROFESSIONAL_ANNUAL']) {
+    if (!plans[key]) { fail(`no Razorpay plan for ${key}`, 'run `pnpm razorpay:plans` and set RAZORPAY_PLAN_IDS'); continue; }
+    try {
+      const res = await fetch(`https://api.razorpay.com/v1/plans/${plans[key]}`, { headers: { authorization: auth }, signal: AbortSignal.timeout(15000) });
+      if (res.status === 401) { fail('Razorpay rejected RAZORPAY_KEY_ID / RAZORPAY_KEY_SECRET', 'generate a key in the Razorpay dashboard (Account & Settings > API keys) and set both values; a regenerated key replaces the old one'); break; }
+      if (res.ok) pass(`${key} plan exists (${env.RAZORPAY_KEY_ID.startsWith('rzp_live_') ? 'live' : 'test'} mode)`);
+      else fail(`${key}: plan ${plans[key]} not found in this account or mode`, 'run `pnpm razorpay:plans` with these keys');
+    } catch (e) { warn(`could not reach Razorpay: ${e.message}`, 'check the network and run again'); break; }
+  }
+  if (!env.RAZORPAY_WEBHOOK_SECRET) warn('RAZORPAY_WEBHOOK_SECRET is not set', 'renewals and failed payments arrive by webhook; see docs/deploy-cloud.md');
+}
+
 section('Database');
 if (env.DATABASE_URL) {
   const prisma = new PrismaClient({ datasources: { db: { url: env.DATABASE_URL } } });

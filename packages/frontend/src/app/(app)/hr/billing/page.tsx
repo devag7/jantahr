@@ -52,6 +52,8 @@ function Cloud({ d }: { d: BillingOverview }) {
   const sub = d.subscription;
   const ent = d.entitlements;
   const paid = sub && sub.plan !== 'FREE' && ['ACTIVE', 'PAST_DUE', 'CANCELLED'].includes(sub.status);
+  // older API builds do not report payment health: assume payable when a provider is configured
+  const payable = !!d.provider && d.payments?.ready !== false;
   const [status, label] = STATUS[sub?.status ?? 'ACTIVE'] ?? ['ACTIVE', 'Active'];
   return (
     <div className="space-y-8">
@@ -59,10 +61,17 @@ function Cloud({ d }: { d: BillingOverview }) {
         <StatCard label="Plan" value={ent.plan === 'SELF_HOSTED' ? 'Self-hosted' : d.plans.find((p) => p.key === ent.plan)?.name ?? ent.plan} hint={<StatusBadge status={status} label={label} />} />
         <StatCard label="Employees" value={d.usage.activeEmployees} hint={d.usage.seatLimit ? `of ${d.usage.seatLimit} seats` : 'No seat limit'} tone={d.usage.seatLimit && d.usage.activeEmployees >= d.usage.seatLimit ? 'warning' : 'default'} />
         <StatCard label={sub?.status === 'TRIALING' ? 'Trial ends' : 'Renews'} value={sub?.status === 'TRIALING' ? (sub.trialEndsAt ? formatDate(sub.trialEndsAt) : '-') : sub?.currentPeriodEnd ? formatDate(sub.currentPeriodEnd) : '-'} hint={sub?.cancelAtPeriodEnd ? 'Will not renew' : sub?.cycle === 'ANNUAL' ? 'Billed yearly' : paid ? 'Billed monthly' : undefined} />
-        <StatCard label="Payments" value={d.provider === 'razorpay' ? 'Razorpay' : d.provider === 'mock' ? 'Test mode' : 'Not set up'} hint={d.provider === 'mock' ? 'Development payments, no money moves' : undefined} />
+        <StatCard label="Payments" value={payable ? (d.provider === 'razorpay' ? 'Razorpay' : 'Test mode') : d.provider ? 'Unavailable' : 'Not set up'} hint={d.provider === 'mock' ? 'Development payments, no money moves' : undefined} tone={d.provider && !payable ? 'warning' : 'default'} />
       </div>
 
-      {owner && d.provider && (paid ? <ManagePlan d={d} /> : <ChoosePlan d={d} />)}
+      {owner && d.provider && !payable && (
+        <p role="status" className="rounded-lg border border-warning/40 bg-warning/10 px-5 py-4 text-caption">
+          <span className="font-semibold">Online payment is temporarily unavailable.</span> Nothing has been charged and your current plan{sub?.status === 'TRIALING' ? ' and trial are' : ' is'} unchanged. Please try again later.
+          {/* the cause is an operator setting, so say which one to whoever runs the server */}
+          <span className="mt-1 block text-fine text-muted-foreground">{d.payments?.problem === 'plans' ? 'For the operator: a Razorpay plan in RAZORPAY_PLAN_IDS is missing from this Razorpay account or mode. Run `pnpm razorpay:plans`.' : 'For the operator: Razorpay rejected RAZORPAY_KEY_ID / RAZORPAY_KEY_SECRET. Generate a key in the Razorpay dashboard and update the server.'}</span>
+        </p>
+      )}
+      {owner && d.provider && (paid ? <ManagePlan d={d} /> : payable && <ChoosePlan d={d} />)}
       {!owner && <p className="text-caption text-muted-foreground">Only the account owner (Super admin) can change the plan.</p>}
       {!d.provider && owner && <p className="text-caption text-muted-foreground">Online payments are not configured on this server. Set RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET and RAZORPAY_PLAN_IDS on the API.</p>}
 

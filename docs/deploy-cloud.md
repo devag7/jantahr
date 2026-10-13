@@ -187,6 +187,11 @@ account, and test and live mode have separate plans and webhooks.
 4. Test end to end in test mode: sign up, buy Standard for 10 seats with a Razorpay test card, confirm the plan turns
    active and the GST invoice (`JH/2026-27/000001`) downloads. Then repeat steps 1 to 3 with the live keys.
 
+If Razorpay rejects the key, or a plan ID belongs to another account or mode, the Billing page says "Online payment is
+temporarily unavailable" instead of offering a checkout that would fail, and `doctor` names the setting to fix.
+Regenerating a key in the Razorpay dashboard replaces the old one: update `RAZORPAY_KEY_ID` and `RAZORPAY_KEY_SECRET`
+on the deployment the same day. Plans and the webhook stay valid as long as the account and mode are the same.
+
 ## 4. Check the deployment
 
 - Run `pnpm --filter jantahr-backend doctor` with the API's environment: it checks every setting above and prints

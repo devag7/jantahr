@@ -16,26 +16,60 @@ export function verifyWebhookSignature(rawBody: Buffer | string, signature: stri
   return safeEqual(hmac(webhookSecret, rawBody), signature);
 }
 
+/**
+ * A failed Razorpay call. `status` is the HTTP status (401 = the API key was rejected), or 0 when Razorpay could not
+ * be reached or this server is misconfigured. Callers turn it into a response the customer can act on.
+ */
+export class RazorpayError extends Error {
+  constructor(message: string, readonly status: number, readonly kind: 'credentials' | 'plans' | 'unreachable' | 'rejected') { super(message); }
+}
+
+export const RAZORPAY_PLAN_KEYS = ['STANDARD_MONTHLY', 'STANDARD_ANNUAL', 'PROFESSIONAL_MONTHLY', 'PROFESSIONAL_ANNUAL'];
+
 export interface RazorpayConfig { keyId: string; keySecret: string; planIds: Record<string, string> }
 
 export class RazorpayClient {
   constructor(private cfg: RazorpayConfig, private base = 'https://api.razorpay.com/v1') {}
 
   private async call<T>(method: string, path: string, body?: unknown): Promise<T> {
-    const res = await fetch(`${this.base}${path}`, {
-      method,
-      headers: { 'content-type': 'application/json', authorization: `Basic ${Buffer.from(`${this.cfg.keyId}:${this.cfg.keySecret}`).toString('base64')}` },
-      body: body ? JSON.stringify(body) : undefined,
-    });
+    let res: Response;
+    try {
+      res = await fetch(`${this.base}${path}`, {
+        method,
+        headers: { 'content-type': 'application/json', authorization: `Basic ${Buffer.from(`${this.cfg.keyId}:${this.cfg.keySecret}`).toString('base64')}` },
+        body: body ? JSON.stringify(body) : undefined,
+        signal: AbortSignal.timeout(15_000),
+      });
+    } catch (e) {
+      throw new RazorpayError(`Razorpay ${method} ${path} could not be reached: ${(e as Error).message}`, 0, 'unreachable');
+    }
     const data = (await res.json().catch(() => ({}))) as T & { error?: { description?: string } };
-    if (!res.ok) throw new Error(data?.error?.description || `Razorpay ${method} ${path} failed (${res.status})`);
+    if (!res.ok) {
+      const message = data?.error?.description || `Razorpay ${method} ${path} failed (${res.status})`;
+      throw new RazorpayError(message, res.status, res.status === 401 ? 'credentials' : res.status >= 500 ? 'unreachable' : 'rejected');
+    }
     return data as T;
   }
 
   planId(plan: string, cycle: string): string {
     const id = this.cfg.planIds[`${plan}_${cycle}`];
-    if (!id) throw new Error(`No Razorpay plan configured for ${plan}_${cycle} (RAZORPAY_PLAN_IDS)`);
+    if (!id) throw new RazorpayError(`No Razorpay plan configured for ${plan}_${cycle} (RAZORPAY_PLAN_IDS)`, 0, 'plans');
     return id;
+  }
+
+  /**
+   * Proves the key is accepted and every plan JantaHR sells exists in this Razorpay account and mode. Throws a
+   * RazorpayError naming the first problem. Read-only.
+   */
+  async verify(): Promise<void> {
+    const missing = RAZORPAY_PLAN_KEYS.filter((k) => !this.cfg.planIds[k]);
+    if (missing.length) throw new RazorpayError(`RAZORPAY_PLAN_IDS has no plan for ${missing.join(', ')}`, 0, 'plans');
+    await Promise.all(RAZORPAY_PLAN_KEYS.map(async (k) => {
+      try { await this.call('GET', `/plans/${this.cfg.planIds[k]}`); } catch (e) {
+        if (e instanceof RazorpayError && e.kind === 'rejected') throw new RazorpayError(`Razorpay plan for ${k} was not found in this account or mode: ${e.message}`, e.status, 'plans');
+        throw e;
+      }
+    }));
   }
 
   createSubscription(p: { plan: string; cycle: string; seats: number; notes: Record<string, string> }) {

@@ -1,4 +1,4 @@
-import { BadRequestException, ForbiddenException, Injectable, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, Logger, NotFoundException, UnauthorizedException, ServiceUnavailableException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { BillingCycle, PlanCode, Prisma, Subscription } from '@prisma/client';
 import * as crypto from 'crypto';
@@ -14,7 +14,7 @@ import { NotificationsService } from '../notifications/notifications.service';
 import { EntitlementsService } from './entitlements.service';
 import { gstFromInclusive, gstOnTaxable, invoiceNumber } from './gst';
 import { FEATURES, PLANS, PlanKey, TRIAL_DAYS, TRIAL_PLAN, periodPricePaise, gstRateFor } from './plans';
-import { RazorpayClient, verifyCheckoutSignature, verifyWebhookSignature, RazorpayWebhook } from './razorpay';
+import { RazorpayClient, RazorpayError, verifyCheckoutSignature, verifyWebhookSignature, RazorpayWebhook } from './razorpay';
 
 import { errorMessage } from '../../common/utils/errors';
 export class CheckoutDto {
@@ -69,6 +69,42 @@ export class BillingService {
     this.gstRate = gstRateFor(config.get<string>('BILLING_SELLER_GSTIN'));
   }
 
+  /** Result of the last Razorpay self-check; a healthy answer is trusted for longer than a failing one. */
+  private health: { at: number; problem: RazorpayError['kind'] | null } | null = null;
+
+  /**
+   * Whether a customer can pay right now. A rejected key or a missing plan makes every checkout fail, so the billing
+   * page says so up front instead of failing after the customer has chosen a plan. Razorpay being slow or down is not
+   * treated as a fault here: the checkout itself reports that.
+   */
+  async paymentsStatus(): Promise<{ ready: boolean; problem: 'credentials' | 'plans' | null }> {
+    if (this.provider !== 'razorpay') return { ready: this.provider === 'mock', problem: null };
+    const fresh = this.health && Date.now() - this.health.at < (this.health.problem ? 60_000 : 10 * 60_000);
+    if (!fresh) {
+      let problem: RazorpayError['kind'] | null = null;
+      try { await this.razorpay!.verify(); } catch (e) {
+        problem = e instanceof RazorpayError ? e.kind : 'unreachable';
+        this.logger.error(`Razorpay self-check failed (${problem}): ${(e as Error).message}`);
+      }
+      this.health = { at: Date.now(), problem };
+    }
+    const problem = this.health!.problem;
+    return problem === 'credentials' || problem === 'plans' ? { ready: false, problem } : { ready: true, problem: null };
+  }
+
+  /** Runs a Razorpay call and turns a failure into a response the customer can act on, never a bare 500. */
+  private async viaRazorpay<T>(what: string, run: (client: RazorpayClient) => Promise<T>): Promise<T> {
+    try { return await run(this.razorpay!); } catch (e) {
+      if (!(e instanceof RazorpayError)) throw e;
+      this.logger.error(`Razorpay ${what} failed (${e.kind}, ${e.status}): ${e.message}`);
+      if (e.kind === 'rejected') throw new BadRequestException(`The payment provider did not accept this request: ${e.message}`);
+      this.health = e.kind === 'unreachable' ? this.health : { at: Date.now(), problem: e.kind };
+      throw new ServiceUnavailableException(e.kind === 'unreachable'
+        ? 'The payment provider is not responding. Nothing was charged; please try again in a few minutes.'
+        : 'Online payment is not available right now. Nothing was charged and your current plan is unchanged; please contact support.');
+    }
+  }
+
   private requireCloud() {
     if (!isCloud()) throw new BadRequestException('Billing is not used in the self-hosted edition: every feature is already included.');
   }
@@ -93,15 +129,17 @@ export class BillingService {
   }
 
   async overview(companyId: string) {
-    const [sub, ent, active, invoices] = await Promise.all([
+    const [sub, ent, active, invoices, payments] = await Promise.all([
       this.prisma.subscription.findUnique({ where: { companyId } }),
       this.entitlements.for(companyId),
       this.prisma.employee.count({ where: { companyId, status: { not: 'LEFT' } } }),
       this.prisma.billingInvoice.findMany({ where: { companyId }, orderBy: { issuedAt: 'desc' }, take: 24 }),
+      this.paymentsStatus(),
     ]);
     return {
       ...this.catalogue(),
       provider: this.provider,
+      payments,
       razorpayKeyId: this.provider === 'razorpay' ? this.config.get<string>('RAZORPAY_KEY_ID') : null,
       subscription: sub,
       entitlements: ent,
@@ -132,7 +170,7 @@ export class BillingService {
 
     let providerSubscriptionId: string;
     if (provider === 'razorpay') {
-      const r = await this.razorpay!.createSubscription({ plan: dto.plan, cycle: dto.cycle, seats: dto.seats, notes: { companyId: user.companyId, plan: dto.plan, cycle: dto.cycle } });
+      const r = await this.viaRazorpay('checkout', (c) => c.createSubscription({ plan: dto.plan, cycle: dto.cycle, seats: dto.seats, notes: { companyId: user.companyId, plan: dto.plan, cycle: dto.cycle } }));
       providerSubscriptionId = r.id;
     } else providerSubscriptionId = `mock_sub_${crypto.randomUUID()}`;
 
@@ -208,7 +246,7 @@ export class BillingService {
     if (seats < min) throw new BadRequestException(`You need at least ${min} seats`);
     // adding seats applies now (prorated by the provider); removing seats applies at renewal
     const atCycleEnd = seats < sub.seats;
-    if (provider === 'razorpay' && sub.providerSubscriptionId) await this.razorpay!.update(sub.providerSubscriptionId, { seats, atCycleEnd });
+    if (provider === 'razorpay' && sub.providerSubscriptionId) await this.viaRazorpay('seat change', (c) => c.update(sub.providerSubscriptionId!, { seats, atCycleEnd }));
     const updated = await this.prisma.subscription.update({ where: { id: sub.id }, data: atCycleEnd ? { pendingSeats: seats } : { seats } });
     this.entitlements.invalidate(user.companyId);
     return { subscription: updated, appliesAt: atCycleEnd ? updated.currentPeriodEnd : new Date() };
@@ -218,7 +256,7 @@ export class BillingService {
     const provider = this.requireProvider();
     const sub = await this.prisma.subscription.findUnique({ where: { companyId: user.companyId } });
     if (!sub || sub.plan === 'FREE' || !['ACTIVE', 'PAST_DUE'].includes(sub.status)) throw new BadRequestException('There is no paid subscription to cancel');
-    if (provider === 'razorpay' && sub.providerSubscriptionId) await this.razorpay!.cancel(sub.providerSubscriptionId, true);
+    if (provider === 'razorpay' && sub.providerSubscriptionId) await this.viaRazorpay('cancellation', (c) => c.cancel(sub.providerSubscriptionId!, true));
     const updated = await this.prisma.subscription.update({ where: { id: sub.id }, data: { status: 'CANCELLED', cancelAtPeriodEnd: true, lapsedPlan: sub.plan } });
     this.entitlements.invalidate(user.companyId);
     return updated;
