@@ -83,6 +83,21 @@ jobs:
       - run: npm run build
         env:
           NEXT_PUBLIC_API_URL: http://localhost:3002
+      - name: Unit tests (Markdown conversion, content negotiation, JSON-LD, MCP protocol)
+        run: npm test
+      - name: Cloud edition, built and started, answers agents and crawlers (Markdown, llms.txt, sitemap, JSON-LD, MCP)
+        env:
+          NEXT_PUBLIC_EDITION: cloud
+          NEXT_PUBLIC_API_URL: /api
+          NEXT_PUBLIC_SITE_URL: http://localhost:3111
+        run: |
+          npm run build
+          PORT=3111 npm start > web.log 2>&1 &
+          for i in $(seq 1 30); do curl -sf http://localhost:3111/login > /dev/null && break; sleep 1; done
+          BASE=http://localhost:3111 npm run test:agents
+      - name: Web log on failure
+        if: failure()
+        run: cat web.log || true
 
   terraform:
     runs-on: ubuntu-latest

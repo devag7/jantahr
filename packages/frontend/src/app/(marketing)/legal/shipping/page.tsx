@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { ContactLine, LegalPage } from '@/components/marketing/legal-page';
 import { INVOICE, OPERATOR } from '@/lib/operator';
 
-export const metadata: Metadata = { title: 'Shipping and delivery' };
+export const metadata: Metadata = { title: 'Shipping and delivery', alternates: { canonical: '/legal/shipping' } };
 
 const SECTIONS: [string, string][] = [
   ['Nothing is shipped', 'JantaHR is software delivered over the internet. We do not sell or ship physical goods, so there are no shipping charges, couriers or delivery addresses.'],

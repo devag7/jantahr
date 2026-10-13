@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { ContactLine, LegalPage } from '@/components/marketing/legal-page';
 import { INVOICE, OPERATOR, PLUS_GST } from '@/lib/operator';
 
-export const metadata: Metadata = { title: 'Terms of service' };
+export const metadata: Metadata = { title: 'Terms of service', alternates: { canonical: '/legal/terms' } };
 
 const SECTIONS: [string, string][] = [
   ['Who we are', `JantaHR Cloud is operated by ${OPERATOR.name}${OPERATOR.address ? `, ${OPERATOR.address}` : ''} (“we”). By creating a company account you accept these terms on behalf of that company.`],

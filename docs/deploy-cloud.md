@@ -143,6 +143,7 @@ secret) so they match the legal name and address on your Razorpay account and GS
 | `BILLING_SELLER_ADDRESS` | registered address, one line (also on invoices) |
 | `SUPPORT_EMAIL` | contact email, a mailbox you read |
 | `SUPPORT_PHONE` | contact phone, with country code |
+| `NEXT_PUBLIC_SITE_URL` | the site's public address, e.g. `https://hr.example.in`, once you use your own domain (Vercel's production address is used until then) |
 | `BILLING_SELLER_GSTIN` | your GST number, **only if you are registered under GST** (see below) |
 
 **GST.** Only a GST-registered seller may collect GST. JantaHR therefore adds 18% GST, prints tax lines on invoices and
@@ -201,6 +202,11 @@ on the deployment the same day. Plans and the webhook stay valid as long as the 
 - Upload a document larger than 4.5 MB under *My work → Profile → Documents* and download it again, or run
   `test/storage-roundtrip.mjs` against the deployment (upload, download, delete through the API).
 - A notification (for example a leave request) updates the bell without a page refresh.
+- What AI agents and crawlers read: `BASE=https://<site> STRICT_VARY=1 npm run test:agents` in `packages/frontend`
+  checks the Markdown version of every public page (`Accept: text/markdown`), the Markdown 404, `/llms.txt`,
+  `/sitemap.xml`, `/robots.txt`, the home page's metadata and JSON-LD, and the public MCP server at `/mcp`
+  (discovery at `/.well-known/mcp`). Add `EXPECT_ADDRESS=1` once `BILLING_SELLER_ADDRESS` is set. A new public page
+  is listed once, in `packages/frontend/src/lib/site/site.ts`.
 
 ## Plans and entitlements
 

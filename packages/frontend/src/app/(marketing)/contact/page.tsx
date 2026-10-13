@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { LegalPage } from '@/components/marketing/legal-page';
 import { OPERATOR } from '@/lib/operator';
 
-export const metadata: Metadata = { title: 'Contact us' };
+export const metadata: Metadata = { title: 'Contact us', alternates: { canonical: '/contact' } };
 
 export default function ContactPage() {
   const rows: [string, React.ReactNode][] = [

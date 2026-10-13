@@ -7,7 +7,9 @@
     "build": "next build",
     "screenshots": "node scripts/capture-screenshots.mjs",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "node --experimental-strip-types --no-warnings --test src/lib/agents/agents.test.mjs",
+    "test:agents": "node test/agent-readiness.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
