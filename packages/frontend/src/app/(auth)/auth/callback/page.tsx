@@ -7,11 +7,12 @@ import { TotpStep } from '@/components/auth/totp-step';
 import { Spinner } from '@/components/common/states';
 import { errorMessage } from '@/lib/api/client';
 import { ROUTES } from '@/lib/constants';
-import { authService } from '@/services/auth/auth.service';
+import { authService, EMAIL_LINK_TYPES, type EmailLinkType } from '@/services/auth/auth.service';
 import { useAuthStore } from '@/stores/auth/auth-store';
 
 /**
- * Return point for Supabase Auth emails and Google: exchanges the PKCE code for a session, then either continues to
+ * Return point for Supabase Auth emails and Google. Email links return the session in the URL fragment, or a token hash
+ * when the project's email templates use one; both work in any browser. Google and older emails carry a PKCE code. Either way a session is established, then the page either continues to
  * `next` (the password reset form) or resolves the JantaHR account like a normal sign-in (creating the workspace a
  * new owner started before confirming their email).
  */
@@ -22,20 +23,40 @@ export default function AuthCallbackPage() {
   const user = useAuthStore((s) => s.user);
   const [error, setError] = React.useState<string | null>(null);
   const [ready, setReady] = React.useState(false);
+  const [otherBrowser, setOtherBrowser] = React.useState(false);
   const started = React.useRef(false);
 
   React.useEffect(() => {
     if (started.current) return;
     started.current = true;
     const url = new URL(window.location.href);
-    const fail = url.searchParams.get('error_description');
-    if (fail) { setError(fail); return; }
+    // emailed links return their result in the fragment (#access_token=… or #error_description=…)
+    const hash = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+    const fail = url.searchParams.get('error_description') || hash.get('error_description');
+    if (fail) { setError(/expired|invalid/i.test(fail) ? 'This link has expired or was already used. Request a new one.' : fail); return; }
     const next = url.searchParams.get('next');
     (async () => {
       const code = url.searchParams.get('code');
-      if (code) await authService.exchangeCode(code);
+      const tokenHash = url.searchParams.get('token_hash');
+      const type = url.searchParams.get('type') as EmailLinkType | null;
+      const accessToken = hash.get('access_token'), refreshToken = hash.get('refresh_token');
+      if (accessToken && refreshToken) {
+        await authService.adoptSession(accessToken, refreshToken);
+        // the tokens are in the address bar: drop them from the URL and the history entry
+        window.history.replaceState(null, '', url.pathname + url.search);
+      } else if (tokenHash && type && EMAIL_LINK_TYPES.includes(type)) await authService.verifyEmailLink(tokenHash, type);
+      else if (code) {
+        try {
+          await authService.exchangeCode(code);
+        } catch (e) {
+          // A `code` link only completes in the browser that started it. Opened elsewhere (a mail app, another
+          // device) it fails here, but Supabase has already confirmed the address by then.
+          if (/code verifier/i.test(errorMessage(e))) { setOtherBrowser(true); return; }
+          throw e;
+        }
+      }
       if (!(await authService.hasSession())) throw new Error('This link is invalid or has expired. Request a new one.');
-      if (next === '/reset-password') { router.replace(next); return; }
+      if (next === '/reset-password' || type === 'recovery' || hash.get('type') === 'recovery') { router.replace('/reset-password'); return; }
       await bootstrap();
       setReady(true);
     })().catch((e) => setError(errorMessage(e)));
@@ -47,6 +68,14 @@ export default function AuthCallbackPage() {
     else if (status === 'no-account' || status === 'anonymous') router.replace(ROUTES.LOGIN);
   }, [ready, status, user, router]);
 
+  if (otherBrowser) {
+    return (
+      <>
+        <AuthHeading title="Your email is confirmed" subtitle="This link was opened in a different browser from the one you started in, so we could not sign you in automatically. Sign in with your email and password to continue." />
+        <p className="mt-6"><Link href={ROUTES.LOGIN} className="inline-flex h-11 items-center rounded-full bg-primary px-[22px] text-body text-primary-foreground transition-transform active:scale-[0.95]">Sign in</Link></p>
+      </>
+    );
+  }
   if (error) {
     return (
       <>

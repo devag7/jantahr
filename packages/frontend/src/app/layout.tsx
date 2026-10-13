@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
+import { AuthLinkForwarder } from '@/components/auth/auth-link-forwarder';
 import { AppProviders } from '@/components/providers/app-providers';
 
 // SF Pro via the system stack on Apple devices; Inter (the reference's named substitute) everywhere else
@@ -20,6 +21,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} font-sans`}>
+        <AuthLinkForwarder />
         <AppProviders>{children}</AppProviders>
       </body>
     </html>

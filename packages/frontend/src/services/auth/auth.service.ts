@@ -1,7 +1,7 @@
 import type { AuthError } from '@supabase/supabase-js';
 import { get, post } from '@/lib/api/client';
 import { ENDPOINTS as E } from '@/lib/api/endpoints';
-import { createClient } from '@/lib/supabase/client';
+import { createClient, createEmailFlowClient } from '@/lib/supabase/client';
 import type { CompanyDetails, SessionUser, SignupInput, TotpEnrolment } from '@/types/auth';
 import type { Ok } from '@/types/common';
 
@@ -9,7 +9,15 @@ import type { Ok } from '@/types/common';
 export const SIGNUP_METADATA_KEY = 'jantahr_signup';
 
 const auth = () => createClient().auth;
-const callbackUrl = (next?: string) => `${window.location.origin}/auth/callback${next ? `?next=${encodeURIComponent(next)}` : ''}`;
+/** For requests that make Supabase send an email: their links must work in any browser (see createEmailFlowClient). */
+const mailer = () => createEmailFlowClient().auth;
+// No query string: Supabase only redirects to URLs on its allow-list, and `…/auth/callback?next=…` does not match the
+// listed `…/auth/callback`, so the user would be dropped on the site's home page. The callback reads the link type instead.
+const callbackUrl = () => `${window.location.origin}/auth/callback`;
+
+/** Kinds of emailed link Supabase Auth sends (the `type` query parameter of our email templates). */
+export const EMAIL_LINK_TYPES = ['email', 'signup', 'magiclink', 'recovery', 'invite', 'email_change'] as const;
+export type EmailLinkType = (typeof EMAIL_LINK_TYPES)[number];
 
 /** Supabase Auth errors in the words the sign-in screens use. */
 function fail(error: AuthError | null): void {
@@ -34,19 +42,28 @@ export const authService = {
   signIn: async (email: string, password: string) => fail((await auth().signInWithPassword({ email, password })).error),
   signOut: async () => { await auth().signOut(); },
   sendMagicLink: async (email: string) => {
-    const { error } = await auth().signInWithOtp({ email, options: { emailRedirectTo: callbackUrl(), shouldCreateUser: false } });
+    const { error } = await mailer().signInWithOtp({ email, options: { emailRedirectTo: callbackUrl(), shouldCreateUser: false } });
     // an unknown address answers "signups not allowed"; report success either way so accounts cannot be probed
     if (error?.code !== 'otp_disabled' && !/signups not allowed/i.test(error?.message ?? '')) fail(error);
   },
   signInWithGoogle: async () => fail((await auth().signInWithOAuth({ provider: 'google', options: { redirectTo: callbackUrl() } })).error),
-  sendPasswordReset: async (email: string) => fail((await auth().resetPasswordForEmail(email, { redirectTo: callbackUrl('/reset-password') })).error),
+  sendPasswordReset: async (email: string) => fail((await mailer().resetPasswordForEmail(email, { redirectTo: callbackUrl() })).error),
   /** Creates the Supabase account; returns whether the email must be confirmed before the workspace can be created. */
   signUp: async ({ email, password, ...company }: SignupInput) => {
-    const { data, error } = await auth().signUp({ email, password, options: { data: { [SIGNUP_METADATA_KEY]: company }, emailRedirectTo: callbackUrl() } });
+    const { data, error } = await mailer().signUp({ email, password, options: { data: { [SIGNUP_METADATA_KEY]: company }, emailRedirectTo: callbackUrl() } });
     fail(error);
+    // with email confirmation switched off Supabase signs the user in at once: hand that session to the main client
+    if (data.session) fail((await auth().setSession({ access_token: data.session.access_token, refresh_token: data.session.refresh_token })).error);
     return { needsConfirmation: !data.session };
   },
   exchangeCode: async (code: string) => fail((await auth().exchangeCodeForSession(code)).error),
+  /** Signs in from an emailed link that returned the session in the URL fragment (the links createEmailFlowClient asks for). */
+  adoptSession: async (accessToken: string, refreshToken: string) => fail((await auth().setSession({ access_token: accessToken, refresh_token: refreshToken })).error),
+  /**
+   * Signs in from an emailed link that carries a token hash. Unlike the PKCE `code` links, these work in any browser or
+   * device, which matters because people open mail in a different app from the one they signed up in.
+   */
+  verifyEmailLink: async (tokenHash: string, type: EmailLinkType) => fail((await auth().verifyOtp({ token_hash: tokenHash, type })).error),
   pendingCompany: async (): Promise<CompanyDetails | null> => {
     const { data } = await auth().getUser();
     return (data.user?.user_metadata?.[SIGNUP_METADATA_KEY] as CompanyDetails | undefined) ?? null;
