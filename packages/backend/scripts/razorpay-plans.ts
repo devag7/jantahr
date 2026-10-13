@@ -1,7 +1,9 @@
 /**
  * Creates the Razorpay subscription plans JantaHR bills against and prints the RAZORPAY_PLAN_IDS value for the API.
- * Amounts come from the plan catalogue (src/modules/billing/plans.ts): per seat, for one billing period, including
- * 18% GST, because Razorpay charges the plan amount and the JantaHR invoice splits the tax back out.
+ * Amounts come from the plan catalogue (src/modules/billing/plans.ts): per seat, for one billing period. When the
+ * seller is GST-registered (BILLING_SELLER_GSTIN is set) they include 18% GST, because Razorpay charges the plan amount
+ * and the JantaHR invoice splits the tax back out; otherwise they are the plain price. Run it again after adding or
+ * removing the GSTIN: the amounts change, so new plans are created.
  *
  *   pnpm --filter jantahr-backend razorpay:plans            create what is missing (needs RAZORPAY_KEY_ID / _SECRET)
  *   pnpm --filter jantahr-backend razorpay:plans --dry-run  only show the plans and amounts
@@ -9,13 +11,13 @@
  * Safe to re-run: a plan that already exists with the same key and amount is reused. Test keys (rzp_test_…) and live
  * keys (rzp_live_…) have separate plans, so run it once for each and keep the two outputs apart.
  */
-import { GST_RATE, PLANS, PlanKey } from '../src/modules/billing/plans';
+import { gstRateFor, PLANS, PlanKey } from '../src/modules/billing/plans';
 
 type Cycle = 'MONTHLY' | 'ANNUAL';
 interface Wanted { key: string; name: string; period: 'monthly' | 'yearly'; amount: number; description: string }
 interface RazorpayPlan { id: string; period: string; interval: number; item: { name: string; amount: number; currency: string }; notes?: Record<string, string> }
 
-export function wantedPlans(): Wanted[] {
+export function wantedPlans(rate = gstRateFor(process.env.BILLING_SELLER_GSTIN)): Wanted[] {
   const out: Wanted[] = [];
   for (const plan of Object.keys(PLANS) as PlanKey[]) {
     const price = PLANS[plan].pricePaise;
@@ -26,8 +28,8 @@ export function wantedPlans(): Wanted[] {
         key: `${plan}_${cycle}`,
         name: `JantaHR ${PLANS[plan].name} (${cycle === 'ANNUAL' ? 'yearly' : 'monthly'})`,
         period: cycle === 'ANNUAL' ? 'yearly' : 'monthly',
-        amount: Math.round(beforeTax * (1 + GST_RATE)),
-        description: `Per employee seat, ${cycle === 'ANNUAL' ? 'per year' : 'per month'}, including 18% GST`,
+        amount: Math.round(beforeTax * (1 + rate)),
+        description: `Per employee seat, ${cycle === 'ANNUAL' ? 'per year' : 'per month'}${rate ? ', including 18% GST' : ''}`,
       });
     }
   }

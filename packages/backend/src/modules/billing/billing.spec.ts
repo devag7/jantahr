@@ -64,6 +64,9 @@ describe('pricing & GST', () => {
     expect(gstOnTaxable(100000, 'Karnataka', 'Karnataka')).toEqual({ taxablePaise: 100000, cgstPaise: 9000, sgstPaise: 9000, igstPaise: 0, totalPaise: 118000 });
     expect(gstOnTaxable(100000, 'Karnataka', 'Maharashtra')).toMatchObject({ igstPaise: 18000, cgstPaise: 0, totalPaise: 118000 });
     expect(gstOnTaxable(100000, 'Karnataka', null).igstPaise).toBe(18000);
+    // a seller without a GSTIN charges no GST at all
+    expect(gstOnTaxable(100000, 'Karnataka', 'Karnataka', 0)).toEqual({ taxablePaise: 100000, cgstPaise: 0, sgstPaise: 0, igstPaise: 0, totalPaise: 100000 });
+    expect(gstFromInclusive(59000, 'Karnataka', 'Maharashtra', 0)).toEqual({ taxablePaise: 59000, cgstPaise: 0, sgstPaise: 0, igstPaise: 0, totalPaise: 59000 });
   });
   it('GST-inclusive charges reconcile to the paisa', () => {
     const g = gstFromInclusive(69620, 'Karnataka', 'Karnataka');

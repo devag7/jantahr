@@ -74,6 +74,12 @@ export const TRIAL_DAYS = 14;
 export const PAST_DUE_GRACE_DAYS = 7;
 export const GST_RATE = 0.18;
 
+/**
+ * The rate actually charged. Only a GST-registered seller may collect GST, so without BILLING_SELLER_GSTIN the price is
+ * charged as it is, invoices carry no tax lines and the site does not mention GST.
+ */
+export const gstRateFor = (sellerGstin: string | null | undefined): number => ((sellerGstin || '').trim() ? GST_RATE : 0);
+
 /** Amount for one billing period, in paise, before GST. Annual plans are billed for 12 months up front. */
 export function periodPricePaise(plan: PlanKey, cycle: Cycle, seats: number): number {
   const p = PLANS[plan].pricePaise;

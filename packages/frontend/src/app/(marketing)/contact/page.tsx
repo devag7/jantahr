@@ -10,6 +10,7 @@ export default function ContactPage() {
     ...(OPERATOR.address ? [['Address', OPERATOR.address] as [string, React.ReactNode]] : []),
     ['Email', <a key="email" className="text-primary hover:underline" href={`mailto:${OPERATOR.email}`}>{OPERATOR.email}</a>],
     ...(OPERATOR.phone ? [['Phone', <a key="phone" className="text-primary hover:underline" href={`tel:${OPERATOR.phone.replace(/[^+\d]/g, '')}`}>{OPERATOR.phone}</a>] as [string, React.ReactNode]] : []),
+    ...(OPERATOR.gstin ? [['GSTIN', OPERATOR.gstin] as [string, React.ReactNode]] : []),
     ['Hours', 'Monday to Friday, 10:00 to 18:00 IST, except public holidays'],
   ];
   return (

@@ -8,14 +8,17 @@ const day = (d: Date) => d.toISOString().slice(0, 10);
 
 export interface Seller { name: string; address: string; state: string; gstin: string; sac: string }
 
-/** GST tax invoice (Rule 46 fields: supplier & recipient details, number, date, SAC, taxable value, tax split, total). */
+/**
+ * GST tax invoice (Rule 46 fields: supplier & recipient details, number, date, SAC, taxable value, tax split, total).
+ * A seller without a GSTIN is not registered under GST: the document is then a plain invoice with no tax lines.
+ */
 export function invoicePdf(inv: BillingInvoice, seller: Seller): Promise<Buffer> {
-  const doc = new PDFDocument({ size: 'A4', margin: 48, info: { Title: `Tax invoice ${inv.number}` } });
+  const doc = new PDFDocument({ size: 'A4', margin: 48, info: { Title: `${seller.gstin ? 'Tax invoice' : 'Invoice'} ${inv.number}` } });
   const out: Buffer[] = [];
   const done = new Promise<Buffer>((resolve, reject) => { doc.on('data', (c) => out.push(c)); doc.on('end', () => resolve(Buffer.concat(out))); doc.on('error', reject); });
   const W = doc.page.width - 96;
 
-  doc.font('Helvetica-Bold').fontSize(20).fillColor(C.ink).text('Tax invoice', 48, 48);
+  doc.font('Helvetica-Bold').fontSize(20).fillColor(C.ink).text(seller.gstin ? 'Tax invoice' : 'Invoice', 48, 48);
   doc.font('Helvetica').fontSize(9).fillColor(C.muted).text(`${inv.number}   ·   ${day(inv.issuedAt)}`, 48, 74);
 
   let y = 110;
@@ -40,9 +43,15 @@ export function invoicePdf(inv: BillingInvoice, seller: Seller): Promise<Buffer>
   y += 14;
   doc.moveTo(48, y).lineTo(48 + W, y).strokeColor(C.line).stroke();
   y += 12;
-  row('Taxable value', rs(inv.taxablePaise));
-  if (inv.igstPaise) row('IGST @ 18%', rs(inv.igstPaise));
-  else { row('CGST @ 9%', rs(inv.cgstPaise)); row('SGST @ 9%', rs(inv.sgstPaise)); }
+  const tax = inv.igstPaise + inv.cgstPaise + inv.sgstPaise;
+  if (tax) {
+    row('Taxable value', rs(inv.taxablePaise));
+    if (inv.igstPaise) row('IGST @ 18%', rs(inv.igstPaise));
+    else { row('CGST @ 9%', rs(inv.cgstPaise)); row('SGST @ 9%', rs(inv.sgstPaise)); }
+  } else if (!seller.gstin) {
+    doc.font('Helvetica').fontSize(8.5).fillColor(C.muted).text('GST not charged: the supplier is not registered under GST.', 48, y);
+    y += 16;
+  }
   row('Total', rs(inv.totalPaise), true);
   doc.font('Helvetica').fontSize(8.5).fillColor(C.muted).text(`Paid via ${inv.provider}${inv.providerPaymentId ? ` (${inv.providerPaymentId})` : ''}. Tax payable on reverse charge: No.`, 48, y + 8, { width: W });
   doc.fontSize(7.5).text('This is a computer-generated invoice and does not require a signature.', 48, doc.page.height - 72, { width: W, align: 'center' });

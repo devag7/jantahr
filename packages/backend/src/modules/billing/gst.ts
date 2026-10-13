@@ -1,8 +1,13 @@
-/** GST on the subscription (SaaS is taxed at 18%). Intra-state sales split CGST + SGST; inter-state is IGST. */
+/**
+ * GST on the subscription (SaaS is taxed at 18%). Intra-state sales split CGST + SGST; inter-state is IGST.
+ * `rate` is 0 for a seller that is not registered under GST: the split is then all zeros and total = taxable.
+ */
+import { GST_RATE } from './plans';
+
 export interface GstSplit { taxablePaise: number; cgstPaise: number; sgstPaise: number; igstPaise: number; totalPaise: number }
 
-export function gstOnTaxable(taxablePaise: number, sellerState: string, buyerState: string | null | undefined): GstSplit {
-  const tax = Math.round(taxablePaise * 0.18);
+export function gstOnTaxable(taxablePaise: number, sellerState: string, buyerState: string | null | undefined, rate = GST_RATE): GstSplit {
+  const tax = Math.round(taxablePaise * rate);
   const intra = !!buyerState && buyerState.trim().toLowerCase() === sellerState.trim().toLowerCase();
   const cgst = intra ? Math.floor(tax / 2) : 0;
   const sgst = intra ? tax - cgst : 0;
@@ -10,9 +15,10 @@ export function gstOnTaxable(taxablePaise: number, sellerState: string, buyerSta
 }
 
 /** When the provider charges a GST-inclusive amount, recover the taxable value. */
-export function gstFromInclusive(totalPaise: number, sellerState: string, buyerState: string | null | undefined): GstSplit {
-  const taxable = Math.round(totalPaise / 1.18);
-  const split = gstOnTaxable(taxable, sellerState, buyerState);
+export function gstFromInclusive(totalPaise: number, sellerState: string, buyerState: string | null | undefined, rate = GST_RATE): GstSplit {
+  if (!rate) return { taxablePaise: totalPaise, cgstPaise: 0, sgstPaise: 0, igstPaise: 0, totalPaise };
+  const taxable = Math.round(totalPaise / (1 + rate));
+  const split = gstOnTaxable(taxable, sellerState, buyerState, rate);
   // keep the total exactly what was charged; any 1-paisa rounding lands in the tax
   const diff = totalPaise - split.totalPaise;
   if (split.igstPaise) split.igstPaise += diff; else split.sgstPaise += diff;

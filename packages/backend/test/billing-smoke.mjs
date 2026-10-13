@@ -1,5 +1,6 @@
 // Cloud-edition billing & entitlements. Run against an API started with:
-//   EDITION=cloud BILLING_PROVIDER=mock CRON_SECRET=<32+ chars> RAZORPAY_WEBHOOK_SECRET=<secret>
+//   EDITION=cloud BILLING_PROVIDER=mock CRON_SECRET=<32+ chars> RAZORPAY_WEBHOOK_SECRET=<secret> BILLING_SELLER_GSTIN=29ABCDE1234F1Z5
+//   (the checks expect GST to be charged, which needs a seller GSTIN)
 // then: API=http://localhost:3010 CRON_SECRET=... RAZORPAY_WEBHOOK_SECRET=... node test/billing-smoke.mjs
 import crypto from 'node:crypto';
 import { signIn, signUp } from './support/supabase-auth.mjs';

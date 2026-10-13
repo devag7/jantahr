@@ -31,7 +31,7 @@ export default function BillingPage() {
   const q = useBillingOverview();
   return (
     <>
-      <PageHeader title="Billing" description="Your plan, seats and GST invoices." />
+      <PageHeader title="Billing" description="Your plan, seats and invoices." />
       <QueryBoundary query={q} rows={6}>{(d) => (d.edition === 'self_hosted' ? <SelfHosted /> : <Cloud d={d} />)}</QueryBoundary>
     </>
   );
@@ -68,12 +68,12 @@ function Cloud({ d }: { d: BillingOverview }) {
 
       <section>
         <h2 className="mb-4 text-tagline font-semibold">Invoices</h2>
-        <DataTable rows={d.invoices} rowKey={(i) => i.id} emptyTitle="No invoices yet" emptyDescription="A GST tax invoice appears here after every payment."
+        <DataTable rows={d.invoices} rowKey={(i) => i.id} emptyTitle="No invoices yet" emptyDescription={`${d.gstRate ? 'A GST tax invoice' : 'An invoice'} appears here after every payment.`}
           columns={[
             { key: 'n', header: 'Invoice', cell: (i) => <span className="font-semibold tabular">{i.number}</span> },
             { key: 'd', header: 'Date', cell: (i) => formatDate(i.issuedAt) },
             { key: 'p', header: 'Plan', cell: (i) => `${d.plans.find((p) => p.key === i.plan)?.name ?? i.plan}, ${i.seats} seats`, hideOnMobile: true },
-            { key: 'g', header: 'GST', align: 'right', cell: (i) => <span className="tabular">{rupees(i.cgstPaise + i.sgstPaise + i.igstPaise)}</span>, hideOnMobile: true },
+            ...(d.gstRate ? [{ key: 'g', header: 'GST', align: 'right' as const, cell: (i: (typeof d.invoices)[number]) => <span className="tabular">{rupees(i.cgstPaise + i.sgstPaise + i.igstPaise)}</span>, hideOnMobile: true }] : []),
             { key: 't', header: 'Total', align: 'right', cell: (i) => <span className="font-semibold tabular">{rupees(i.totalPaise)}</span> },
             { key: 'x', header: '', align: 'right', cell: (i) => <DownloadButton size="sm" variant="ghost" icon={false} onDownload={() => billingService.invoicePdf(i.id, i.number)}><Download className="h-4 w-4" /><span className="sr-only">Download {i.number}</span></DownloadButton> },
           ]} />
@@ -114,7 +114,7 @@ function ChoosePlan({ d }: { d: BillingOverview }) {
 
   return (
     <Card>
-      <CardHeader><CardTitle>Choose a plan</CardTitle><CardDescription>Prices are per employee per month, before 18% GST.</CardDescription></CardHeader>
+      <CardHeader><CardTitle>Choose a plan</CardTitle><CardDescription>Prices are per employee per month{d.gstRate ? ', before 18% GST' : ''}.</CardDescription></CardHeader>
       <CardContent className="space-y-6">
         <div className="grid gap-3 sm:grid-cols-2" role="radiogroup" aria-label="Plan">
           {buyable.map((p) => (
@@ -139,7 +139,7 @@ function ChoosePlan({ d }: { d: BillingOverview }) {
           <p id="seats-hint" className="pb-3 text-fine text-muted-foreground">At least {min} ({d.usage.activeEmployees} active employees)</p>
         </div>
         <div className="flex flex-wrap items-center justify-between gap-4 border-t border-divider pt-5">
-          <p className="text-body"><span className="font-semibold tabular">{rupees(Math.round(taxable * 1.18))}</span> <span className="text-muted-foreground">{cycle === 'ANNUAL' ? 'a year' : 'a month'} including GST ({rupees(taxable)} + {rupees(Math.round(taxable * 0.18))})</span></p>
+          <p className="text-body"><span className="font-semibold tabular">{rupees(Math.round(taxable * (1 + d.gstRate)))}</span> <span className="text-muted-foreground">{cycle === 'ANNUAL' ? 'a year' : 'a month'}{d.gstRate ? <> including GST ({rupees(taxable)} + {rupees(Math.round(taxable * d.gstRate))})</> : null}</span></p>
           <Button onClick={buy} disabled={busy}>{busy && <Spinner />}{d.provider === 'mock' ? 'Activate (test mode)' : 'Continue to payment'}</Button>
         </div>
       </CardContent>

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { OPERATOR } from '@/lib/operator';
+import { CHARGES_GST, OPERATOR } from '@/lib/operator';
 
 const COLS: { title: string; links: { label: string; href: string }[] }[] = [
   { title: 'Product', links: [{ label: 'Payroll', href: '/#payroll' }, { label: 'Compliance calendar', href: '/#compliance' }, { label: 'Pricing', href: '/pricing' }, { label: 'Self-hosting', href: '/self-hosting' }] },
@@ -27,7 +27,7 @@ export function MarketingFooter() {
             </ul>
           </div>
         </div>
-        <p className="mt-6 text-fine text-muted-foreground">Prices exclude 18% GST. Statutory rules are kept current with central and state notifications; payroll outputs should be reviewed by your chartered accountant.</p>
+        <p className="mt-6 text-fine text-muted-foreground">{CHARGES_GST ? 'Prices exclude 18% GST. ' : ''}Statutory rules are kept current with central and state notifications; payroll outputs should be reviewed by your chartered accountant.</p>
         <p className="mt-3 text-fine text-muted-foreground">Copyright {new Date().getFullYear()} {OPERATOR.name}{OPERATOR.address ? `, ${OPERATOR.address}` : ''}. Data hosted in India.</p>
       </div>
     </footer>

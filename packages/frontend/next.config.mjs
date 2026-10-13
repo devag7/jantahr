@@ -9,6 +9,8 @@ const fromShared = {
   // who runs this hosted edition (contact and policy pages): the same seller the API prints on GST invoices
   NEXT_PUBLIC_OPERATOR_NAME: process.env.NEXT_PUBLIC_OPERATOR_NAME ?? process.env.BILLING_SELLER_NAME,
   NEXT_PUBLIC_OPERATOR_ADDRESS: process.env.NEXT_PUBLIC_OPERATOR_ADDRESS ?? process.env.BILLING_SELLER_ADDRESS,
+  // a GSTIN means the seller is GST-registered: only then do prices and policies mention GST
+  NEXT_PUBLIC_OPERATOR_GSTIN: process.env.NEXT_PUBLIC_OPERATOR_GSTIN ?? process.env.BILLING_SELLER_GSTIN,
   NEXT_PUBLIC_SALES_EMAIL: process.env.NEXT_PUBLIC_SALES_EMAIL ?? process.env.SUPPORT_EMAIL,
   NEXT_PUBLIC_SUPPORT_PHONE: process.env.NEXT_PUBLIC_SUPPORT_PHONE ?? process.env.SUPPORT_PHONE,
 };

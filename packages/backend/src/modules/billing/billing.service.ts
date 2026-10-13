@@ -13,7 +13,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { EntitlementsService } from './entitlements.service';
 import { gstFromInclusive, gstOnTaxable, invoiceNumber } from './gst';
-import { FEATURES, PLANS, PlanKey, TRIAL_DAYS, TRIAL_PLAN, periodPricePaise } from './plans';
+import { FEATURES, PLANS, PlanKey, TRIAL_DAYS, TRIAL_PLAN, periodPricePaise, gstRateFor } from './plans';
 import { RazorpayClient, verifyCheckoutSignature, verifyWebhookSignature, RazorpayWebhook } from './razorpay';
 
 import { errorMessage } from '../../common/utils/errors';
@@ -50,6 +50,8 @@ export class BillingService {
   private readonly provider: Provider | null;
   private readonly razorpay: RazorpayClient | null;
   private readonly sellerState: string;
+  /** 0.18, or 0 when the seller has no GSTIN and so may not charge GST */
+  private readonly gstRate: number;
 
   constructor(private prisma: PrismaService, private config: ConfigService, private entitlements: EntitlementsService, private notifications: NotificationsService) {
     const keyId = config.get<string>('RAZORPAY_KEY_ID');
@@ -64,6 +66,7 @@ export class BillingService {
       this.provider = config.get('BILLING_PROVIDER') === 'mock' ? 'mock' : null;
     }
     this.sellerState = config.get<string>('BILLING_SELLER_STATE') || 'Karnataka';
+    this.gstRate = gstRateFor(config.get<string>('BILLING_SELLER_GSTIN'));
   }
 
   private requireCloud() {
@@ -82,7 +85,7 @@ export class BillingService {
     return {
       edition: isCloud() ? 'cloud' : 'self_hosted',
       currency: 'INR',
-      gstRate: 0.18,
+      gstRate: this.gstRate,
       trialDays: TRIAL_DAYS,
       features: FEATURES,
       plans: Object.values(PLANS),
@@ -142,7 +145,7 @@ export class BillingService {
     return {
       provider, subscriptionId: providerSubscriptionId,
       razorpayKeyId: provider === 'razorpay' ? this.config.get<string>('RAZORPAY_KEY_ID') : null,
-      amount: gstOnTaxable(taxable, this.sellerState, company.state),
+      amount: gstOnTaxable(taxable, this.sellerState, company.state, this.gstRate),
       prefill: { name: company.name, email: user.email },
     };
   }
@@ -160,7 +163,7 @@ export class BillingService {
       paymentId = dto.razorpay_payment_id!;
     } else paymentId = `mock_pay_${crypto.randomUUID()}`;
     const taxable = periodPricePaise(sub.pendingPlan as PlanKey, sub.pendingCycle ?? 'MONTHLY', sub.pendingSeats ?? 1);
-    const total = Math.round(taxable * 1.18);
+    const total = Math.round(taxable * (1 + this.gstRate));
     await this.activate(sub, { plan: sub.pendingPlan, cycle: sub.pendingCycle ?? 'MONTHLY', seats: sub.pendingSeats ?? 1, start: new Date(), paymentId, totalPaise: total, provider });
     return this.overview(user.companyId);
   }
@@ -179,7 +182,7 @@ export class BillingService {
   private async recordInvoice(companyId: string, p: { plan: PlanCode; cycle: BillingCycle; seats: number; periodStart: Date; periodEnd: Date; totalPaise: number; provider: string; paymentId: string }) {
     if (await this.prisma.billingInvoice.findUnique({ where: { providerPaymentId: p.paymentId } })) return;
     const company = await this.prisma.company.findUniqueOrThrow({ where: { id: companyId } });
-    const gst = gstFromInclusive(p.totalPaise, this.sellerState, company.state);
+    const gst = gstFromInclusive(p.totalPaise, this.sellerState, company.state, this.gstRate);
     // sequential numbering: serialised by a transaction-scoped advisory lock
     await this.prisma.$transaction(async (tx) => {
       await tx.$executeRaw`SELECT pg_advisory_xact_lock(918273645)`;

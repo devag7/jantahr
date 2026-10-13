@@ -143,6 +143,13 @@ secret) so they match the legal name and address on your Razorpay account and GS
 | `BILLING_SELLER_ADDRESS` | registered address, one line (also on invoices) |
 | `SUPPORT_EMAIL` | contact email, a mailbox you read |
 | `SUPPORT_PHONE` | contact phone, with country code |
+| `BILLING_SELLER_GSTIN` | your GST number, **only if you are registered under GST** (see below) |
+
+**GST.** Only a GST-registered seller may collect GST. JantaHR therefore adds 18% GST, prints tax lines on invoices and
+mentions GST on the site only when `BILLING_SELLER_GSTIN` is set. Without it the listed price is the amount charged,
+invoices are plain invoices and the site says no GST is added. An individual or a business below the registration
+threshold can start this way; set the GSTIN when you register, then run `razorpay:plans` again, because the plan
+amounts change.
 
 Read the four policy pages before submitting and adjust anything that is not how you intend to trade (the refund
 terms and the response times are commitments to your customers). They are not legal advice.
@@ -156,10 +163,11 @@ account, and test and live mode have separate plans and webhooks.
    ```bash
    pnpm --filter jantahr-backend razorpay:plans
    ```
-   It creates what is missing and prints the `RAZORPAY_PLAN_IDS=…` line for the API. Amounts are per seat and
-   include 18% GST, because Razorpay charges the plan amount and JantaHR's invoice splits the tax back out:
+   It creates what is missing and prints the `RAZORPAY_PLAN_IDS=…` line for the API. Amounts are per seat. With a
+   GSTIN they include 18% GST, because Razorpay charges the plan amount and JantaHR's invoice splits the tax back out;
+   without one they are the plain prices (₹59, ₹588, ₹119, ₹1,188):
 
-   | Key | Period | Amount per seat |
+   | Key | Period | Amount per seat when GST-registered |
    |---|---|---|
    | `STANDARD_MONTHLY` | monthly | ₹69.62 (₹59 + GST) |
    | `STANDARD_ANNUAL` | yearly | ₹693.84 (₹49 × 12 + GST) |

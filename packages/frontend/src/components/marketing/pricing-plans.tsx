@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Check } from 'lucide-react';
 import { FEATURE_LABELS, PLANS, TRIAL_DAYS } from '@/lib/plans';
 import { SALES_EMAIL } from '@/lib/edition';
+import { CHARGES_GST } from '@/lib/operator';
 import { cn } from '@/lib/utils';
 import type { Cycle, FeatureKey, PlanDef } from '@/types/billing';
 
@@ -54,7 +55,7 @@ export function PricingPlans() {
                 {p.pricePaise ? (
                   <>
                     <p><span className="text-display font-semibold">{inr(p.pricePaise[cycle])}</span><span className="ml-1 text-caption text-muted-foreground">per employee a month</span></p>
-                    <p className="mt-2 text-caption text-muted-foreground tabular">{inr(total!)} a month for {Math.max(p.minSeats, employees)} employees{cycle === 'ANNUAL' ? ', billed yearly' : ''}, plus GST</p>
+                    <p className="mt-2 text-caption text-muted-foreground tabular">{inr(total!)} a month for {Math.max(p.minSeats, employees)} employees{cycle === 'ANNUAL' ? ', billed yearly' : ''}{CHARGES_GST ? ', plus GST' : ''}</p>
                   </>
                 ) : (
                   <>

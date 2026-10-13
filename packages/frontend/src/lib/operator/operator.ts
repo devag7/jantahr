@@ -12,6 +12,14 @@ export const OPERATOR = {
   address: process.env.NEXT_PUBLIC_OPERATOR_ADDRESS || '',
   email: SALES_EMAIL,
   phone: process.env.NEXT_PUBLIC_SUPPORT_PHONE || '',
+  /** GST registration number; empty when the business is not registered under GST. */
+  gstin: process.env.NEXT_PUBLIC_OPERATOR_GSTIN || '',
 } as const;
+
+/** Only a GST-registered seller may add GST, so prices and policies mention it only then (the API applies the same rule). */
+export const CHARGES_GST = !!OPERATOR.gstin;
+/** "plus 18% GST" where it applies, nothing otherwise. */
+export const PLUS_GST = CHARGES_GST ? ' plus 18% GST' : '';
+export const INVOICE = CHARGES_GST ? 'GST tax invoice' : 'invoice';
 
 export const LEGAL_UPDATED = 'October 2026';
