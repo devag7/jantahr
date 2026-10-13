@@ -18,8 +18,23 @@ const fromShared = {
   NEXT_PUBLIC_SUPPORT_PHONE: process.env.NEXT_PUBLIC_SUPPORT_PHONE ?? process.env.SUPPORT_PHONE,
 };
 
+// The public site exists only in the cloud edition. There, a request that names text/markdown in Accept is answered by
+// /agent-markdown (the page as Markdown, or a Markdown 404), and pages are marked as varying by Accept. Pages only:
+// not the API, Next's assets, the handler itself, the MCP endpoints, or anything with a file extension.
+const isCloud = fromShared.NEXT_PUBLIC_EDITION === 'cloud';
+const PAGE = '/:path((?!api/|_next/|agent-markdown|mcp$|\\.well-known/|.*\\.[a-zA-Z0-9]+$).*)';
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  async rewrites() {
+    if (!isCloud) return [];
+    return { beforeFiles: [{ source: PAGE, has: [{ type: 'header', key: 'accept', value: '(.*)text/markdown(.*)' }], destination: '/agent-markdown?path=/:path' }] };
+  },
+  async headers() {
+    if (!isCloud) return [];
+    // Next names its own request headers in Vary; they are repeated for hosts where this value replaces Next's
+    return [{ source: PAGE, headers: [{ key: 'Vary', value: 'RSC, Next-Router-State-Tree, Next-Router-Prefetch, Accept' }] }];
+  },
   reactStrictMode: true,
   output: 'standalone',
   poweredByHeader: false,

@@ -1,7 +1,4 @@
-/** Content negotiation for agents: does this Accept header ask for Markdown ahead of HTML? No imports: the middleware and the tests both load it. */
-
-/** Request header in which the middleware tells the Markdown handler which page was asked for. */
-export const AGENT_PATH_HEADER = 'x-agent-path';
+/** Content negotiation for agents: does this Accept header ask for Markdown ahead of HTML? No imports: the route handler and the tests both load it. */
 
 function quality(accept: string, type: string): number {
   let best = -1;

@@ -32,7 +32,7 @@ await check('home: Accept: text/html still gets HTML', async () => {
   assert.equal(res.status, 200);
   assert.ok(type(res).startsWith('text/html'), `content-type ${type(res)}`);
   assert.match(await res.text(), /<!DOCTYPE html>/i);
-  // `next start` writes its own Vary over the middleware's, so this half is enforced only where asked (the deployed site)
+  // `next start` writes its own Vary over the configured one, so this half is enforced only where asked (the deployed site)
   if (!varies(res)) { if (process.env.STRICT_VARY) assert.fail(`vary ${res.headers.get('vary')}`); console.log(`note  HTML response does not list Accept in Vary here: ${res.headers.get('vary')}`); }
 });
 
@@ -63,6 +63,12 @@ await check('home: JSON-LD with Organization (contactPoint) and SoftwareApplicat
   assert.ok(app.name && app.description && app.url && app.offers.length >= 2);
   assert.ok(app.offers.every((o) => o.priceCurrency === 'INR' && /^\d+\.\d\d$/.test(o.price)));
   if (process.env.EXPECT_ADDRESS) assert.equal(org.address['@type'], 'PostalAddress');
+});
+
+await check('home: HTML ranked above Markdown gets HTML', async () => {
+  const res = await get('/', 'text/html, text/markdown;q=0.5');
+  assert.equal(res.status, 200);
+  assert.ok(type(res).startsWith('text/html'), `content-type ${type(res)}`);
 });
 
 await check('404: Markdown body with the 404 status when Markdown is asked for', async () => {

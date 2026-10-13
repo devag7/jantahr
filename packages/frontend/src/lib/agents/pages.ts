@@ -27,7 +27,7 @@ Where to go instead:
 `;
 
 /** Fetches a page of this site as HTML, from the address the request came in on and then from the configured one. */
-async function fetchHtml(request: Request, path: string): Promise<Response | null> {
+export async function fetchHtml(request: Request, path: string): Promise<Response | null> {
   const origins = Array.from(new Set([new URL(request.url).origin, SITE_URL]));
   for (const origin of origins) {
     try {
