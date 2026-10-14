@@ -40,6 +40,8 @@ const addPeriod = (from: Date, cycle: BillingCycle) => {
   return d;
 };
 
+const OTHER_ACCOUNT = 'This plan was set up on a different Razorpay account or mode (for example test mode before live payments were switched on), so it cannot be changed here. Choose a plan again to start a new subscription.';
+
 /**
  * Cloud-edition subscriptions. Provider = Razorpay in production (RAZORPAY_* set) or `mock` for development and demos
  * (BILLING_PROVIDER=mock). Every state change is idempotent: webhooks may arrive twice, late or before the browser confirm.
@@ -105,6 +107,20 @@ export class BillingService {
     }
   }
 
+  /**
+   * Which payment account a subscription belongs to: Razorpay keeps test-mode and live-mode subscriptions apart, so
+   * a subscription created with test keys does not exist once the server runs on live keys (and the other way round).
+   */
+  private get accountTag(): string | null {
+    if (this.provider !== 'razorpay') return this.provider;
+    return this.config.get<string>('RAZORPAY_KEY_ID')?.startsWith('rzp_live_') ? 'razorpay' : 'razorpay_test';
+  }
+
+  /** True when the company's subscription was made on a different payment account (e.g. test mode before go-live). */
+  private onOtherAccount(sub: Subscription | null): boolean {
+    return !!sub?.providerSubscriptionId && !!sub.provider && sub.provider !== this.accountTag;
+  }
+
   private requireCloud() {
     if (!isCloud()) throw new BadRequestException('Billing is not used in the self-hosted edition: every feature is already included.');
   }
@@ -140,6 +156,8 @@ export class BillingService {
       ...this.catalogue(),
       provider: this.provider,
       payments,
+      /** the plan was bought on another payment account (test mode): it cannot be managed here, only replaced */
+      subscriptionOnOtherAccount: this.onOtherAccount(sub),
       razorpayKeyId: this.provider === 'razorpay' ? this.config.get<string>('RAZORPAY_KEY_ID') : null,
       subscription: sub,
       entitlements: ent,
@@ -164,7 +182,7 @@ export class BillingService {
     if (dto.seats < minSeats) throw new BadRequestException(`Choose at least ${minSeats} seats (${active} active employees; ${def.name} starts at ${def.minSeats}).`);
     const company = await this.prisma.company.findUniqueOrThrow({ where: { id: user.companyId } });
     const existing = await this.prisma.subscription.findUnique({ where: { companyId: user.companyId } });
-    if (existing?.status === 'ACTIVE' && existing.providerSubscriptionId && existing.plan !== 'FREE') {
+    if (existing?.status === 'ACTIVE' && existing.providerSubscriptionId && existing.plan !== 'FREE' && !this.onOtherAccount(existing)) {
       throw new BadRequestException('You already have an active subscription. Change seats or cancel it first.');
     }
 
@@ -176,8 +194,8 @@ export class BillingService {
 
     await this.prisma.subscription.upsert({
       where: { companyId: user.companyId },
-      create: { companyId: user.companyId, plan: 'FREE', status: 'ACTIVE', provider, providerSubscriptionId, pendingPlan: dto.plan, pendingCycle: dto.cycle, pendingSeats: dto.seats },
-      update: { provider, providerSubscriptionId, pendingPlan: dto.plan, pendingCycle: dto.cycle, pendingSeats: dto.seats },
+      create: { companyId: user.companyId, plan: 'FREE', status: 'ACTIVE', provider: this.accountTag, providerSubscriptionId, pendingPlan: dto.plan, pendingCycle: dto.cycle, pendingSeats: dto.seats },
+      update: { provider: this.accountTag, providerSubscriptionId, pendingPlan: dto.plan, pendingCycle: dto.cycle, pendingSeats: dto.seats },
     });
     const taxable = periodPricePaise(dto.plan, dto.cycle, dto.seats);
     return {
@@ -252,6 +270,7 @@ export class BillingService {
     if (seats < min) throw new BadRequestException(`You need at least ${min} seats`);
     // adding seats applies now (prorated by the provider); removing seats applies at renewal
     const atCycleEnd = seats < sub.seats;
+    if (this.onOtherAccount(sub)) throw new BadRequestException(OTHER_ACCOUNT);
     if (provider === 'razorpay' && sub.providerSubscriptionId) await this.viaRazorpay('seat change', (c) => c.update(sub.providerSubscriptionId!, { seats, atCycleEnd }));
     const updated = await this.prisma.subscription.update({ where: { id: sub.id }, data: atCycleEnd ? { pendingSeats: seats } : { seats } });
     this.entitlements.invalidate(user.companyId);
@@ -262,6 +281,7 @@ export class BillingService {
     const provider = this.requireProvider();
     const sub = await this.prisma.subscription.findUnique({ where: { companyId: user.companyId } });
     if (!sub || sub.plan === 'FREE' || !['ACTIVE', 'PAST_DUE'].includes(sub.status)) throw new BadRequestException('There is no paid subscription to cancel');
+    if (this.onOtherAccount(sub)) throw new BadRequestException(OTHER_ACCOUNT);
     if (provider === 'razorpay' && sub.providerSubscriptionId) await this.viaRazorpay('cancellation', (c) => c.cancel(sub.providerSubscriptionId!, true));
     const updated = await this.prisma.subscription.update({ where: { id: sub.id }, data: { status: 'CANCELLED', cancelAtPeriodEnd: true, lapsedPlan: sub.plan } });
     this.entitlements.invalidate(user.companyId);

@@ -28,7 +28,7 @@ export interface Invoice {
 }
 export interface BillingOverview {
   edition: 'self_hosted' | 'cloud'; currency: 'INR'; gstRate: number; trialDays: number; features: Record<FeatureKey, string>; plans: PlanDef[];
-  provider: 'razorpay' | 'mock' | null; payments?: { ready: boolean; problem: 'credentials' | 'plans' | null }; razorpayKeyId: string | null; subscription: Subscription | null; entitlements: Entitlements;
+  provider: 'razorpay' | 'mock' | null; payments?: { ready: boolean; problem: 'credentials' | 'plans' | null }; subscriptionOnOtherAccount?: boolean; razorpayKeyId: string | null; subscription: Subscription | null; entitlements: Entitlements;
   usage: { activeEmployees: number; seatLimit: number | null }; invoices: Invoice[];
 }
 export interface CheckoutResult { provider: 'razorpay' | 'mock'; subscriptionId: string; razorpayKeyId: string | null; amount: GstSplit; prefill: { name: string; email: string } }

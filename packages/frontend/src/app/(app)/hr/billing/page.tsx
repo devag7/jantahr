@@ -72,7 +72,12 @@ function Cloud({ d }: { d: BillingOverview }) {
           <span className="mt-1 block text-fine text-muted-foreground">{d.payments?.problem === 'plans' ? 'For the operator: a Razorpay plan in RAZORPAY_PLAN_IDS is missing from this Razorpay account or mode. Run `pnpm razorpay:plans`.' : 'For the operator: Razorpay rejected RAZORPAY_KEY_ID / RAZORPAY_KEY_SECRET. Generate a key in the Razorpay dashboard and update the server.'}</span>
         </p>
       )}
-      {owner && d.provider && (paid ? <ManagePlan d={d} /> : payable && <ChoosePlan d={d} />)}
+      {owner && paid && d.subscriptionOnOtherAccount && (
+        <p role="status" className="rounded-lg border border-warning/40 bg-warning/10 px-5 py-4 text-caption">
+          <span className="font-semibold">This plan was bought in test mode.</span> Live payments are now on, so it cannot be changed or cancelled here. Choose a plan below to start a real subscription; it replaces this one.
+        </p>
+      )}
+      {owner && d.provider && (paid && !d.subscriptionOnOtherAccount ? <ManagePlan d={d} /> : payable && <ChoosePlan d={d} />)}
       {!owner && <p className="text-caption text-muted-foreground">Only the account owner (Super admin) can change the plan.</p>}
       {!d.provider && owner && <p className="text-caption text-muted-foreground">Online payments are not configured on this server. Set RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET and RAZORPAY_PLAN_IDS on the API.</p>}
 
