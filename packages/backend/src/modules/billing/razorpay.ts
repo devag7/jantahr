@@ -93,7 +93,8 @@ export class RazorpayClient {
 export interface RazorpayWebhook {
   event: string;
   payload?: {
-    subscription?: { entity?: { id: string; status?: string; quantity?: number; current_start?: number | null; current_end?: number | null } };
+    /** `ended_at` is set once the subscription has actually ended: now for an immediate cancel, the cycle end otherwise. */
+    subscription?: { entity?: { id: string; status?: string; quantity?: number; current_start?: number | null; current_end?: number | null; ended_at?: number | null } };
     payment?: { entity?: { id: string; amount?: number; status?: string } };
   };
 }

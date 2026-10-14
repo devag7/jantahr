@@ -116,6 +116,11 @@ ok('activation webhook first', (await call('POST', '/billing/webhooks/razorpay',
 const late = await call('POST', '/billing/checkout/confirm', R, {});
 ok('late browser confirm still succeeds', late.status === 201 && late.data.subscription.plan === 'STANDARD' && late.data.subscription.status === 'ACTIVE', late.data);
 ok('one invoice for the payment', late.data.invoices?.filter((i) => i.providerPaymentId === `pay_first_${stamp}`).length === 1 && late.data.invoices.length === 1, late.data?.invoices);
+const endedNow = Math.floor(Date.now() / 1000) - 5;
+const cancelledNow = JSON.stringify({ entity: 'event', event: 'subscription.cancelled', payload: { subscription: { entity: { id: rSub, status: 'cancelled', quantity: 10, current_start: now, current_end: now + 365 * 86400, ended_at: endedNow } } } });
+ok('immediate cancellation webhook', (await call('POST', '/billing/webhooks/razorpay', null, cancelledNow, { 'x-razorpay-signature': sign(cancelledNow), 'x-razorpay-event-id': `evt_${stamp}_4` })).status === 200);
+const afterCancel = await call('GET', '/billing', R);
+ok('immediate cancellation ends paid access now, not at the end of the paid year', afterCancel.data.subscription.status === 'CANCELLED' && new Date(afterCancel.data.subscription.currentPeriodEnd).getTime() <= Date.now() && afterCancel.data.entitlements.plan === 'FREE', { sub: afterCancel.data.subscription, plan: afterCancel.data.entitlements?.plan });
 
 // ---- operator view ----
 ok('tenant list is operator-only', (await call('GET', '/billing/platform/tenants', T)).status === 403);

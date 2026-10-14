@@ -363,7 +363,9 @@ export class BillingService {
         break;
       case 'subscription.cancelled':
       case 'subscription.completed':
-        await this.prisma.subscription.update({ where: { id: sub.id }, data: { status: 'CANCELLED', lapsedPlan: sub.plan, currentPeriodEnd: ts(entity.current_end) ?? sub.currentPeriodEnd } });
+        // Cancelled immediately (for example with a refund from the Razorpay dashboard): access ends when the
+        // subscription did, not at the end of the period that was paid for.
+        await this.prisma.subscription.update({ where: { id: sub.id }, data: { status: 'CANCELLED', lapsedPlan: sub.plan, cancelAtPeriodEnd: false, currentPeriodEnd: ts(entity.ended_at) ?? ts(entity.current_end) ?? sub.currentPeriodEnd } });
         break;
       case 'subscription.updated':
         await this.prisma.subscription.update({ where: { id: sub.id }, data: { seats, pendingSeats: null } });
