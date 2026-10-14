@@ -192,7 +192,7 @@ export class BillingService {
   async confirm(user: AuthUser, dto: ConfirmCheckoutDto) {
     const provider = this.requireProvider();
     const sub = await this.prisma.subscription.findUnique({ where: { companyId: user.companyId } });
-    if (!sub?.providerSubscriptionId || !sub.pendingPlan) throw new BadRequestException('No checkout in progress');
+    if (!sub?.providerSubscriptionId) throw new BadRequestException('No checkout in progress');
     let paymentId: string;
     if (provider === 'razorpay') {
       if (dto.razorpay_subscription_id !== sub.providerSubscriptionId) throw new BadRequestException('Subscription does not match the checkout');
@@ -200,6 +200,12 @@ export class BillingService {
       if (!ok) throw new UnauthorizedException('Payment signature could not be verified');
       paymentId = dto.razorpay_payment_id!;
     } else paymentId = `mock_pay_${crypto.randomUUID()}`;
+    if (!sub.pendingPlan) {
+      // Razorpay's webhook usually lands before the browser returns, and has already activated the plan and issued
+      // the invoice: the payment is done, so this confirmation succeeds rather than reporting a missing checkout.
+      if (sub.status === 'ACTIVE' && sub.plan !== 'FREE') return this.overview(user.companyId);
+      throw new BadRequestException('No checkout in progress');
+    }
     const taxable = periodPricePaise(sub.pendingPlan as PlanKey, sub.pendingCycle ?? 'MONTHLY', sub.pendingSeats ?? 1);
     const total = Math.round(taxable * (1 + this.gstRate));
     await this.activate(sub, { plan: sub.pendingPlan, cycle: sub.pendingCycle ?? 'MONTHLY', seats: sub.pendingSeats ?? 1, start: new Date(), paymentId, totalPaise: total, provider });

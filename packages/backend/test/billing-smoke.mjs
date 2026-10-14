@@ -104,6 +104,19 @@ ok('billing sweep via cron secret', job.status === 200 && job.data?.ok === true,
 ok('unknown job 404', (await call('POST', '/internal/jobs/nope', null, undefined, { authorization: `Bearer ${CRON}` })).status === 404);
 
 
+// ---- the webhook arrives before the browser confirms (the usual order with Razorpay) ----
+const ravi = await signUp(`ravi.${stamp}@godavari.example`, 'Godavari2026');
+ok('second signup', (await call('POST', '/auth/provision', ravi.accessToken, { companyName: `Godavari Mills ${stamp}`, firstName: 'Ravi', state: 'Karnataka' })).status === 201);
+const R = ravi.accessToken;
+ok('second checkout', (await call('POST', '/billing/checkout', R, { plan: 'STANDARD', cycle: 'ANNUAL', seats: 10 })).status === 201);
+const rSub = (await call('GET', '/billing', R)).data.subscription.providerSubscriptionId;
+const now = Math.floor(Date.now() / 1000);
+const activated = JSON.stringify({ entity: 'event', event: 'subscription.activated', payload: { subscription: { entity: { id: rSub, status: 'active', quantity: 10, current_start: now, current_end: now + 365 * 86400 } }, payment: { entity: { id: `pay_first_${stamp}`, amount: 588000, status: 'captured' } } } });
+ok('activation webhook first', (await call('POST', '/billing/webhooks/razorpay', null, activated, { 'x-razorpay-signature': sign(activated), 'x-razorpay-event-id': `evt_${stamp}_3` })).status === 200);
+const late = await call('POST', '/billing/checkout/confirm', R, {});
+ok('late browser confirm still succeeds', late.status === 201 && late.data.subscription.plan === 'STANDARD' && late.data.subscription.status === 'ACTIVE', late.data);
+ok('one invoice for the payment', late.data.invoices?.filter((i) => i.providerPaymentId === `pay_first_${stamp}`).length === 1 && late.data.invoices.length === 1, late.data?.invoices);
+
 // ---- operator view ----
 ok('tenant list is operator-only', (await call('GET', '/billing/platform/tenants', T)).status === 403);
 

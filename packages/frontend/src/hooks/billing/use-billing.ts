@@ -20,7 +20,8 @@ export function useFeatureAccess(feature?: FeatureKey) {
   return 'none' as const;
 }
 export const useBillingOverview = () => useQuery({ queryKey: ['billing', 'overview'], queryFn: billingService.overview });
-export const useCheckout = () => useApiMutation(billingService.checkout);
-export const useConfirmCheckout = () => useApiMutation(billingService.confirm, { invalidate: [...B], success: 'Your plan is active' });
+// the billing page reports checkout errors itself (one message for the whole flow), so these stay silent
+export const useCheckout = () => useApiMutation(billingService.checkout, { silentError: true });
+export const useConfirmCheckout = () => useApiMutation(billingService.confirm, { invalidate: [...B], success: 'Your plan is active', silentError: true });
 export const useChangeSeats = () => useApiMutation((seats: number) => billingService.seats(seats), { invalidate: [...B], success: 'Seats updated' });
 export const useCancelSubscription = () => useApiMutation(() => billingService.cancel(), { invalidate: [...B], success: 'Subscription will end at the close of this period' });

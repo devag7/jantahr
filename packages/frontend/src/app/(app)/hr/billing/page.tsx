@@ -1,5 +1,6 @@
 'use client';
 import * as React from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Check, Download } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -104,6 +105,7 @@ function ChoosePlan({ d }: { d: BillingOverview }) {
   const [seats, setSeats] = React.useState(String(Math.max(min, 10)));
   const checkout = useCheckout();
   const confirm = useConfirmCheckout();
+  const qc = useQueryClient();
   const [busy, setBusy] = React.useState(false);
   const n = Math.max(min, Number(seats) || min);
   const taxable = def.pricePaise[cycle] * n * (cycle === 'ANNUAL' ? 12 : 1);
@@ -118,7 +120,11 @@ function ChoosePlan({ d }: { d: BillingOverview }) {
       } else await confirm.mutateAsync({});
     } catch (e) {
       toast.error(errorMessage(e));
-    } finally { setBusy(false); }
+    } finally {
+      setBusy(false);
+      // whatever happened in the browser, show the plan as the server now has it (a webhook may have activated it)
+      void qc.invalidateQueries({ queryKey: ['billing'] });
+    }
   };
 
   return (
