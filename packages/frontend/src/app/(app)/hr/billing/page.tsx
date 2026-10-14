@@ -149,6 +149,10 @@ function ChoosePlan({ d }: { d: BillingOverview }) {
         </div>
         <div className="flex flex-wrap items-center justify-between gap-4 border-t border-divider pt-5">
           <p className="text-body"><span className="font-semibold tabular">{rupees(Math.round(taxable * (1 + d.gstRate)))}</span> <span className="text-muted-foreground">{cycle === 'ANNUAL' ? 'a year' : 'a month'}{d.gstRate ? <> including GST ({rupees(taxable)} + {rupees(Math.round(taxable * d.gstRate))})</> : null}</span></p>
+          {d.razorpayKeyId?.startsWith('rzp_test_') && (
+            // Razorpay test mode only accepts its own test cards, and subscriptions need the recurring one
+            <p className="basis-full text-fine text-muted-foreground sm:order-last">Test mode: no money moves. Pay with Razorpay&apos;s recurring test card 4718 6091 0820 4366, any future expiry, any CVV, and any OTP of 4 to 10 digits.</p>
+          )}
           <Button onClick={buy} disabled={busy}>{busy && <Spinner />}{d.provider === 'mock' ? 'Activate (test mode)' : 'Continue to payment'}</Button>
         </div>
       </CardContent>

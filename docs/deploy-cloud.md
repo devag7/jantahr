@@ -185,7 +185,7 @@ account, and test and live mode have separate plans and webhooks.
    type there is `RAZORPAY_WEBHOOK_SECRET`.
 3. Set `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET` and `RAZORPAY_PLAN_IDS` on the deployment
    and redeploy.
-4. Test end to end in test mode: sign up, buy Standard for 10 seats with a Razorpay test card, confirm the plan turns
+4. Test end to end in test mode: sign up, buy Standard for 10 seats with Razorpay's recurring test card (Visa 4718 6091 0820 4366; the ordinary test cards are refused for subscriptions), confirm the plan turns
    active and the GST invoice (`JH/2026-27/000001`) downloads. Then repeat steps 1 to 3 with the live keys.
 
 If Razorpay rejects the key, or a plan ID belongs to another account or mode, the Billing page says "Online payment is

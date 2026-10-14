@@ -24,9 +24,12 @@ export async function openRazorpay(p: { key: string; subscriptionId: string; nam
       key: p.key, subscription_id: p.subscriptionId, name: 'JantaHR', description: p.description,
       prefill: { name: p.name, email: p.email }, theme: { color: '#0066cc' },
       handler: (r: RazorpaySuccess) => resolve(r),
-      modal: { ondismiss: () => reject(new Error('Payment was cancelled')) },
+      // Razorpay keeps its window open after a failed attempt so the customer can retry with another card; settle
+      // only when it closes, and then say why the last attempt failed rather than just "cancelled".
+      modal: { ondismiss: () => reject(new Error(lastFailure ? `Payment failed: ${lastFailure}` : 'Payment was cancelled')) },
     });
-    rz.on('payment.failed', (r: unknown) => reject(new Error((r as { error?: { description?: string } })?.error?.description || 'Payment failed')));
+    let lastFailure = '';
+    rz.on('payment.failed', (r: unknown) => { lastFailure = (r as { error?: { description?: string } })?.error?.description || 'the card was declined'; });
     rz.open();
   });
 }
