@@ -32,6 +32,10 @@ const nextConfig = {
     if (!isCloud) return [];
     return { beforeFiles: [{ source: PAGE, has: [{ type: 'header', key: 'accept', value: '(.*)text/markdown(.*)' }], destination: '/agent-markdown?path=/:path' }] };
   },
+  // browsers ask for /favicon.ico on pages that declare no icon (raw JSON, text files); the icon is an SVG
+  async redirects() {
+    return [{ source: '/favicon.ico', destination: '/icon.svg', permanent: true }];
+  },
   async headers() {
     if (!isCloud) return [];
     // Next names its own request headers in Vary; they are repeated for hosts where this value replaces Next's
