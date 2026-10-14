@@ -7,7 +7,7 @@
 **Open-source HR and payroll for India.**<br>
 PF, ESI, TDS, professional tax, LWF and the new labour codes, calculated every month. Self-host free, forever.
 
-[Website](https://devag7.github.io/jantahr/) · [Self-host in one command](deploy/self-hosted/README.md) · [Cloud on Supabase + Vercel](docs/deploy-cloud.md) · [Legal basis](docs/legal-2026.md) · [Contributing](CONTRIBUTING.md)
+[Try the cloud](https://jantahr.devshipit.com) · [Website](https://devag7.github.io/jantahr/) · [Self-host in one command](deploy/self-hosted/README.md) · [Cloud on Supabase + Vercel](docs/deploy-cloud.md) · [Legal basis](docs/legal-2026.md) · [Contributing](CONTRIBUTING.md)
 
 [![License: AGPL-3.0](https://img.shields.io/badge/license-AGPL--3.0-0066cc)](LICENSE)
 [![CI](https://github.com/devag7/jantahr/actions/workflows/ci.yml/badge.svg)](https://github.com/devag7/jantahr/actions/workflows/ci.yml)

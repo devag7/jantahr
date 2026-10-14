@@ -193,6 +193,20 @@ temporarily unavailable" instead of offering a checkout that would fail, and `do
 Regenerating a key in the Razorpay dashboard replaces the old one: update `RAZORPAY_KEY_ID` and `RAZORPAY_KEY_SECRET`
 on the deployment the same day. Plans and the webhook stay valid as long as the account and mode are the same.
 
+### 3.3 Moving to your own domain
+
+Add the domain in Vercel (Settings > Domains) and make it the production domain: canonical links, the sitemap and
+`robots.txt` follow automatically. Then point everything that calls or links to the site at the new address:
+
+1. Supabase > Authentication > URL Configuration: set Site URL to `https://your-domain` and add
+   `https://your-domain/**` to Redirect URLs. Sign-up confirmations and password-reset links return there; an address
+   missing from the list falls back to the Site URL.
+2. The Razorpay webhook URL: `https://your-domain/api/billing/webhooks/razorpay` (Dashboard > Webhooks, or the API).
+3. The scheduled jobs: update the Vault secret that holds the jobs URL
+   (`select vault.update_secret((select id from vault.secrets where name = 'jantahr_api_jobs_url'), 'https://your-domain/api/internal/jobs');`).
+4. Behind Cloudflare, set the DNS record to "DNS only": Vercel issues and renews the certificate itself, and
+   Cloudflare's bot protection can block server-to-server calls such as Razorpay's webhooks.
+
 ## 4. Check the deployment
 
 - Run `pnpm --filter jantahr-backend doctor` with the API's environment: it checks every setting above and prints
