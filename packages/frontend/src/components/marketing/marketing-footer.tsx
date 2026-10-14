@@ -29,7 +29,7 @@ export function MarketingFooter() {
           </div>
         </div>
         <p className="mt-6 text-fine text-muted-foreground">{CHARGES_GST ? 'Prices exclude 18% GST. ' : ''}Statutory rules are kept current with central and state notifications; payroll outputs should be reviewed by your chartered accountant.</p>
-        <p className="mt-3 text-fine text-muted-foreground">Copyright {new Date().getFullYear()} {OPERATOR.name}{OPERATOR.address ? `, ${OPERATOR.address}` : ''}. Data hosted in India.</p>
+        <p className="mt-3 text-fine text-muted-foreground">Copyright {new Date().getFullYear()} {OPERATOR.url ? <a href={OPERATOR.url} className="hover:underline">{OPERATOR.name}</a> : OPERATOR.name}{OPERATOR.address ? `, ${OPERATOR.address}` : ''}. Data hosted in India.</p>
       </div>
     </footer>
   );

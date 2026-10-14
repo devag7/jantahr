@@ -6,7 +6,8 @@ export const metadata: Metadata = { title: 'Contact us', alternates: { canonical
 
 export default function ContactPage() {
   const rows: [string, React.ReactNode][] = [
-    ['Business name', OPERATOR.name],
+    ['Operated by', OPERATOR.name],
+    ...(OPERATOR.url ? [['Website', <a key="site" className="text-primary hover:underline" href={OPERATOR.url}>{OPERATOR.url.replace(/^https?:\/\//, '').replace(/\/$/, '')}</a>] as [string, React.ReactNode]] : []),
     ...(OPERATOR.address ? [['Address', OPERATOR.address] as [string, React.ReactNode]] : []),
     ['Email', <a key="email" className="text-primary hover:underline" href={`mailto:${OPERATOR.email}`}>{OPERATOR.email}</a>],
     ...(OPERATOR.phone ? [['Phone', <a key="phone" className="text-primary hover:underline" href={`tel:${OPERATOR.phone.replace(/[^+\d]/g, '')}`}>{OPERATOR.phone}</a>] as [string, React.ReactNode]] : []),

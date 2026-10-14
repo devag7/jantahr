@@ -10,6 +10,8 @@ export const OPERATOR = {
   name: process.env.NEXT_PUBLIC_OPERATOR_NAME || 'JantaHR',
   /** Registered or operating address, one line. */
   address: process.env.NEXT_PUBLIC_OPERATOR_ADDRESS || '',
+  /** The operator's own website, if it has one (for example the studio a product belongs to). */
+  url: process.env.NEXT_PUBLIC_OPERATOR_URL || '',
   email: SALES_EMAIL,
   phone: process.env.NEXT_PUBLIC_SUPPORT_PHONE || '',
   /** GST registration number; empty when the business is not registered under GST. */
