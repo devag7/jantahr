@@ -46,3 +46,26 @@ describe('subscriptions made on another Razorpay account or mode', () => {
     restore();
   });
 });
+
+describe('webhooks for subscriptions JantaHR did not create', () => {
+  function inbox(ageMs: number) {
+    const event = { id: 'evt_1', createdAt: new Date(Date.now() - ageMs), payload: { event: 'subscription.cancelled', payload: { subscription: { entity: { id: 'sub_elsewhere', status: 'cancelled' } } } } };
+    const update = jest.fn(async () => event);
+    const tx = { $queryRaw: jest.fn(async () => [{ locked: true }]), billingEvent: { findMany: jest.fn(async () => [event]), update } };
+    const prisma = { $transaction: jest.fn(async (fn: (t: typeof tx) => Promise<unknown>) => fn(tx)), subscription: { findUnique: jest.fn(async () => null) } };
+    const service = new BillingService(prisma as never, { get: () => undefined } as never, { invalidate: jest.fn() } as never, {} as never);
+    return { service, update };
+  }
+
+  it('are retried while fresh, in case the event outran the checkout', async () => {
+    const { service, update } = inbox(60_000);
+    expect(await service.processInbox()).toEqual({ processed: 0, failed: 1 });
+    expect(update).toHaveBeenCalledWith({ where: { id: 'evt_1' }, data: { error: 'No subscription sub_elsewhere' } });
+  });
+
+  it('are set aside after an hour instead of failing every run', async () => {
+    const { service, update } = inbox(2 * 3600_000);
+    expect(await service.processInbox()).toEqual({ processed: 1, failed: 0 });
+    expect(update).toHaveBeenCalledWith({ where: { id: 'evt_1' }, data: expect.objectContaining({ error: 'ignored: No subscription sub_elsewhere', processedAt: expect.any(Date) }) });
+  });
+});

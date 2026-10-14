@@ -40,6 +40,12 @@ const addPeriod = (from: Date, cycle: BillingCycle) => {
   return d;
 };
 
+/** A webhook for a subscription JantaHR did not create. */
+class UnknownSubscription extends Error {
+  constructor(id: string) { super(`No subscription ${id}`); }
+}
+const UNKNOWN_SUBSCRIPTION_GRACE_MS = 60 * 60 * 1000;
+
 const OTHER_ACCOUNT = 'This plan was set up on a different Razorpay account or mode (for example test mode before live payments were switched on), so it cannot be changed here. Choose a plan again to start a new subscription.';
 
 /**
@@ -316,8 +322,11 @@ export class BillingService {
           await tx.billingEvent.update({ where: { id: ev.id }, data: { processedAt: new Date(), error: null } });
           processed++;
         } catch (e) {
-          failed++;
-          await tx.billingEvent.update({ where: { id: ev.id }, data: { error: errorMessage(e).slice(0, 2000) } });
+          // A subscription made outside JantaHR (in the Razorpay dashboard, or a check run with the API keys) never
+          // gets a row here. Retry for a while in case the event outran the checkout, then set it aside.
+          const stale = e instanceof UnknownSubscription && Date.now() - ev.createdAt.getTime() > UNKNOWN_SUBSCRIPTION_GRACE_MS;
+          if (stale) processed++; else failed++;
+          await tx.billingEvent.update({ where: { id: ev.id }, data: { error: `${stale ? 'ignored: ' : ''}${errorMessage(e)}`.slice(0, 2000), ...(stale ? { processedAt: new Date() } : {}) } });
         }
       }
     }, { timeout: 60_000 });
@@ -328,7 +337,7 @@ export class BillingService {
     const entity = body?.payload?.subscription?.entity;
     if (!entity?.id) return; // not a subscription event
     const sub = await this.prisma.subscription.findUnique({ where: { providerSubscriptionId: entity.id } });
-    if (!sub) throw new NotFoundException(`No subscription ${entity.id}`);
+    if (!sub) throw new UnknownSubscription(entity.id);
     const ts = (s?: number | null) => (s ? new Date(s * 1000) : undefined);
     const plan = (sub.pendingPlan ?? sub.plan) as PlanCode;
     const cycle = (sub.pendingCycle ?? sub.cycle) as BillingCycle;
