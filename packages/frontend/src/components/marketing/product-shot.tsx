@@ -14,7 +14,7 @@ export function ProductShot({ name, priority, sizes = '(max-width: 1024px) 100vw
     <div className={cn('mx-auto', !priority && 'reveal', className)}>
       {/* eslint-disable-next-line @next/next/no-img-element -- next/image is unoptimised here (see next.config.mjs), so srcset is written by hand */}
       <img src={s.src} srcSet={srcSetOf(s)} sizes={sizes} alt={s.alt} width={s.width} height={s.height}
-        loading={priority ? 'eager' : 'lazy'} decoding={priority ? 'sync' : 'async'} {...(priority ? { fetchPriority: 'high' as const } : {})}
+        loading={priority ? 'eager' : 'lazy'} decoding="async" {...(priority ? { fetchPriority: 'high' as const } : {})}
         className={cn('h-auto w-full rounded-lg shadow-product', imgClassName)} />
     </div>
   );

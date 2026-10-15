@@ -46,7 +46,8 @@ await check('home: canonical, lang, og:image, og:type and a title that names the
   assert.match(html, /<html[^>]*\blang="en"/);
   assert.match(html, /<link rel="canonical" href="https?:\/\/[^"]+\/?"/);
   assert.match(html, /<meta property="og:type" content="website"/);
-  assert.match(html, /<meta property="og:image" content="https?:\/\/[^"]+overview\.webp"/);
+  // the share card rendered from app/opengraph-image.tsx
+  assert.match(html, /<meta property="og:image" content="https?:\/\/[^"]+\/opengraph-image[^"]*"/);
   assert.match(html, /<title>JantaHR: HRMS and payroll software for India<\/title>/);
 });
 

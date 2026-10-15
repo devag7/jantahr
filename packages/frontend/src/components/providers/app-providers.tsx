@@ -1,7 +1,6 @@
 'use client';
 import * as React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ThemeProvider } from 'next-themes';
 import { Toaster } from 'sonner';
 import axios from 'axios';
 import { useAuthStore } from '@/stores/auth/auth-store';
@@ -25,14 +24,16 @@ function AuthBootstrap({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+/**
+ * What the signed-in app, the sign-in pages and the careers pages need: the API cache, the Supabase session and
+ * toasts. Mounted by those layouts only, so the public marketing pages do not download the session and API code.
+ */
 export function AppProviders({ children }: { children: React.ReactNode }) {
   const [client] = React.useState(makeClient);
   return (
-    <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange>
-      <QueryClientProvider client={client}>
-        <AuthBootstrap>{children}</AuthBootstrap>
-        <Toaster richColors closeButton position="top-right" />
-      </QueryClientProvider>
-    </ThemeProvider>
+    <QueryClientProvider client={client}>
+      <AuthBootstrap>{children}</AuthBootstrap>
+      <Toaster richColors closeButton position="top-right" />
+    </QueryClientProvider>
   );
 }

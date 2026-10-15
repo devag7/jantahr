@@ -1,8 +1,7 @@
 'use client';
 import * as React from 'react';
-import { CheckCircle2 } from 'lucide-react';
+import { CheckCircle2, Loader2 } from 'lucide-react';
 import { Field, FormGrid } from '@/components/common/field';
-import { Spinner } from '@/components/common/states';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { NativeSelect } from '@/components/ui/native-select';
@@ -93,7 +92,7 @@ export function ContactForm({ email }: { email: string }) {
       <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-fine text-muted-foreground">We use these details only to reply to you. See the <a className="text-primary underline underline-offset-2" href="/legal/privacy">privacy notice</a>.</p>
         <Button type="submit" disabled={send.isPending} aria-disabled={send.isPending} className="shrink-0">
-          {send.isPending && <Spinner className="mr-2" />}{send.isPending ? 'Sending' : 'Send message'}
+          {send.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin motion-reduce:animate-none" aria-hidden />}{send.isPending ? 'Sending' : 'Send message'}
         </Button>
       </div>
     </form>
