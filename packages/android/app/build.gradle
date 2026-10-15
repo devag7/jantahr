@@ -8,7 +8,7 @@ plugins {
 def twa = [
     applicationId: 'com.devshipit.jantahr',
     hostName: 'jantahr.devshipit.com',
-    launchUrl: '/dashboard',
+    launchUrl: '/dashboard?source=android-app',
     name: 'JantaHR',
     launcherName: 'JantaHR',
     themeColor: '#000000',          // status bar: the app's black top bar

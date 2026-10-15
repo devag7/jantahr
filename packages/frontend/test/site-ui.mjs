@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
 const BASE = (process.env.BASE || 'http://localhost:3000').replace(/\/+$/, '');
-const PAGES = ['/', '/pricing', '/self-hosting', '/developers', '/about', '/contact', '/legal/terms', '/legal/privacy', '/legal/refunds', '/legal/shipping'];
+const PAGES = ['/', '/pricing', '/self-hosting', '/developers', '/about', '/contact', '/legal/terms', '/legal/privacy', '/legal/refunds', '/legal/shipping', '/legal/delete-account'];
 const PLANS = readFileSync(new URL('../src/lib/plans/plans.generated.ts', import.meta.url), 'utf8');
 let failed = 0;
 

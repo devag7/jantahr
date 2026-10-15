@@ -5,7 +5,7 @@
 import assert from 'node:assert/strict';
 
 const BASE = (process.env.BASE || 'http://localhost:3000').replace(/\/+$/, '');
-const PAGES = ['/', '/pricing', '/self-hosting', '/developers', '/about', '/contact', '/legal/terms', '/legal/privacy', '/legal/refunds', '/legal/shipping'];
+const PAGES = ['/', '/pricing', '/self-hosting', '/developers', '/about', '/contact', '/legal/terms', '/legal/privacy', '/legal/refunds', '/legal/shipping', '/legal/delete-account'];
 let failed = 0;
 
 async function check(name, fn) {

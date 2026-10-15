@@ -10,6 +10,14 @@ JantaHR runs on phones in two ways, both built from the web app, so every change
 A new Play release is only needed when the Android shell changes (icon, colours, permissions, target SDK). Web
 changes ship through the normal web deployment.
 
+**No purchases in the Android app.** Google Play's payments policy does not allow selling the subscription inside a
+Play app through Razorpay, so the app hides plan purchase, seat changes and upgrade prompts; Billing there only shows
+the plan and invoices. The app opens `/dashboard?source=android-app` and Chrome sends the referrer
+`android-app://com.devshipit.jantahr`; `inAndroidApp()` in `packages/frontend/src/components/pwa/pwa.ts` checks
+either and remembers it for the session. The iPhone web app is not distributed through a store and keeps them.
+
+Play's Data safety form asks for an account deletion link: `https://<your domain>/legal/delete-account`.
+
 ## Costs
 
 | Item | Cost |

@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { featureFor } from '@/components/layout/nav.constants';
 import { useFeatureAccess } from '@/hooks/billing/use-billing';
 import { useAuth } from '@/hooks/auth/use-auth';
+import { useInAndroidApp } from '@/components/pwa/pwa-bootstrap';
 
 const PLAN_FOR: Record<string, string> = {
   payroll: 'Standard', statutory: 'Standard', lifecycle: 'Standard', expenses: 'Standard', helpdesk: 'Standard',
@@ -19,13 +20,15 @@ export function PlanGate({ children }: { children: React.ReactNode }) {
   const feature = featureFor(pathname);
   const access = useFeatureAccess(feature);
   const { user } = useAuth();
+  const androidApp = useInAndroidApp();
+  const canBuy = user?.role === 'SUPER_ADMIN' && !androidApp;
   if (!feature || access === 'full' || access === undefined) return <>{children}</>;
   if (access === 'read') {
     return (
       <>
         <div role="status" className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-card px-5 py-3">
           <p className="text-caption"><span className="font-semibold">Read-only.</span> Your subscription is not active, so you can view this data but not change it.</p>
-          <Button asChild size="sm"><Link href="/hr/billing">Renew plan</Link></Button>
+          {canBuy && <Button asChild size="sm"><Link href="/hr/billing">Renew plan</Link></Button>}
         </div>
         {children}
       </>
@@ -36,9 +39,9 @@ export function PlanGate({ children }: { children: React.ReactNode }) {
     <div className="mx-auto flex max-w-xl flex-col items-center py-24 text-center">
       <Lock className="h-8 w-8 text-muted-foreground" aria-hidden />
       <h1 className="mt-5 text-title font-semibold">Available on {plan}</h1>
-      <p className="mt-3 text-body text-muted-foreground">This part of JantaHR is not included in your company&apos;s current plan.{user?.role === 'SUPER_ADMIN' ? ' You can upgrade in a couple of minutes; your data stays as it is.' : ' Ask your administrator to upgrade.'}</p>
+      <p className="mt-3 text-body text-muted-foreground">This part of JantaHR is not included in your company&apos;s current plan.{canBuy ? ' You can upgrade in a couple of minutes; your data stays as it is.' : user?.role === 'SUPER_ADMIN' ? '' : ' Ask your administrator to upgrade.'}</p>
       <div className="mt-8 flex gap-3">
-        {user?.role === 'SUPER_ADMIN' && <Button asChild><Link href="/hr/billing">See plans</Link></Button>}
+        {canBuy && <Button asChild><Link href="/hr/billing">See plans</Link></Button>}
         <Button asChild variant="outline"><Link href="/dashboard">Back to overview</Link></Button>
       </div>
     </div>

@@ -14,6 +14,7 @@ import { QueryBoundary, Spinner } from '@/components/common/states';
 import { StatCard } from '@/components/common/stat-card';
 import { StatusBadge } from '@/components/common/status-badge';
 import { openRazorpay } from '@/components/billing/razorpay';
+import { useInAndroidApp } from '@/components/pwa/pwa-bootstrap';
 import { useAuth } from '@/hooks/auth/use-auth';
 import { useBillingOverview, useCancelSubscription, useChangeSeats, useCheckout, useConfirmCheckout } from '@/hooks/billing/use-billing';
 import { errorMessage } from '@/lib/api/client';
@@ -50,6 +51,7 @@ function SelfHosted() {
 function Cloud({ d }: { d: BillingOverview }) {
   const { user } = useAuth();
   const owner = user?.role === 'SUPER_ADMIN';
+  const androidApp = useInAndroidApp();
   const sub = d.subscription;
   const ent = d.entitlements;
   const paid = sub && sub.plan !== 'FREE' && ['ACTIVE', 'PAST_DUE', 'CANCELLED'].includes(sub.status);
@@ -65,21 +67,22 @@ function Cloud({ d }: { d: BillingOverview }) {
         <StatCard label="Payments" value={payable ? (d.provider === 'razorpay' ? 'Razorpay' : 'Test mode') : d.provider ? 'Unavailable' : 'Not set up'} hint={d.provider === 'mock' ? 'Development payments, no money moves' : undefined} tone={d.provider && !payable ? 'warning' : 'default'} />
       </div>
 
-      {owner && d.provider && !payable && (
+      {androidApp && <p role="status" className="rounded-lg border bg-muted px-5 py-4 text-caption">Plans and payments are not available in the Android app.</p>}
+      {owner && d.provider && !payable && !androidApp && (
         <p role="status" className="flex gap-3 rounded-lg border bg-muted px-5 py-4 text-caption"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" aria-hidden /><span>
           <span className="font-semibold">Online payment is temporarily unavailable.</span> Nothing has been charged and your current plan{sub?.status === 'TRIALING' ? ' and trial are' : ' is'} unchanged. Please try again later.
           {/* the cause is an operator setting, so say which one to whoever runs the server */}
           <span className="mt-1 block text-fine text-muted-foreground">{d.payments?.problem === 'plans' ? 'For the operator: a Razorpay plan in RAZORPAY_PLAN_IDS is missing from this Razorpay account or mode. Run `pnpm razorpay:plans`.' : 'For the operator: Razorpay rejected RAZORPAY_KEY_ID / RAZORPAY_KEY_SECRET. Generate a key in the Razorpay dashboard and update the server.'}</span>
         </span></p>
       )}
-      {owner && paid && d.subscriptionOnOtherAccount && (
+      {owner && paid && d.subscriptionOnOtherAccount && !androidApp && (
         <p role="status" className="flex gap-3 rounded-lg border bg-muted px-5 py-4 text-caption"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" aria-hidden /><span>
           <span className="font-semibold">This plan was bought in test mode.</span> Live payments are now on, so it cannot be changed or cancelled here. Choose a plan below to start a real subscription; it replaces this one.
         </span></p>
       )}
-      {owner && d.provider && (paid && !d.subscriptionOnOtherAccount ? <ManagePlan d={d} /> : payable && <ChoosePlan d={d} />)}
-      {!owner && <p className="text-caption text-muted-foreground">Only the account owner (Super admin) can change the plan.</p>}
-      {!d.provider && owner && <p className="text-caption text-muted-foreground">Online payments are not configured on this server. Set RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET and RAZORPAY_PLAN_IDS on the API.</p>}
+      {owner && d.provider && !androidApp && (paid && !d.subscriptionOnOtherAccount ? <ManagePlan d={d} /> : payable && <ChoosePlan d={d} />)}
+      {!owner && !androidApp && <p className="text-caption text-muted-foreground">Only the account owner (Super admin) can change the plan.</p>}
+      {!d.provider && owner && !androidApp && <p className="text-caption text-muted-foreground">Online payments are not configured on this server. Set RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET and RAZORPAY_PLAN_IDS on the API.</p>}
 
       <section>
         <h2 className="mb-4 text-tagline font-semibold">Invoices</h2>

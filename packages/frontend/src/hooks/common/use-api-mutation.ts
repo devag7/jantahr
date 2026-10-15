@@ -1,6 +1,7 @@
 'use client';
 import { useMutation, useQueryClient, type QueryKey } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { inAndroidApp } from '@/components/pwa/pwa';
 import { errorMessage, planError } from '@/lib/api/client';
 
 interface Options<TData, TVars> {
@@ -26,7 +27,8 @@ export function useApiMutation<TData, TVars = void>(fn: (vars: TVars) => Promise
     onError: (e) => {
       if (opts.silentError) return;
       const plan = planError(e);
-      if (plan) toast.error(plan.message, { action: { label: plan.code === 'SEAT_LIMIT' ? 'Add seats' : 'See plans', onClick: () => window.location.assign('/hr/billing') } });
+      if (plan && inAndroidApp()) toast.error(plan.message);
+      else if (plan) toast.error(plan.message, { action: { label: plan.code === 'SEAT_LIMIT' ? 'Add seats' : 'See plans', onClick: () => window.location.assign('/hr/billing') } });
       else toast.error(errorMessage(e));
     },
   });

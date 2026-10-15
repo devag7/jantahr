@@ -4,7 +4,7 @@ import { CHARGES_GST, OPERATOR } from '@/lib/operator';
 const COLS: { title: string; links: { label: string; href: string }[] }[] = [
   { title: 'Product', links: [{ label: 'Payroll', href: '/#payroll' }, { label: 'Compliance calendar', href: '/#compliance' }, { label: 'Pricing', href: '/pricing' }, { label: 'Self-hosting', href: '/self-hosting' }, { label: 'Developers', href: '/developers' }] },
   { title: 'Account', links: [{ label: 'Sign in', href: '/login' }, { label: 'Start free trial', href: '/signup' }, { label: 'Reset password', href: '/forgot-password' }] },
-  { title: 'Legal', links: [{ label: 'Terms of service', href: '/legal/terms' }, { label: 'Privacy notice', href: '/legal/privacy' }, { label: 'Cancellation and refunds', href: '/legal/refunds' }, { label: 'Shipping and delivery', href: '/legal/shipping' }] },
+  { title: 'Legal', links: [{ label: 'Terms of service', href: '/legal/terms' }, { label: 'Privacy notice', href: '/legal/privacy' }, { label: 'Cancellation and refunds', href: '/legal/refunds' }, { label: 'Shipping and delivery', href: '/legal/shipping' }, { label: 'Delete your account', href: '/legal/delete-account' }] },
 ];
 
 // Phones: a wrapped label keeps normal leading (2.41 leading would leave a blank line inside one link) and padding

@@ -23,6 +23,7 @@ export const PUBLIC_PAGES: PublicPage[] = [
   { path: '/legal/terms', title: 'JantaHR terms of service', description: 'The agreement for using JantaHR Cloud.', group: 'legal' },
   { path: '/legal/privacy', title: 'JantaHR privacy notice', description: 'What personal data is processed, why, where it is stored, and rights under the DPDP Act 2023.', group: 'legal' },
   { path: '/legal/refunds', title: 'JantaHR cancellation and refunds', description: 'How to cancel a plan and when a payment is refunded.', group: 'legal' },
+  { path: '/legal/delete-account', title: 'Delete a JantaHR account', description: 'How to delete a JantaHR account and its data, what is kept and for how long.', group: 'legal' },
   { path: '/legal/shipping', title: 'JantaHR shipping and delivery', description: 'JantaHR is software delivered online: when access starts after payment.', group: 'legal' },
 ];
 
