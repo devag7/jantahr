@@ -27,7 +27,7 @@ import { useEmployee, useResetEmployeePassword, useSetEmployeeStatus, useUpdateE
 import { useLeaveBalance } from '@/hooks/leave/use-leave';
 import { useMyOnboarding, useUpdateTask } from '@/hooks/lifecycle/use-lifecycle';
 import { useEmployeeSlips } from '@/hooks/payroll/use-payroll';
-import { formatDate, formatINR, monthLabel } from '@/lib/format';
+import { formatDate, formatINR, formatPayMonth, humanize, monthLabel } from '@/lib/format';
 import { ADMIN, PAYROLL } from '@/lib/permissions';
 import type { Employee } from '@/types/employees';
 import type { Slip } from '@/types/payroll';
@@ -56,7 +56,7 @@ function PayslipsTab({ employeeId }: { employeeId: string }) {
   return (
     <>
       <DataTable rows={q.data} loading={q.isLoading} error={q.error} rowKey={(s) => s.id} onRowClick={setOpen} emptyTitle="No salary slips yet" columns={[
-        { key: 'm', header: 'Month', cell: (s) => monthLabel(s.month, s.year) }, { key: 'g', header: 'Gross', cell: (s) => formatINR(s.grossPay), align: 'right' }, { key: 'd', header: 'Deductions', cell: (s) => formatINR(s.totalDeductions), align: 'right' },
+        { key: 'm', header: 'Month', cell: (s) => formatPayMonth(s.month, s.year) }, { key: 'g', header: 'Gross', cell: (s) => formatINR(s.grossPay), align: 'right' }, { key: 'd', header: 'Deductions', cell: (s) => formatINR(s.totalDeductions), align: 'right' },
         { key: 'n', header: 'Net pay', cell: (s) => <b className="tabular-nums">{formatINR(s.netPay)}</b>, align: 'right' }, { key: 's', header: 'Status', cell: (s) => <StatusBadge status={s.status} /> },
       ]} />
       <SlipDetailModal slip={open} onClose={() => setOpen(null)} />
@@ -126,15 +126,15 @@ export default function EmployeeDetailPage() {
           <>
             <Header e={e} />
             <Tabs defaultValue="overview">
-              <TabsList className="h-auto flex-wrap justify-start"><TabsTrigger value="overview">Overview</TabsTrigger>{payroll && <TabsTrigger value="comp">Compensation</TabsTrigger>}<TabsTrigger value="leave">Leave</TabsTrigger><TabsTrigger value="attendance">Attendance</TabsTrigger>{payroll && <TabsTrigger value="slips">Payslips</TabsTrigger>}<TabsTrigger value="docs">Documents</TabsTrigger><TabsTrigger value="onboarding">Onboarding</TabsTrigger>{admin && <TabsTrigger value="edit">Edit</TabsTrigger>}</TabsList>
+              <TabsList className="justify-start"><TabsTrigger value="overview">Overview</TabsTrigger>{payroll && <TabsTrigger value="comp">Compensation</TabsTrigger>}<TabsTrigger value="leave">Leave</TabsTrigger><TabsTrigger value="attendance">Attendance</TabsTrigger>{payroll && <TabsTrigger value="slips">Payslips</TabsTrigger>}<TabsTrigger value="docs">Documents</TabsTrigger><TabsTrigger value="onboarding">Onboarding</TabsTrigger>{admin && <TabsTrigger value="edit">Edit</TabsTrigger>}</TabsList>
               <TabsContent value="overview" className="mt-4 space-y-6">
                 <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-                  <StatCard label="Joined" value={formatDate(e.dateOfJoining, false)} hint={formatDate(e.dateOfJoining).slice(-4)} /><StatCard label="Annual CTC" value={e.ctc ? formatINR(e.ctc) : '-'} hint={payroll || admin ? undefined : 'Restricted'} />
-                  <StatCard label="System role" value={e.user.role.replace('_', ' ').toLowerCase()} hint={e.user.mfaEnabled ? '2FA on' : '2FA off'} /><StatCard label="Last login" value={e.user.lastLogin ? formatDate(e.user.lastLogin, false) : 'Never'} />
+                  <StatCard label="Joined" value={formatDate(e.dateOfJoining)} /><StatCard label="Annual CTC" value={e.ctc ? formatINR(e.ctc) : '-'} hint={payroll || admin ? undefined : 'Restricted'} />
+                  <StatCard label="System role" value={humanize(e.user.role)} hint={e.user.mfaEnabled ? '2FA on' : '2FA off'} /><StatCard label="Last login" value={e.user.lastLogin ? formatDate(e.user.lastLogin) : 'Never'} />
                 </div>
                 <Card><CardHeader><CardTitle>Employment & personal</CardTitle></CardHeader><CardContent><DetailList cols={3} items={[
                   { label: 'Reporting manager', value: e.reportingManager ? `${e.reportingManager.firstName} ${e.reportingManager.lastName}` : null }, { label: 'Employment type', value: e.employmentType }, { label: 'Notice period', value: `${e.noticeperiodDays ?? '-'} days` },
-                  { label: 'Date of birth', value: formatDate(e.dateOfBirth) }, { label: 'Gender', value: e.gender }, { label: 'Marital status', value: e.maritalStatus }, { label: 'Address', value: [e.currentAddress, e.city, e.state, e.pincode].filter(Boolean).join(', ') }, { label: 'Blood group', value: e.bloodGroup },
+                  { label: 'Date of birth', value: formatDate(e.dateOfBirth) }, { label: 'Gender', value: e.gender ? humanize(e.gender) : null }, { label: 'Marital status', value: e.maritalStatus ? humanize(e.maritalStatus) : null }, { label: 'Address', value: [e.currentAddress, e.city, e.state, e.pincode].filter(Boolean).join(', ') }, { label: 'Blood group', value: e.bloodGroup },
                   { label: 'Emergency contact', value: e.emergencyContactName ? `${e.emergencyContactName} · ${e.emergencyContactPhone ?? ''}` : null },
                 ]} /></CardContent></Card>
                 <Card><CardHeader><CardTitle>Statutory & bank</CardTitle></CardHeader><CardContent><DetailList cols={3} items={[

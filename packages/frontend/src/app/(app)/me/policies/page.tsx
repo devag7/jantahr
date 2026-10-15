@@ -15,7 +15,7 @@ export default function PoliciesPage() {
   const [open, setOpen] = React.useState<string | null>(null);
   return (
     <>
-      <PageHeader title="Company policies" description="Read and acknowledge policies. You'll be asked again when a policy changes." />
+      <PageHeader title="Policies" description="Read and acknowledge policies. You'll be asked again when a policy changes." />
       <QueryBoundary query={q} empty={{ when: (d) => d.length === 0, title: 'No policies published yet' }}>
         {(policies) => (
           <div className="space-y-3">

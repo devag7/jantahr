@@ -19,10 +19,11 @@ const badgeVariants = cva("inline-flex items-center whitespace-nowrap rounded-fu
   defaultVariants: { variant: "default" },
 })
 
-export interface BadgeProps extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof badgeVariants> {}
+export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement>, VariantProps<typeof badgeVariants> {}
 
 function Badge({ className, variant, ...props }: BadgeProps) {
-  return <div className={cn(badgeVariants({ variant }), className)} {...props} />
+  // a span, so a badge is valid inside text (a stat card's hint, a sentence)
+  return <span className={cn(badgeVariants({ variant }), className)} {...props} />
 }
 
 export { Badge, badgeVariants }

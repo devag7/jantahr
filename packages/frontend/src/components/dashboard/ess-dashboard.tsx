@@ -9,7 +9,7 @@ import { QuickLinks } from '@/components/dashboard/quick-links';
 import { AnnouncementsCard, CelebrationsCard, HolidaysCard, SectionCard } from '@/components/dashboard/widgets';
 import { LeaveBalanceTable } from '@/components/leave/leave-balance-cards';
 import { useEssDashboard } from '@/hooks/reports/use-reports';
-import { formatDate, formatINR, monthLabel } from '@/lib/format';
+import { formatDate, formatINR, formatPayMonth } from '@/lib/format';
 
 interface Todo { key: string; text: string; href: string; meta?: string }
 
@@ -49,7 +49,7 @@ export function EssDashboard() {
                 </SectionCard>
                 <SectionCard title="Payslips" flush action={<Link href="/me/payslips" className="text-fine font-semibold text-primary hover:underline">View all</Link>}>
                   {d.latestPayslips.length === 0 ? <p className="px-6 py-3 text-caption text-muted-foreground">No payslip published yet.</p> : (
-                    <ul className="divide-y">{d.latestPayslips.map((p) => <li key={p.id}><Link href="/me/payslips" className="flex items-center justify-between px-6 py-2.5 text-caption hover:bg-accent/50"><span>{monthLabel(p.month, p.year)}</span><span className="flex items-center gap-3"><span className="font-semibold tabular-nums">{formatINR(p.net)}</span><Badge variant={p.status === 'PAID' ? 'success' : 'muted'}>{p.status === 'PAID' ? 'Paid' : 'Published'}</Badge></span></Link></li>)}</ul>
+                    <ul className="divide-y">{d.latestPayslips.map((p) => <li key={p.id}><Link href="/me/payslips" className="flex items-center justify-between px-6 py-2.5 text-caption hover:bg-accent/50"><span>{formatPayMonth(p.month, p.year)}</span><span className="flex items-center gap-3"><span className="font-semibold tabular-nums">{formatINR(p.net)}</span><Badge variant={p.status === 'PAID' ? 'success' : 'muted'}>{p.status === 'PAID' ? 'Paid' : 'Published'}</Badge></span></Link></li>)}</ul>
                   )}
                 </SectionCard>
               </div>

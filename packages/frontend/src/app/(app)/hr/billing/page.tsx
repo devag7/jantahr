@@ -1,7 +1,7 @@
 'use client';
 import * as React from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { Check, Download } from 'lucide-react';
+import { AlertTriangle, Check, Download } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -66,16 +66,16 @@ function Cloud({ d }: { d: BillingOverview }) {
       </div>
 
       {owner && d.provider && !payable && (
-        <p role="status" className="rounded-lg border border-warning/40 bg-warning/10 px-5 py-4 text-caption">
+        <p role="status" className="flex gap-3 rounded-lg border bg-muted px-5 py-4 text-caption"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" aria-hidden /><span>
           <span className="font-semibold">Online payment is temporarily unavailable.</span> Nothing has been charged and your current plan{sub?.status === 'TRIALING' ? ' and trial are' : ' is'} unchanged. Please try again later.
           {/* the cause is an operator setting, so say which one to whoever runs the server */}
           <span className="mt-1 block text-fine text-muted-foreground">{d.payments?.problem === 'plans' ? 'For the operator: a Razorpay plan in RAZORPAY_PLAN_IDS is missing from this Razorpay account or mode. Run `pnpm razorpay:plans`.' : 'For the operator: Razorpay rejected RAZORPAY_KEY_ID / RAZORPAY_KEY_SECRET. Generate a key in the Razorpay dashboard and update the server.'}</span>
-        </p>
+        </span></p>
       )}
       {owner && paid && d.subscriptionOnOtherAccount && (
-        <p role="status" className="rounded-lg border border-warning/40 bg-warning/10 px-5 py-4 text-caption">
+        <p role="status" className="flex gap-3 rounded-lg border bg-muted px-5 py-4 text-caption"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" aria-hidden /><span>
           <span className="font-semibold">This plan was bought in test mode.</span> Live payments are now on, so it cannot be changed or cancelled here. Choose a plan below to start a real subscription; it replaces this one.
-        </p>
+        </span></p>
       )}
       {owner && d.provider && (paid && !d.subscriptionOnOtherAccount ? <ManagePlan d={d} /> : payable && <ChoosePlan d={d} />)}
       {!owner && <p className="text-caption text-muted-foreground">Only the account owner (Super admin) can change the plan.</p>}

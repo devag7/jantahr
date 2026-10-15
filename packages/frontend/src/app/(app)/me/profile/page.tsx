@@ -75,7 +75,7 @@ export default function ProfilePage() {
   const q = useMyProfile();
   return (
     <>
-      <PageHeader title="My profile" description="Your employment record, documents and account security." />
+      <PageHeader title="Profile" description="Your employment record, documents and account security." />
       <QueryBoundary query={q} rows={6}>
         {(e) => (
           <Tabs defaultValue="overview">

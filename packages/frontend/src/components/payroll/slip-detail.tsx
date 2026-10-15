@@ -4,7 +4,7 @@ import { DownloadButton } from '@/components/common/download-button';
 import { Modal } from '@/components/common/modal';
 import { StatusBadge } from '@/components/common/status-badge';
 import { payrollService } from '@/services/payroll/payroll.service';
-import { formatINR, monthLabel } from '@/lib/format';
+import { formatINR, formatPayMonth } from '@/lib/format';
 import type { Slip } from '@/types/payroll';
 
 function Lines({ title, lines, total, tone }: { title: string; lines: { name: string; amount: number }[]; total: number; tone: string }) {
@@ -22,7 +22,7 @@ function Lines({ title, lines, total, tone }: { title: string; lines: { name: st
 /** Payslip breakdown dialog used by employees (own slips) and payroll admins (any slip). */
 export function SlipDetailModal({ slip, onClose }: { slip: Slip | null; onClose: () => void }) {
   return (
-    <Modal open={!!slip} onOpenChange={(o) => !o && onClose()} size="lg" title={slip ? `Payslip · ${monthLabel(slip.month, slip.year)}` : ''} description={slip?.employee ? `${slip.employee.name} (${slip.employee.employeeCode})` : undefined}
+    <Modal open={!!slip} onOpenChange={(o) => !o && onClose()} size="lg" title={slip ? `Payslip · ${formatPayMonth(slip.month, slip.year)}` : ''} description={slip?.employee ? `${slip.employee.name} (${slip.employee.employeeCode})` : undefined}
       footer={slip && <DownloadButton onDownload={() => payrollService.downloadSlip(slip.id, `Payslip_${slip.year}-${slip.month}.pdf`)}>Download PDF</DownloadButton>}>
       {slip && (
         <div className="space-y-4">

@@ -18,23 +18,43 @@ export function formatINRCompact(n: number): string {
   return `₹${Math.round(n)}`;
 }
 
+// One format everywhere (docs/design-system.md, "Dates and numbers"): 07 Oct 2026 for dates, Oct 2026 for pay
+// months, 2:30 pm for times. Built by hand because the browser's own short month for September is "Sept" in
+// current ICU data, unlike every other month.
+const IST_OFFSET_MS = 330 * 60 * 1000;
+const asDate = (d: string | Date) => (typeof d === 'string' ? new Date(d) : d);
+const pad = (n: number) => String(n).padStart(2, '0');
+
+/** 07 Oct 2026. Calendar dates are stored at UTC midnight, so they are read in UTC. */
 export function formatDate(d: string | Date | null | undefined, withYear = true): string {
   if (!d) return '-';
-  const date = typeof d === 'string' ? new Date(d) : d;
+  const date = asDate(d);
   if (Number.isNaN(date.getTime())) return '-';
-  return date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', ...(withYear ? { year: 'numeric' } : {}), timeZone: 'UTC' });
+  return `${pad(date.getUTCDate())} ${MONTH_SHORT[date.getUTCMonth()]}${withYear ? ` ${date.getUTCFullYear()}` : ''}`;
 }
 
+/** 2:30 pm, India time: punches and timestamps are instants. */
 export function formatTime(d: string | Date | null | undefined): string {
   if (!d) return '-';
-  const date = typeof d === 'string' ? new Date(d) : d;
-  return date.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Kolkata' });
+  const date = asDate(d);
+  if (Number.isNaN(date.getTime())) return '-';
+  const ist = new Date(date.getTime() + IST_OFFSET_MS);
+  const h = ist.getUTCHours();
+  return `${h % 12 || 12}:${pad(ist.getUTCMinutes())} ${h < 12 ? 'am' : 'pm'}`;
 }
 
+/** 07 Oct, 2:30 pm (India time). */
 export function formatDateTime(d: string | Date | null | undefined): string {
   if (!d) return '-';
-  const date = typeof d === 'string' ? new Date(d) : d;
-  return `${date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', timeZone: 'Asia/Kolkata' })}, ${formatTime(date)}`;
+  const date = asDate(d);
+  if (Number.isNaN(date.getTime())) return '-';
+  const ist = new Date(date.getTime() + IST_OFFSET_MS);
+  return `${pad(ist.getUTCDate())} ${MONTH_SHORT[ist.getUTCMonth()]}, ${formatTime(date)}`;
+}
+
+/** Oct 2026: a pay month. */
+export function formatPayMonth(month: number, year: number): string {
+  return `${MONTH_SHORT[month - 1]} ${year}`;
 }
 
 export function formatDuration(seconds: number): string {

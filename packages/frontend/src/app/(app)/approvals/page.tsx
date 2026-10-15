@@ -38,7 +38,7 @@ export default function ApprovalsPage() {
     <>
       <PageHeader title="Approvals" description="Requests waiting for your decision." />
       <Tabs defaultValue="leave">
-        <TabsList className="h-auto flex-wrap justify-start">
+        <TabsList className="justify-start">
           <TabsTrigger value="leave">Leave<Count n={leave.data?.length ?? 0} /></TabsTrigger>
           <TabsTrigger value="attendance">Attendance<Count n={att.data?.length ?? 0} /></TabsTrigger>
           <TabsTrigger value="expenses">Expenses<Count n={claims.data?.length ?? 0} /></TabsTrigger>

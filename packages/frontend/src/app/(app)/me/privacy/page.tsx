@@ -10,7 +10,7 @@ import { privacyService } from '@/services/privacy/privacy.service';
 export default function MyPrivacyPage() {
   return (
     <>
-      <PageHeader title="Privacy & my data" description="See how your personal data is used, control optional uses, download your data and exercise your rights under the DPDP Act." />
+      <PageHeader title="Privacy" description="See how your personal data is used, control optional uses, download your data and exercise your rights under the DPDP Act." />
       <div className="space-y-6">
         <PrivacyNoticeCard />
         <ConsentPanel />

@@ -34,7 +34,8 @@ export default function EmployeesPage() {
   return (
     <>
       <PageHeader title="Employees" description="Everyone in the company: profiles, compensation and records."
-        actions={canEdit && <><Button variant="outline" onClick={() => setImp(true)}><Upload className="mr-2 h-4 w-4" />Import CSV</Button><Button asChild><Link href="/hr/employees/new"><Plus className="mr-2 h-4 w-4" />Add employee</Link></Button></>} />
+        actions={canEdit && <Button asChild><Link href="/hr/employees/new"><Plus className="mr-2 h-4 w-4" />Add employee</Link></Button>}
+        more={canEdit ? [{ label: 'Import CSV', icon: Upload, onSelect: () => setImp(true) }] : undefined} />
       <div className="mb-4 flex flex-wrap gap-2">
         <SearchInput onSearch={setSearch} placeholder="Search name, ID or email" className="w-72" />
         <NativeSelect aria-label="Department" className="w-48" value={dept} onChange={(e) => setDept(e.target.value)}><option value="">All departments</option>{depts.data?.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}</NativeSelect>

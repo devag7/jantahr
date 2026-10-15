@@ -28,9 +28,9 @@ export default function HrLeavePage() {
   const admin = hasRole(ADMIN);
   return (
     <>
-      <PageHeader title="Leave management" description="Applications, leave types, policies, balances, encashment and comp-off." />
+      <PageHeader title="Leave" description="Applications, leave types, policies, balances, encashment and comp-off." />
       <Tabs defaultValue="applications">
-        <TabsList className="h-auto flex-wrap justify-start"><TabsTrigger value="applications">Applications</TabsTrigger><TabsTrigger value="calendar">Company calendar</TabsTrigger><TabsTrigger value="types">Leave types</TabsTrigger><TabsTrigger value="policies">Policies</TabsTrigger><TabsTrigger value="allocations">Balances & accrual</TabsTrigger><TabsTrigger value="other">Encashment & comp-off</TabsTrigger></TabsList>
+        <TabsList className="justify-start"><TabsTrigger value="applications">Applications</TabsTrigger><TabsTrigger value="calendar">Company calendar</TabsTrigger><TabsTrigger value="types">Leave types</TabsTrigger><TabsTrigger value="policies">Policies</TabsTrigger><TabsTrigger value="allocations">Balances & accrual</TabsTrigger><TabsTrigger value="other">Encashment & comp-off</TabsTrigger></TabsList>
         <TabsContent value="applications" className="mt-4"><ApplicationsTab admin={admin} /></TabsContent>
         <TabsContent value="calendar" className="mt-4"><LeaveCalendar /></TabsContent>
         <TabsContent value="types" className="mt-4"><TypesTab admin={admin} /></TabsContent>

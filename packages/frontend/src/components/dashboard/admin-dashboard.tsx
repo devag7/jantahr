@@ -25,22 +25,9 @@ export function AdminDashboard() {
         return (
           <div className="space-y-4">
             <SetupGuide />
-            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-              <StatCard label="Active employees" value={d.headcount.active} icon={Users} onClick={() => router.push('/hr/employees')} />
-              <StatCard label="Joined this month" value={d.headcount.joinersThisMonth} icon={UserPlus} tone="success" />
-              <StatCard label="Exits this FY" value={d.headcount.exitsThisFY} hint={`${d.headcount.attritionRatePercent}% attrition`} icon={UserMinus} tone={d.headcount.attritionRatePercent > 15 ? 'destructive' : 'default'} />
-              <StatCard label="Open positions" value={d.recruitment.openPositions} hint={`${d.recruitment.activeApplicants} active applicants`} icon={TrendingDown} tone="info" onClick={() => router.push('/hr/recruitment')} />
-            </div>
-
-            <div className="grid gap-4 lg:grid-cols-3">
-              <SectionCard title="Attendance today" flush className="lg:col-span-1" action={<button onClick={() => router.push('/hr/attendance')} className="text-fine font-semibold text-primary hover:underline">Details</button>}>
-                <ul className="divide-y text-caption">
-                  {[['Present / WFH', a.present, 'bg-success'], ['On leave', a.onLeave, 'bg-info'], ['Half day', a.halfDay, 'bg-warning'], ['Absent', a.absent, 'bg-destructive'], ['Not marked', a.notMarked, 'bg-muted-foreground']].map(([l, v, c]) => (
-                    <li key={String(l)} className="flex items-center justify-between px-6 py-2"><span className="flex items-center gap-2"><span className={`h-2 w-2 rounded-full ${c}`} aria-hidden />{l}</span><span className="font-semibold tabular-nums">{v}</span></li>
-                  ))}
-                </ul>
-              </SectionCard>
-              <SectionCard title="Pending with HR" flush className="lg:col-span-1">
+            {/* what needs attention today comes first: requests waiting on HR and the next statutory deadlines */}
+            <div className="grid gap-4 lg:grid-cols-2">
+              <SectionCard title="Pending with HR" flush>
                 {totalPending + pending.helpdesk + pending.overdueOnboarding === 0 ? <p className="px-6 py-3 text-caption text-muted-foreground">Nothing pending.</p> : (
                   <ul className="divide-y">
                     {[
@@ -57,18 +44,35 @@ export function AdminDashboard() {
               <DeadlinesCard />
             </div>
 
+            {/* then headcount and today's attendance */}
+            <div className="grid gap-4 lg:grid-cols-3">
+              <div className="grid content-start grid-cols-2 gap-3 lg:col-span-2">
+                <StatCard label="Active employees" value={d.headcount.active} icon={Users} onClick={() => router.push('/hr/employees')} />
+                <StatCard label="Joined this month" value={d.headcount.joinersThisMonth} icon={UserPlus} tone="success" />
+                <StatCard label="Exits this FY" value={d.headcount.exitsThisFY} hint={`${d.headcount.attritionRatePercent}% attrition`} icon={UserMinus} tone={d.headcount.attritionRatePercent > 15 ? 'destructive' : 'default'} />
+                <StatCard label="Open positions" value={d.recruitment.openPositions} hint={`${d.recruitment.activeApplicants} active applicants`} icon={TrendingDown} tone="info" onClick={() => router.push('/hr/recruitment')} />
+              </div>
+              <SectionCard title="Attendance today" flush action={<button onClick={() => router.push('/hr/attendance')} className="text-fine font-semibold text-primary hover:underline">Details</button>}>
+                <ul className="divide-y text-caption">
+                  {[['Present / WFH', a.present, 'bg-success'], ['On leave', a.onLeave, 'bg-info'], ['Half day', a.halfDay, 'bg-warning'], ['Absent', a.absent, 'bg-destructive'], ['Not marked', a.notMarked, 'bg-muted-foreground']].map(([l, v, c]) => (
+                    <li key={String(l)} className="flex items-center justify-between px-6 py-2"><span className="flex items-center gap-2"><span className={`h-2 w-2 rounded-full ${c}`} aria-hidden />{l}</span><span className="font-semibold tabular-nums">{v}</span></li>
+                  ))}
+                </ul>
+              </SectionCard>
+            </div>
+
             <div className="grid gap-4 lg:grid-cols-2">
               <SectionCard title="Payroll cost trend">
                 {d.payrollTrend.length === 0 ? <Hint text="Gross pay, net pay and employer contributions for each month appear here after your first payroll run." href="/hr/payroll" cta="Go to payroll" /> : (
-                  <GroupedBarChart data={d.payrollTrend} xKey="label" keys={[{ key: 'gross', label: 'Gross' }, { key: 'net', label: 'Net pay' }, { key: 'employerCost', label: 'Employer contributions' }]} formatValue={formatINRCompact} />
+                  <GroupedBarChart label="Payroll cost trend" data={d.payrollTrend} xKey="label" keys={[{ key: 'gross', label: 'Gross' }, { key: 'net', label: 'Net pay' }, { key: 'employerCost', label: 'Employer contributions' }]} formatValue={formatINRCompact} />
                 )}
               </SectionCard>
-              <SectionCard title="Headcount by department">{solo ? <Hint text="Add employees and assign them to departments to see how your headcount is spread." href="/hr/employees" cta="Add employees" /> : <HBarChart data={d.byDepartment} />}</SectionCard>
+              <SectionCard title="Headcount by department">{solo ? <Hint text="Add employees and assign them to departments to see how your headcount is spread." href="/hr/employees" cta="Add employees" /> : <HBarChart label="Headcount by department" data={d.byDepartment} />}</SectionCard>
             </div>
 
             <div className="grid gap-4 lg:grid-cols-3">
-              <SectionCard title="Gender split">{solo ? <Hint text="Shown once you have more than one employee." /> : <DonutChart data={d.byGender} />}</SectionCard>
-              <SectionCard title="Employment type">{solo ? <Hint text="Permanent, contract, intern and fixed-term headcount, once you have more than one employee." /> : <DonutChart data={d.byEmploymentType} />}</SectionCard>
+              <SectionCard title="Gender split">{solo ? <Hint text="Shown once you have more than one employee." /> : <DonutChart label="Gender split" data={d.byGender} />}</SectionCard>
+              <SectionCard title="Employment type">{solo ? <Hint text="Permanent, contract, intern and fixed-term headcount, once you have more than one employee." /> : <DonutChart label="Employment type" data={d.byEmploymentType} />}</SectionCard>
               <CelebrationsCard data={d.celebrations} />
             </div>
           </div>

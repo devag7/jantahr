@@ -63,7 +63,7 @@ async function capture(page, url, text, name) {
 if (want('overview') || want('compliance') || want('recruitment')) {
   const hr = await signedIn('hr@jantahr.com', DEMO_PASSWORD, 1440, 900);
   if (want('overview')) await capture(hr, '/dashboard', 'Statutory deadlines', 'overview');
-  if (want('compliance')) await capture(hr, '/hr/compliance', 'Compliance calendar', 'compliance');
+  if (want('compliance')) await capture(hr, '/hr/compliance', 'Mark filed', 'compliance');
   if (want('recruitment')) {
     await hr.setViewport({ width: 1200, height: 750, deviceScaleFactor: 2 });
     await capture(hr, '/hr/recruitment', 'Interview', 'recruitment');

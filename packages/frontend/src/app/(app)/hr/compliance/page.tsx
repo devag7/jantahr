@@ -32,7 +32,7 @@ export default function CompliancePage() {
   const rows = q.data?.items.filter((i) => (filter === 'OPEN' ? i.status !== 'DONE' : filter === 'ALL' ? true : i.category === filter));
   return (
     <>
-      <PageHeader title="Compliance calendar" description="Statutory deadlines for wages, TDS, EPF, ESI, returns, exits and data protection, from 45 days ago to 60 days ahead." />
+      <PageHeader title="Compliance" description="Statutory deadlines for wages, TDS, EPF, ESI, returns, exits and data protection, from 45 days ago to 60 days ahead." />
       <div className="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard label="Overdue" value={s?.OVERDUE ?? '-'} tone={s?.OVERDUE ? 'destructive' : 'default'} />
         <StatCard label="Due in 7 days" value={s?.DUE_SOON ?? '-'} tone={s?.DUE_SOON ? 'warning' : 'default'} />

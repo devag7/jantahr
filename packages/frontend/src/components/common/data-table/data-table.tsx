@@ -36,20 +36,26 @@ export function DataTable<T>({ columns, rows, rowKey, loading, error, onRetry, e
   if (loading && !rows) return <LoadingBlock rows={5} />;
   if (!rows?.length) return <EmptyState title={emptyTitle} description={emptyDescription} action={emptyAction} />;
 
-  const align = (a?: string) => (a === 'right' ? 'text-right' : a === 'center' ? 'text-center' : 'text-left');
+  const align = (a?: string) => (a === 'right' ? 'text-right tabular whitespace-nowrap' : a === 'center' ? 'text-center' : 'text-left');
+  // Desktop (1024+): the header row stays under the app's two bars while the page scrolls. Smaller screens: the
+  // table scrolls sideways inside its card with the first column pinned, so a row never loses its name.
+  // Separate borders: a sticky header cell carries its own bottom border, which a collapsed border would leave behind.
+  const pin = (i: number) => i === 0 && 'max-lg:sticky max-lg:left-0 max-lg:z-[1] max-lg:min-w-[9.5rem] max-lg:bg-card';
+  // text columns keep a readable width and the table scrolls, rather than wrapping a phrase one word per line
+  const room = (c: Column<T>, i: number) => i > 0 && (!c.align || c.align === 'left') && 'max-lg:min-w-[8rem]';
   const table = (
-    <Table>
-      <TableHeader>
+    <Table className="border-separate border-spacing-0" containerClassName="lg:overflow-visible">
+      <TableHeader className="[&_tr]:border-0">
         <TableRow className="hover:bg-transparent">
-          {columns.map((c) => (
-            <TableHead key={c.key} className={cn(dense ? 'h-9' : 'h-10', 'whitespace-nowrap text-fine font-semibold', align(c.align), c.hideOnMobile && 'hidden md:table-cell', c.className)}>{c.header}</TableHead>
+          {columns.map((c, i) => (
+            <TableHead key={c.key} scope="col" className={cn(dense ? 'h-9' : 'h-10', 'whitespace-nowrap border-b border-border bg-card text-fine font-semibold lg:sticky lg:top-[96px] lg:z-10', align(c.align), pin(i), room(c, i), i === 0 && 'max-lg:z-[2]', c.hideOnMobile && 'hidden md:table-cell', c.className)}>{c.header}</TableHead>
           ))}
         </TableRow>
       </TableHeader>
-      <TableBody>
+      <TableBody className="[&_tr:last-child_td]:border-0">
         {rows.map((row) => (
-          <TableRow key={rowKey(row)} className={cn(onRowClick && 'cursor-pointer')} onClick={onRowClick ? () => onRowClick(row) : undefined}>
-            {columns.map((c) => <TableCell key={c.key} className={cn(dense ? 'px-4 py-1.5' : 'px-4 py-2.5', align(c.align), c.hideOnMobile && 'hidden md:table-cell', c.className)}>{c.cell(row)}</TableCell>)}
+          <TableRow key={rowKey(row)} className={cn('border-0', onRowClick && 'cursor-pointer')} onClick={onRowClick ? () => onRowClick(row) : undefined}>
+            {columns.map((c, i) => <TableCell key={c.key} className={cn(dense ? 'px-4 py-1.5' : 'px-4 py-2.5', 'border-b border-divider', align(c.align), pin(i), room(c, i), c.hideOnMobile && 'hidden md:table-cell', c.className)}>{c.cell(row)}</TableCell>)}
           </TableRow>
         ))}
       </TableBody>
@@ -57,7 +63,8 @@ export function DataTable<T>({ columns, rows, rowKey, loading, error, onRetry, e
   );
   return (
     <div className={cn(loading && 'opacity-60 transition-opacity')}>
-      {bare ? table : <Card className="overflow-hidden">{table}</Card>}
+      {/* clip, not hidden: a hidden overflow would make the card a scroll container and unstick the header */}
+      {bare ? table : <Card className="overflow-clip">{table}</Card>}
       {page && page.totalPages > 1 && <Pagination {...page} />}
     </div>
   );

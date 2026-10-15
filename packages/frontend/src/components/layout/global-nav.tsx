@@ -6,7 +6,7 @@ import { Menu, Search, X } from 'lucide-react';
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { BrandMark } from '@/components/auth/brand-mark';
 import { GlobalSearch } from '@/components/layout/global-search';
-import { locate, navFor } from '@/components/layout/nav.constants';
+import { isNavActive, locate, navFor } from '@/components/layout/nav.constants';
 import { NotificationBell } from '@/components/layout/notification-bell';
 import { UserMenu } from '@/components/layout/user-menu';
 import { useAuth } from '@/hooks/auth/use-auth';
@@ -18,6 +18,7 @@ export function GlobalNav() {
   const { user } = useAuth();
   const sections = navFor(user);
   const { section: current } = locate(pathname, user);
+  const hrefs = sections.flatMap((s) => s.items.map((i) => i.href));
   const [searching, setSearching] = React.useState(false);
   const [menu, setMenu] = React.useState(false);
 
@@ -37,7 +38,7 @@ export function GlobalNav() {
         <div className="mx-auto flex h-nav max-w-[1440px] items-center gap-6 px-4 lg:px-6">
           <Sheet open={menu} onOpenChange={setMenu}>
             <SheetTrigger asChild>
-              <button className="-ml-1 rounded-sm p-1.5 text-white/80 hover:text-white min-[834px]:hidden" aria-label="Open menu" data-tour="nav-menu"><Menu className="h-5 w-5" /></button>
+              <button className="-ml-3 flex h-11 w-11 items-center justify-center rounded-sm text-white/80 hover:text-white min-[834px]:hidden" aria-label="Open menu" data-tour="nav-menu"><Menu className="h-5 w-5" /></button>
             </SheetTrigger>
             <SheetContent side="left" className="w-80 overflow-y-auto border-0 bg-nav p-0 text-white">
               <SheetTitle className="sr-only">Menu</SheetTitle>
@@ -46,14 +47,17 @@ export function GlobalNav() {
                 {sections.map((s) => (
                   <div key={s.key} className="mt-7">
                     <p className="text-fine text-white/55">{s.label}</p>
-                    <ul className="mt-1">{s.items.map((i) => <li key={i.href}><Link href={i.href} className="block py-1.5 text-dense-link text-white/90 hover:text-white">{i.label}</Link></li>)}</ul>
+                    <ul className="mt-1">{s.items.map((i) => {
+                      const here = isNavActive(pathname, i.href, hrefs);
+                      return <li key={i.href}><Link href={i.href} aria-current={here ? 'page' : undefined} className={cn('flex min-h-[44px] items-center text-body', here ? 'font-semibold text-white' : 'text-white/85 hover:text-white')}>{i.label}</Link></li>;
+                    })}</ul>
                   </div>
                 ))}
               </div>
             </SheetContent>
           </Sheet>
 
-          <Link href="/dashboard" aria-label="JantaHR home" className="shrink-0"><BrandMark light compact className="min-[834px]:hidden" /><BrandMark light className="hidden min-[834px]:inline-flex" /></Link>
+          <Link href="/dashboard" className="shrink-0"><span aria-hidden className="contents"><BrandMark light compact className="min-[834px]:hidden" /><BrandMark light className="hidden min-[834px]:inline-flex" /></span><span className="sr-only">JantaHR home</span></Link>
 
           <ul className="hidden flex-1 items-center justify-center gap-7 min-[834px]:flex">
             {sections.map((s) => {
