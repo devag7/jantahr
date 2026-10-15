@@ -32,6 +32,7 @@ import { PrivacyModule } from './modules/privacy/privacy.module';
 import { RecruitmentModule } from './modules/recruitment/recruitment.module';
 import { ReportsModule } from './modules/reports/reports.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { ContactModule } from './modules/contact/contact.module';
 
 @Module({
   imports: [
@@ -68,6 +69,7 @@ import { PrismaModule } from './prisma/prisma.module';
     AiModule,
     BillingModule,
     JobsModule,
+    ContactModule,
   ],
   controllers: [HealthController],
   providers: [

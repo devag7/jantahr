@@ -65,6 +65,7 @@ export const ENDPOINTS = {
   },
   uploads: { sign: '/uploads/sign' },
   meta: { runtime: '/meta/runtime', realtime: '/notifications/realtime' },
+  contact: { send: '/contact' },
   compliance: { calendar: '/compliance/calendar', overtime: '/compliance/overtime', filing: (key: string) => `/compliance/filings/${encodeURIComponent(key)}` },
   privacy: {
     consents: '/privacy/consents', consent: (purpose: string) => `/privacy/consents/${purpose}`, myData: '/privacy/my-data', requests: '/privacy/requests', myRequests: '/privacy/requests/mine', request: (id: string) => `/privacy/requests/${id}`,

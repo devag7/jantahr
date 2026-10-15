@@ -27,3 +27,6 @@ export const PUBLIC_PAGES: PublicPage[] = [
 ];
 
 export const isPublicPage = (path: string) => PUBLIC_PAGES.some((p) => p.path === (path.replace(/\/+$/, '') || '/'));
+
+/** The one-line description a public page uses in search results, from the same list as llms.txt and the sitemap. */
+export const pageDescription = (path: string) => PUBLIC_PAGES.find((p) => p.path === path)?.description;

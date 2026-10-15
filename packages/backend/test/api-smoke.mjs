@@ -60,6 +60,13 @@ ok('openapi.json is public, OpenAPI 3.0, with a unique operationId and a descrip
   spec.status === 200 && /^3\.0\./.test(spec.data?.openapi) && specOps.length > 150 && new Set(specOps.map((o) => o.operationId)).size === specOps.length && specOps.every((o) => o.description && o.responses),
   { status: spec.status, operations: specOps.length });
 ok('openapi.json lists a real route and hides scheduler hooks', !!spec.data?.paths?.['/leave/applications']?.post && !Object.keys(spec.data?.paths ?? {}).some((p) => p.startsWith('/internal')));
+// public contact form: validation, the honeypot, and an honest answer when mail is not configured (as in CI)
+const badContact = await call('POST', '/contact', null, { name: 'A', email: 'nope', topic: 'jobs', message: 'hi' });
+ok('contact form rejects invalid fields with 400', badContact.status === 400 && Array.isArray(badContact.data?.message), badContact.data);
+const bot = await call('POST', '/contact', null, { name: 'Bot', email: 'bot@example.com', topic: 'other', message: 'cheap pills for sale', website: 'http://spam.example' });
+ok('contact form accepts and drops a filled honeypot', bot.status === 200 && bot.data?.ok === true, bot.data);
+const contact = await call('POST', '/contact', null, { name: 'Asha Rao', email: 'asha@example.in', topic: 'sales', message: 'We have 40 employees and want to move payroll.' });
+ok('contact form sends, or says plainly that mail is not set up', (contact.status === 200 && contact.data?.ok) || (contact.status === 503 && contact.data?.code === 'CONTACT_UNAVAILABLE'), contact);
 const forged = await call('GET', '/employees', `${A.split('.').slice(0, 2).join('.')}.forged-signature`);
 ok('forged token -> 401', forged.status === 401 && forged.data?.code === 'SESSION_INVALID', forged.data);
 ok('auth/me', (await call('GET', '/auth/me', emp)).data?.employee?.employeeCode === 'EMP005');

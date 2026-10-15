@@ -9,10 +9,12 @@ import { OPERATOR } from '@/lib/operator';
 import { PLANS } from '@/lib/plans';
 import { REPO_URL, SITE_DESCRIPTION, SITE_IMAGE, SITE_NAME, SITE_TITLE, SITE_URL } from '@/lib/site';
 
+// the share image is app/opengraph-image.tsx
+
 export const metadata: Metadata = isCloudWeb ? {
   title: { absolute: SITE_TITLE },
   alternates: { canonical: '/' },
-  openGraph: { type: 'website', url: '/', siteName: SITE_NAME, locale: 'en_IN', title: SITE_TITLE, description: SITE_DESCRIPTION, images: [{ url: SITE_IMAGE, width: 2880, height: 1800, alt: 'JantaHR company overview' }] },
+  openGraph: { type: 'website', url: '/', siteName: SITE_NAME, locale: 'en_IN', title: SITE_TITLE, description: SITE_DESCRIPTION },
 } : {};
 
 /** Cloud edition: public landing page. Self-hosted edition: straight into the app. */

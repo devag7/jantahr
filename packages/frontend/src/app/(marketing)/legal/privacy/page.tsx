@@ -1,8 +1,9 @@
 import type { Metadata } from 'next';
+import { pageDescription } from '@/lib/site';
 import { ContactLine, LegalPage } from '@/components/marketing/legal-page';
 import { OPERATOR } from '@/lib/operator';
 
-export const metadata: Metadata = { title: 'Privacy notice', alternates: { canonical: '/legal/privacy' } };
+export const metadata: Metadata = { title: 'Privacy notice', description: pageDescription('/legal/privacy'), alternates: { canonical: '/legal/privacy' } };
 
 const SECTIONS: [string, string][] = [
   ['Who we are', `JantaHR Cloud is operated by ${OPERATOR.name}${OPERATOR.address ? `, ${OPERATOR.address}` : ''}. ` + 'For employee records, your employer is the data fiduciary under the Digital Personal Data Protection Act, 2023 and we process that data on its instructions. For the account details of people who sign up or contact us, we are the data fiduciary.'],

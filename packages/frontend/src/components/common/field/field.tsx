@@ -3,15 +3,17 @@ import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 
 /** Label above, helper text below, error below that (skill 4.6). */
-export function Field({ label, htmlFor, error, hint, required, className, children }: {
+export function Field({ label, htmlFor, error, hint, required, className, children, errorId, hintId }: {
   label: string; htmlFor?: string; error?: string; hint?: string; required?: boolean; className?: string; children: React.ReactNode;
+  /** ids for aria-describedby on the control */
+  errorId?: string; hintId?: string;
 }) {
   return (
     <div className={cn('flex flex-col gap-2', className)}>
       <Label htmlFor={htmlFor} className="text-caption font-semibold">{label}{required && <span className="ml-0.5 text-destructive" aria-hidden>*</span>}</Label>
       {children}
-      {hint && !error && <p className="text-fine text-muted-foreground">{hint}</p>}
-      {error && <p role="alert" className="text-fine text-destructive">{error}</p>}
+      {hint && !error && <p id={hintId} className="text-fine text-muted-foreground">{hint}</p>}
+      {error && <p id={errorId} role="alert" className="text-fine text-destructive">{error}</p>}
     </div>
   );
 }

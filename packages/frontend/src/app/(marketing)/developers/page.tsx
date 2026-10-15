@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { ContactLine, LegalPage } from '@/components/marketing/legal-page';
+import { ContactLine, INLINE_LINK, LegalPage } from '@/components/marketing/legal-page';
 import { OPERATOR } from '@/lib/operator';
 import { REPO_URL } from '@/lib/site';
 
@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   alternates: { canonical: '/developers' },
 };
 
-const link = 'text-primary hover:underline';
+const link = INLINE_LINK;
 const code = 'rounded bg-card px-1.5 py-0.5 text-caption';
 
 export default function DevelopersPage() {

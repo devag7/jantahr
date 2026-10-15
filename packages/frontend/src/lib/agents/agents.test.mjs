@@ -59,6 +59,7 @@ test('htmlToMarkdown: text that only CSS keeps apart, controls and awkward link 
     <ol><li><p>1. Get the code</p></li><li><p>2. Start</p></li></ol></main>`);
   assert.match(md, /^₹49 per employee a month$/m);
   assert.equal(/Monthly|Yearly/.test(md), false);
+  assert.equal(htmlToMarkdown('<main><p>Write to us.</p><form><label>Name</label><input/><button>Send</button></form></main>'), 'Write to us.\n');
   assert.match(md, /^\[Start free trial\]\(\/signup\) \[See pricing\]\(\/pricing\)$/m);
   assert.match(md, /\[Contact sales\]\(mailto:sales@x\.in\?subject=JantaHR%20Enterprise\)/);
   assert.match(md, /^1\. Get the code\n2\. Start$/m);
