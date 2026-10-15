@@ -64,7 +64,12 @@ async function shoot({ page, errors }, name, url, width, theme, waitText) {
   if (waitText) await page.waitForFunction((t) => document.body.innerText.includes(t), { timeout: 20000 }, waitText).catch(() => errors.push(`never showed "${waitText}"`));
   await page.waitForFunction(() => !document.querySelector('.animate-pulse, [aria-busy="true"]'), { timeout: 15000 }).catch(() => errors.push('skeletons still showing after 15s'));
   await page.evaluate(() => document.fonts.ready);
-  await new Promise((r) => setTimeout(r, 700));
+  // scroll through once so lazy images load and scroll-driven animations finish, then back to the top
+  await page.evaluate(async () => {
+    for (let y = 0; y < document.body.scrollHeight; y += Math.round(innerHeight * 0.8)) { scrollTo(0, y); await new Promise((r) => setTimeout(r, 120)); }
+    scrollTo(0, 0);
+  });
+  await new Promise((r) => setTimeout(r, 900));
   const overflow = await page.evaluate(overflowProbe);
   const file = `${name}-${width}-${theme}.webp`;
   await page.screenshot({ path: path.join(OUT, file), type: 'webp', quality: 60, fullPage: true, captureBeyondViewport: true });

@@ -1,18 +1,10 @@
 import type { Metadata } from 'next';
 import { MarketingNav } from '@/components/marketing/marketing-nav';
 import { PricingPlans } from '@/components/marketing/pricing-plans';
-import { CHARGES_GST } from '@/lib/operator';
+import { Faq } from '@/components/marketing/faq';
+import { FAQ } from '@/components/marketing/faq.constants';
 
 export const metadata: Metadata = { title: 'Pricing', description: 'Per-employee pricing for JantaHR Cloud, and the free self-hosted edition.', alternates: { canonical: '/pricing' } };
-
-const FAQ = [
-  ['Is GST included?', CHARGES_GST ? 'Prices exclude GST. We add 18% on the invoice: CGST and SGST within our state, IGST for other states. Add your GSTIN under Settings to claim input credit.' : 'No GST is added: the price shown is the price you pay. We are not registered under GST yet, so invoices carry no tax.'],
-  ['What counts as an employee?', 'Anyone who has not left the company. You choose how many seats to pay for; you can add seats at any time and reduce them at renewal.'],
-  ['What happens when the trial ends?', 'Your company moves to the Free plan. Nothing is deleted: payroll and the other paid modules become read-only until you choose a plan.'],
-  ['Where is our data stored?', 'In India, in Supabase Postgres (Mumbai region), encrypted at rest. PAN, Aadhaar and bank numbers are additionally encrypted field by field.'],
-  ['Can we move between Cloud and self-hosted?', 'Yes. Both editions run the same code and database schema, so a Postgres dump from one restores into the other.'],
-  ['How do we pay?', 'By card, UPI or netbanking through Razorpay, monthly or yearly. You receive ' + (CHARGES_GST ? 'a GST tax invoice' : 'an invoice') + ' for every charge.'],
-];
 
 export default function PricingPage() {
   return (
@@ -27,14 +19,7 @@ export default function PricingPage() {
           <div className="mt-12"><PricingPlans /></div>
           <section className="mx-auto mt-24 max-w-[760px]">
             <h2 className="text-center text-display font-semibold">Questions</h2>
-            <div className="mt-10 divide-y rounded-lg border bg-card">
-              {FAQ.map(([q, a]) => (
-                <details key={q} className="group px-8 py-5">
-                  <summary className="flex cursor-pointer list-none items-center justify-between gap-6 text-body font-semibold">{q}<span className="text-primary transition-transform group-open:rotate-45" aria-hidden>+</span></summary>
-                  <p className="mt-3 text-body text-secondary-foreground">{a}</p>
-                </details>
-              ))}
-            </div>
+            <div className="mt-10"><Faq items={FAQ} /></div>
           </section>
         </div>
       </main>

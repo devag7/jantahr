@@ -46,6 +46,7 @@ export function SecurityCard() {
             enable.mutate({ factorId: enrol.factorId, code }, { onSuccess: async () => { toast.success('Two-factor authentication is on'); setEnrol(null); await refresh(); }, onError: (err) => setError(errorMessage(err)) });
           }}>
             <div className="flex flex-col items-center gap-3 rounded-md bg-muted p-4 sm:flex-row sm:items-start">
+              {/* eslint-disable-next-line @next/next/no-img-element -- an inline data: URL from Supabase, nothing to optimise */}
               {enrol.qrCode.startsWith('data:image/svg') && <img src={enrol.qrCode} alt="QR code for your authenticator app" className="h-36 w-36 rounded-sm bg-white p-2" />}
               <div className="min-w-0"><p className="text-fine text-muted-foreground">Setup key</p><p className="mt-1 break-all font-mono text-caption font-semibold tracking-wider">{enrol.secret}</p><a href={enrol.uri} className="mt-2 inline-block text-fine text-primary hover:underline">Open in authenticator app</a></div>
             </div>

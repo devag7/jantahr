@@ -21,7 +21,7 @@ export default function ContactPage() {
       intro="For sales, billing, refunds, privacy requests or help with your account, reach us here. We reply within 2 working days."
       sections={[
         ['How to reach us', (
-          <dl className="grid gap-x-8 gap-y-3 sm:grid-cols-[160px_1fr]">
+          <dl key="s24" className="grid gap-x-8 gap-y-3 sm:grid-cols-[160px_1fr]">
             {rows.map(([label, value]) => (<div key={label} className="contents"><dt className="font-semibold text-foreground">{label}</dt><dd>{value}</dd></div>))}
           </dl>
         )],
