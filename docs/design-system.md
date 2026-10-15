@@ -105,6 +105,55 @@ and one real product screenshot with `shadow-product`. This is the reference's d
 overrides the generic single-theme rule.
 Rule 14. No em dash or en dash anywhere in visible copy; no eyebrow on more than one section in three.
 
+
+Rule 15. **Screenshots fail open.** The scroll `reveal` animates transform only, never opacity, so a screenshot is
+visible in any browser or tool that does not advance scroll timelines. Below-the-fold shots are `loading="lazy"`, ship
+a `srcset` of 640 / 1080 / 1600 px copies plus the original (`components/marketing/shots.ts`) and carry width, height
+and alt text. *Test: `test/site-ui.mjs` ("scroll reveal never hides", "every screenshot below the fold").*
+
+### Marketing patterns
+
+- **Product tour** (`product-tour.tsx`). A segmented control (Radix Tabs, arrow keys) over one framed screenshot in a
+  16:10 frame with `shadow-product`. Only the first view is in the HTML (eager, `fetchpriority="high"`, the LCP
+  image); the others load after the page and cross-fade in 150 ms, with no fade under reduced motion.
+  Rule: one tour per page, in the hero only. *Test: site-ui "only the first tour image is in the HTML".*
+- **Trust strip.** Plain facts with a lucide icon each, no cards, logos or numbers the product does not produce,
+  directly under the hero on a white band. Rule: every claim is a fact the code or a constant backs
+  (`RULES_CURRENT_TO` is shared with the law section). *Test: site-ui "trust strip has four plain facts".*
+- **Module cell (bento).** One cell per module in `nav.constants.ts`: icon, a 4 to 8 word title, one sentence, and
+  the first plan that includes the module, read from the plan catalogue. One large cell; at most two cells carry a
+  real screenshot. Rule: no invented badge; plan names come from `lowestPlanWith`. *Test: site-ui "one module cell
+  per gated module".*
+- **Step row.** Three steps named by their verb ("Run payroll"), one sentence each, a row from 640 px and a column
+  below, in an ordered list. No numbers, connecting lines or animation. *Test: site-ui "steps are named by their
+  verbs".*
+- **Long-form page** (`legal-page.tsx`). 70 character column at 17 px, headed sections with anchors, an "On this
+  page" list when the text passes 1,500 words, underlined inline links (`INLINE_LINK`). *Test: site-ui "long-form
+  pages".*
+
+## Dates and numbers
+
+Rule 16. One format, from `lib/format`: `07 Oct 2026` for dates, `Oct 2026` for pay months, `2:30 pm` for times
+(India time), rupees with Indian grouping (`₹1,20,194`). No `toLocaleDateString` with `month: 'short'` (it prints
+"Sept") and no `toLocaleString()` without a locale. *Test: `src/lib/format/format.test.mjs`; `grep -rn
+"toLocaleDateString" src` finds only the weekday name.*
+
+## Product patterns
+
+- **Page header.** Every page uses `PageHeader`: title equal to its nav label, one muted line of description, the
+  primary action on the right and secondary actions in the "More" menu beside it. *Test: each `PageHeader title`
+  matches a label in `nav.constants.ts`; no page renders more than one filled button in its header.*
+- **Tables** (`DataTable`). Header row sticky under the two bars from 1024 px; below that the table scrolls inside
+  its card with the first column pinned and text columns at least 8rem wide. Numeric columns are right-aligned in
+  tabular figures. *Test: no screen in `scripts/ui-screens.mjs` reports horizontal overflow at 390 px.*
+- **Save bar** (`SaveBar`). Long forms keep their save action in a frosted bar stuck to the bottom of the screen,
+  padded clear of the Help button. *Test: the employee and settings forms end in `SaveBar`.*
+- **Forms.** Label above, hint below, error below the field (replacing the hint), `aria-invalid` and
+  `aria-describedby` on the control, required fields marked with `*` and `aria-required`, a disabled and labelled
+  sending state, and a success state that says what happens next (`contact-form.tsx`). *Test: site-ui "contact".*
+- **Charts.** Colours from the chart tokens only; each chart is an image whose accessible name states its numbers.
+  *Test: every chart component takes a required `label`.*
+
 ## Type in code
 
 Product UI uses the tokens only: `text-fine` (12), `text-caption` (14), `text-body` (17), `text-tagline` (21),
