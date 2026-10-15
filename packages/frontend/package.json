@@ -9,7 +9,7 @@
     "screens:audit": "node scripts/ui-screens.mjs",
     "start": "next start",
     "lint": "next lint",
-    "test": "node --experimental-strip-types --no-warnings --test src/lib/agents/agents.test.mjs",
+    "test": "node --experimental-strip-types --no-warnings --test src/lib/agents/agents.test.mjs src/components/marketing/pricing.params.test.mjs",
     "test:agents": "node test/agent-readiness.mjs"
   },
   "dependencies": {
