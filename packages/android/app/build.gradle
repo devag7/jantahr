@@ -29,7 +29,7 @@ android {
 
     defaultConfig {
         applicationId twa.applicationId
-        minSdk 23
+        minSdk 24 // androidbrowserhelper 2.7 needs Android 7.0
         targetSdk 36
         versionCode appVersionCode
         versionName appVersionName

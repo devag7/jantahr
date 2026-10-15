@@ -33,7 +33,7 @@ self.addEventListener('fetch', (event) => {
   if (url.pathname.startsWith('/_next/static/') || url.pathname.startsWith('/icons/')) {
     event.respondWith(
       caches.open(ASSETS).then(async (cache) => {
-        const hit = await cache.match(req);
+        const hit = await caches.match(req); // any cache: the offline page's icon is precached with the shell
         if (hit) return hit;
         const res = await fetch(req);
         if (res.ok) cache.put(req, res.clone());
