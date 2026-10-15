@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
-import { Landing } from '@/components/marketing/landing';
+import { HOME_FAQ, Landing } from '@/components/marketing/landing';
+import { faqJsonLd } from '@/components/marketing/faq.constants';
 import { MarketingFooter } from '@/components/marketing/marketing-footer';
 import { buildJsonLd, jsonLdScript } from '@/lib/agents/json-ld';
 import { isCloudWeb } from '@/lib/edition';
@@ -21,6 +22,7 @@ export default function Home() {
   return (
     <div className="bg-card">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLdScript(faqJsonLd(HOME_FAQ)) }} />
       <Landing /><MarketingFooter />
     </div>
   );

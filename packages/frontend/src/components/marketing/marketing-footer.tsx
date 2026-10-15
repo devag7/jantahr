@@ -7,6 +7,10 @@ const COLS: { title: string; links: { label: string; href: string }[] }[] = [
   { title: 'Legal', links: [{ label: 'Terms of service', href: '/legal/terms' }, { label: 'Privacy notice', href: '/legal/privacy' }, { label: 'Cancellation and refunds', href: '/legal/refunds' }, { label: 'Shipping and delivery', href: '/legal/shipping' }] },
 ];
 
+// Phones: a wrapped label keeps normal leading (2.41 leading would leave a blank line inside one link) and padding
+// keeps each link a 44px target. From 640px: the reference's dense 17px / 2.41 columns.
+const LINK = 'block py-2.5 text-body leading-[1.5] text-secondary-foreground hover:underline sm:inline sm:py-0 sm:text-dense-link';
+
 /** Reference `footer`: Parchment, dense link columns at 17px with 2.41 leading on desktop, 12px legal row. */
 export function MarketingFooter() {
   return (
@@ -16,15 +20,16 @@ export function MarketingFooter() {
           {COLS.map((c) => (
             <div key={c.title}>
               <p className="text-caption font-semibold">{c.title}</p>
-              <ul className="mt-2">{c.links.map((l) => <li key={l.href}><Link href={l.href} className="text-dense-link text-secondary-foreground hover:underline">{l.label}</Link></li>)}</ul>
+              <ul className="mt-1 sm:mt-2">{c.links.map((l) => <li key={l.href}><Link href={l.href} className={LINK}>{l.label}</Link></li>)}</ul>
             </div>
           ))}
-          <div>
+          {/* full width on phones, so the email address fits on one line */}
+          <div className="col-span-2 sm:col-span-1">
             <p className="text-caption font-semibold">Contact</p>
             <ul className="mt-2">
-              <li><Link href="/about" className="text-dense-link text-secondary-foreground hover:underline">About</Link></li>
-              <li><Link href="/contact" className="text-dense-link text-secondary-foreground hover:underline">Contact us</Link></li>
-              <li><a href={`mailto:${OPERATOR.email}`} className="break-all text-dense-link text-secondary-foreground hover:underline">{OPERATOR.email}</a></li>
+              <li><Link href="/about" className={LINK}>About</Link></li>
+              <li><Link href="/contact" className={LINK}>Contact us</Link></li>
+              <li><a href={`mailto:${OPERATOR.email}`} className={`${LINK} [overflow-wrap:anywhere]`}>{OPERATOR.email}</a></li>
             </ul>
           </div>
         </div>
