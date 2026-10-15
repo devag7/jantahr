@@ -49,7 +49,7 @@ export function ProductTour() {
                 // eslint-disable-next-line @next/next/no-img-element -- srcset by hand: next/image runs unoptimised here
                 <img src={s.src} srcSet={srcSetOf(s)} alt={s.alt} width={s.width} height={s.height}
                   sizes={phone ? '(max-width: 1024px) 31vw, 320px' : '(max-width: 1024px) 100vw, 1024px'}
-                  loading={i === 0 ? 'eager' : 'lazy'} decoding={i === 0 ? 'sync' : 'async'} {...(i === 0 ? { fetchPriority: 'high' as const } : {})}
+                  loading={i === 0 ? 'eager' : 'lazy'} decoding="async" {...(i === 0 ? { fetchPriority: 'high' as const } : {})}
                   className={phone ? 'h-[92%] w-auto rounded-lg' : 'h-full w-full object-cover object-top'} />
               )}
             </TabsPrimitive.Content>

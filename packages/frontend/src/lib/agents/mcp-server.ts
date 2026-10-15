@@ -19,7 +19,7 @@ export function publicMcpServer(request: Request): McpServer {
         name: 'list_pages', title: 'List JantaHR pages',
         description: 'Lists the public pages of the JantaHR site (product, pricing, self-hosting, developers, about, contact, legal) with a one-line summary of each. Use it to choose a path for get_page.',
         inputSchema: { type: 'object', properties: {}, additionalProperties: false },
-        call: () => PUBLIC_PAGES.map((p) => `- ${p.path} — ${p.title}: ${p.description}`).join('\n'),
+        call: () => PUBLIC_PAGES.map((p) => `- ${p.path}: ${p.title}. ${p.description}`).join('\n'),
       },
       {
         name: 'get_page', title: 'Read a JantaHR page',

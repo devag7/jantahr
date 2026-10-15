@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { AuthLinkForwarder } from '@/components/auth/auth-link-forwarder';
-import { AppProviders } from '@/components/providers/app-providers';
+import { ThemeProvider } from '@/components/providers/theme-provider';
 import { isCloudWeb } from '@/lib/edition';
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '@/lib/site';
 
@@ -30,8 +30,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} font-sans`}>
-        <AuthLinkForwarder />
-        <AppProviders>{children}</AppProviders>
+        {/* the app's providers (session, API cache, toasts) live in the (app), (auth) and careers layouts */}
+        <ThemeProvider>
+          <AuthLinkForwarder />
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );

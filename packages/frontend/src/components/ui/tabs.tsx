@@ -4,7 +4,8 @@ import { cn } from "@/lib/utils"
 
 const Tabs = TabsPrimitive.Root
 
-/** Segmented control (iOS grammar): Parchment pill track, white pill for the selected tab, hairline instead of shadow. */
+/** Segmented control (iOS grammar): Parchment pill track, white pill for the selected tab, hairline instead of shadow.
+ * Unselected labels use secondary ink: muted grey on the track is 4.45:1, under WCAG AA. */
 const TabsList = React.forwardRef<React.ElementRef<typeof TabsPrimitive.List>, React.ComponentPropsWithoutRef<typeof TabsPrimitive.List>>(({ className, ...props }, ref) => (
   <TabsPrimitive.List
     ref={ref}
@@ -18,7 +19,7 @@ const TabsTrigger = React.forwardRef<React.ElementRef<typeof TabsPrimitive.Trigg
   <TabsPrimitive.Trigger
     ref={ref}
     className={cn(
-      "inline-flex h-8 items-center justify-center whitespace-nowrap rounded-full border border-transparent px-4 text-caption text-muted-foreground transition-colors hover:text-foreground disabled:pointer-events-none disabled:opacity-50 data-[state=active]:border-border data-[state=active]:bg-card data-[state=active]:font-semibold data-[state=active]:text-foreground",
+      "inline-flex h-8 items-center justify-center whitespace-nowrap rounded-full border border-transparent px-4 text-caption text-secondary-foreground transition-colors hover:text-foreground disabled:pointer-events-none disabled:opacity-50 data-[state=active]:border-border data-[state=active]:bg-card data-[state=active]:font-semibold data-[state=active]:text-foreground",
       className
     )}
     {...props}
