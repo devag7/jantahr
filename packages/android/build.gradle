@@ -1,0 +1,18 @@
+// JantaHR for Android: a Trusted Web Activity that opens https://jantahr.devshipit.com full screen.
+// Laid out like Google's Bubblewrap template (https://github.com/GoogleChromeLabs/bubblewrap).
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.9.1'
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}

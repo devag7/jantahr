@@ -1,8 +1,11 @@
 'use client';
+import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import { Compass, KeyRound, ListChecks, LogOut, Moon, Sun, UserRound } from 'lucide-react';
+import { Compass, Download, KeyRound, ListChecks, LogOut, Moon, Sun, UserRound } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { UserAvatar } from '@/components/common/user-avatar';
+import { InstallAppDialog } from '@/components/pwa/install-app-dialog';
+import { isInstalled } from '@/components/pwa/pwa';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/hooks/auth/use-auth';
 import { useSetupStatus } from '@/hooks/org/use-org';
@@ -18,9 +21,14 @@ export function UserMenu() {
   const setup = useSetupStatus(hasRole(ADMIN));
   const logout = useAuthStore((s) => s.logout);
   const { resolvedTheme, setTheme } = useTheme();
+  const [installOpen, setInstallOpen] = React.useState(false);
+  // decided after mount: the server cannot know whether this is the installed app
+  const [installable, setInstallable] = React.useState(false);
+  React.useEffect(() => setInstallable(!isInstalled()), []);
   if (!user) return null;
   const name = user.employee?.fullName ?? user.email;
   return (
+    <>
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button className="ml-1 rounded-full" aria-label="Account menu">
@@ -41,9 +49,14 @@ export function UserMenu() {
         {setup.data && !setup.data.complete && (
           <DropdownMenuItem className="cursor-pointer" onSelect={() => { setGuideHidden(user.company.id, false); router.push('/dashboard'); }}><ListChecks className="mr-2 h-4 w-4" />Setup guide ({setup.data.done}/{setup.data.total})</DropdownMenuItem>
         )}
+        {installable && (
+          <DropdownMenuItem className="cursor-pointer" onSelect={() => window.setTimeout(() => setInstallOpen(true), 150)}><Download className="mr-2 h-4 w-4" />Install the app</DropdownMenuItem>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem className="cursor-pointer text-destructive focus:text-destructive" onSelect={async () => { await logout(); router.replace('/login'); }}><LogOut className="mr-2 h-4 w-4" />Sign out</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
+    <InstallAppDialog open={installOpen} onOpenChange={setInstallOpen} />
+    </>
   );
 }

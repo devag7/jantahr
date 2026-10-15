@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#000000">
+<title>Offline · JantaHR</title>
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<style>
+  :root { color-scheme: light dark; --bg:#f2f4f7; --fg:#1d1d1f; --muted:#6e6e73; --accent:#0066cc; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#000; --fg:#f5f5f7; --muted:#a1a1a6; --accent:#2997ff; } }
+  body { margin:0; min-height:100dvh; display:grid; place-items:center; background:var(--bg); color:var(--fg);
+         font:17px/1.47 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; padding:24px; box-sizing:border-box; text-align:center; }
+  img { width:56px; height:56px; border-radius:12px; }
+  h1 { font-size:28px; letter-spacing:-.3px; margin:20px 0 8px; }
+  p { color:var(--muted); margin:0 auto 24px; max-width:32ch; }
+  button { font:inherit; color:#fff; background:var(--accent); border:0; border-radius:999px; padding:11px 22px; cursor:pointer; }
+</style>
+</head>
+<body>
+<main>
+  <img src="/icons/icon-192.png" alt="">
+  <h1>You're offline</h1>
+  <p>JantaHR needs an internet connection. Check your connection and try again.</p>
+  <button type="button" onclick="location.reload()">Try again</button>
+</main>
+</body>
+</html>

@@ -18,6 +18,8 @@ const fromShared = {
   NEXT_PUBLIC_OPERATOR_GSTIN: process.env.NEXT_PUBLIC_OPERATOR_GSTIN ?? process.env.BILLING_SELLER_GSTIN,
   NEXT_PUBLIC_SALES_EMAIL: process.env.NEXT_PUBLIC_SALES_EMAIL ?? process.env.SUPPORT_EMAIL,
   NEXT_PUBLIC_SUPPORT_PHONE: process.env.NEXT_PUBLIC_SUPPORT_PHONE ?? process.env.SUPPORT_PHONE,
+  // the Android app on Google Play, offered from Install the app (also used by the manifest and assetlinks.json)
+  NEXT_PUBLIC_ANDROID_PACKAGE_NAME: process.env.NEXT_PUBLIC_ANDROID_PACKAGE_NAME ?? process.env.ANDROID_PACKAGE_NAME,
 };
 
 // The public site exists only in the cloud edition. There, a request that names text/markdown in Accept is answered by
@@ -37,9 +39,11 @@ const nextConfig = {
     return [{ source: '/favicon.ico', destination: '/icon.svg', permanent: true }];
   },
   async headers() {
-    if (!isCloud) return [];
+    // the service worker must be re-checked on every visit so an update reaches installed apps promptly
+    const sw = [{ source: '/sw.js', headers: [{ key: 'Cache-Control', value: 'no-cache' }, { key: 'Service-Worker-Allowed', value: '/' }] }];
+    if (!isCloud) return sw;
     // Next names its own request headers in Vary; they are repeated for hosts where this value replaces Next's
-    return [{ source: PAGE, headers: [{ key: 'Vary', value: 'RSC, Next-Router-State-Tree, Next-Router-Prefetch, Accept' }] }];
+    return [...sw, { source: PAGE, headers: [{ key: 'Vary', value: 'RSC, Next-Router-State-Tree, Next-Router-Prefetch, Accept' }] }];
   },
   reactStrictMode: true,
   output: 'standalone',

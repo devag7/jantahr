@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The app's side of Digital Asset Links: it trusts this site (the site's assetlinks.json trusts the app). -->
+    <string name="assetStatements" translatable="false">
+        [{
+            \"relation\": [\"delegate_permission/common.handle_all_urls\"],
+            \"target\": {\"namespace\": \"web\", \"site\": \"https://jantahr.devshipit.com\"}
+        }]
+    </string>
+    <string name="shortcut_checkin">Check in</string>
+    <string name="shortcut_checkin_long">Check in for attendance</string>
+    <string name="shortcut_leave">Leave</string>
+    <string name="shortcut_leave_long">Apply for leave</string>
+    <string name="shortcut_payslips">Payslips</string>
+    <string name="shortcut_payslips_long">My payslips</string>
+</resources>

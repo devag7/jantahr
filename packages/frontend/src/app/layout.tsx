@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { AuthLinkForwarder } from '@/components/auth/auth-link-forwarder';
+import { PwaBootstrap } from '@/components/pwa/pwa-bootstrap';
 import { ThemeProvider } from '@/components/providers/theme-provider';
 import { isCloudWeb } from '@/lib/edition';
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '@/lib/site';
@@ -12,8 +13,8 @@ const inter = Inter({ subsets: ['latin'], display: 'swap', variable: '--font-int
 export const metadata: Metadata = {
   title: { default: 'JantaHR', template: '%s · JantaHR' },
   description: SITE_DESCRIPTION,
-  manifest: '/manifest.webmanifest',
-  icons: { icon: '/icon.svg', apple: '/icon.svg' },
+  // the manifest comes from app/manifest.ts; iPhones need a PNG for the Home Screen icon
+  icons: { icon: [{ url: '/icon.svg', type: 'image/svg+xml' }, { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' }], apple: '/icons/apple-touch-icon.png' },
   appleWebApp: { capable: true, title: 'JantaHR', statusBarStyle: 'default' },
   // the public site (cloud edition) has an address of its own, so its pages carry absolute links and a share card
   ...(isCloudWeb ? {
@@ -33,6 +34,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* the app's providers (session, API cache, toasts) live in the (app), (auth) and careers layouts */}
         <ThemeProvider>
           <AuthLinkForwarder />
+          <PwaBootstrap />
           {children}
         </ThemeProvider>
       </body>
