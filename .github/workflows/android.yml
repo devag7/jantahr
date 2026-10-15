@@ -148,7 +148,7 @@ jobs:
           packageName: ${{ env.PACKAGE_NAME }}
           releaseFiles: dist/jantahr-${{ steps.version.outputs.name }}.aab
           releaseName: ${{ steps.version.outputs.name }}
-          track: ${{ steps.version.outputs.track }}
+          tracks: ${{ steps.version.outputs.track }}
           # "draft" until the app has its first rolled-out release; "completed" sends it to testers straight away
           status: ${{ vars.PLAY_RELEASE_STATUS || 'completed' }}
           whatsNewDirectory: whatsnew
