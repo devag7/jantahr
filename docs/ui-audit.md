@@ -111,6 +111,75 @@ Lighthouse, mobile, before: `/` Performance 78, Accessibility 100, Best Practice
 33. Parity is good: no hard-coded colours. The dark tile behind the compliance shot and the closing band read as one
     block when the shot is missing (see 1).
 
+## What changed, finding by finding
+
+| # | Finding | Result |
+|---|---|---|
+| 1 | Product shots can render blank | Fixed: `reveal` animates transform only (rule 15) |
+| 2 | Most modules invisible to a buyer | Fixed: "Everything around payroll", one cell per module, plan from the catalogue |
+| 3 | Hero shot unreadable on a phone | Improved: a product tour with a Mobile view; the Overview view is still a desktop screen (see open questions) |
+| 4 | 2880 px images on every device | Fixed: srcset with 640, 1080 and 1600 px copies |
+| 5 | Law chips in one cloud | Fixed: four labelled clusters, every item kept |
+| 6 | No prices or answers on the page | Fixed: pricing teaser and five questions, with FAQPage JSON-LD |
+| 7 | Brand link name mismatch | Fixed: visible-text name, no aria-label |
+| 8 | No selected state in the nav | Fixed: `aria-current` and a stronger label |
+| 9 | No phone menu | Fixed: sheet menu, focus trapped, Escape closes, 44 px links |
+| 10 | Email breaks mid-domain | Fixed: full-width contact column on phones, `overflow-wrap: anywhere` as a last resort |
+| 11 | Wrapped footer links look like two | Fixed: normal leading and 44 px targets under 640 px |
+| 12 | Billing toggle contrast 4.45:1 | Fixed here and in every segmented control (shared Tabs) |
+| 13, 17 | Colour-only inline links | Fixed: underlined inline links |
+| 14 | Employee count clamps silently, state lost | Fixed: whole numbers 1 to 1,00,000 with an inline error; state in `?billing=&employees=` |
+| 15 | Comparison table sideways on phones | Fixed: sticky header from 768 px, one card per plan on phones |
+| 16 | 90 character measure | Fixed: 70 characters at 17 px, "On this page" over 1,500 words |
+| 18 | No contact form | Added: a form that mails the support address, with validation, sending and success states |
+| 19 | Framework 404 | Fixed: branded 404 with links home, to pricing and to sign in |
+| 20 | "Sept" and mixed date formats | Fixed: one helper (rule 16) |
+| 21 | Segmented controls wrap on phones | Fixed: they scroll |
+| 22 | Squeezed or cut table columns | Fixed: first column pinned, readable column widths, scroll inside the card |
+| 23 | Headers scroll away | Fixed: sticky header from 1024 px |
+| 24 | Help button covers content | Kept: the page already ends with room to scroll past it; the save bar is padded clear of it |
+| 25 | Attention items two screens down | Fixed: pending requests and deadlines first |
+| 26, 27 | Raw enum values, split dates | Fixed |
+| 28 | Payroll steps overflow at 390 | Fixed |
+| 29 | Paid days in red only | Fixed: "LOP 0.5" beside the number |
+| 31 | Tinted notice on Billing | Fixed: neutral surface, coloured icon (rule 3b) |
+
 ## Before and after
 
-Filled in at the end of the work (see below).
+Machine checks on the same 150 screens: horizontal overflow on 2 before, **0 after**. App console errors: a hydration
+warning on Billing before (a `div` badge inside a `p`), **none after**; the only remaining console lines come from
+the local test setup (no realtime server) and the 404 page's own status.
+
+Lighthouse, mobile, median of three runs on a local production build (`next start`, simulated slow 4G and 4x CPU):
+
+| Page | | Performance (runs) | Accessibility | Best Practices | SEO | LCP | CLS |
+|---|---|---|---|---|---|---|---|
+| / | Before | 89 (89, 89, 89) | 100 | 100 | 100 | 3.7 s | 0.00 |
+| / | After | 96 (96, 96, 96) | 100 | 100 | 100 | 2.7 s | 0.00 |
+| /pricing | Before | 99 (99, 96, 99) | 92 | 100 | 100 | 2.3 s | 0.00 |
+| /pricing | After | 98 (98, 99, 98) | 100 | 100 | 100 | 2.3 s | 0.00 |
+
+Home LCP fell from 3.7 s to 2.7 s: phones now get a 640 or 1080 px hero instead of 2880 px, and the marketing pages
+no longer load the signed-in app's session and API code (the root layout carried about 390 KB of uncompressed
+JavaScript for it). Pricing stays at 2.3 s while gaining the comparison table and the URL state. Home is still 0.2 s
+over the 2.5 s target in this simulation: the hero image arrives early, and what holds the paint back is the
+framework's own JavaScript (React and the Next.js runtime, shared by every page). Production numbers on Vercel's CDN
+should be measured after deploy.
+
+| Screen | Before | After |
+|---|---|---|
+| Home, 1440, light | ![](ui-audit/m-home-1440-light-before.webp) | ![](ui-audit/m-home-1440-light-after.webp) |
+| Home, 390, light | ![](ui-audit/m-home-390-light-before.webp) | ![](ui-audit/m-home-390-light-after.webp) |
+| Home, 1440, dark | ![](ui-audit/m-home-1440-dark-before.webp) | ![](ui-audit/m-home-1440-dark-after.webp) |
+| Pricing, 390 | ![](ui-audit/m-pricing-390-light-before.webp) | ![](ui-audit/m-pricing-390-light-after.webp) |
+| Contact, 1440 | ![](ui-audit/m-contact-1440-light-before.webp) | ![](ui-audit/m-contact-1440-light-after.webp) |
+| 404, 1440 | ![](ui-audit/m-not-found-1440-light-before.webp) | ![](ui-audit/m-not-found-1440-light-after.webp) |
+| Terms, 1440 | ![](ui-audit/m-terms-1440-light-before.webp) | ![](ui-audit/m-terms-1440-light-after.webp) |
+| Dashboard, 1440 | ![](ui-audit/p-dashboard-1440-light-before.webp) | ![](ui-audit/p-dashboard-1440-light-after.webp) |
+| Employee detail, 1440 | ![](ui-audit/p-employee-detail-1440-light-before.webp) | ![](ui-audit/p-employee-detail-1440-light-after.webp) |
+| Payroll run, 390 | ![](ui-audit/p-payroll-run-390-light-before.webp) | ![](ui-audit/p-payroll-run-390-light-after.webp) |
+| Compliance, 390 | ![](ui-audit/p-compliance-390-light-before.webp) | ![](ui-audit/p-compliance-390-light-after.webp) |
+| Attendance, 390 | ![](ui-audit/p-attendance-390-light-before.webp) | ![](ui-audit/p-attendance-390-light-after.webp) |
+
+The full sets (150 screenshots each, with `report.json`) are reproducible with
+`OUT=<dir> node packages/frontend/scripts/ui-screens.mjs` against a seeded cloud-edition build.

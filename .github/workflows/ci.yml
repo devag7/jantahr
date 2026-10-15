@@ -83,9 +83,9 @@ jobs:
       - run: npm run build
         env:
           NEXT_PUBLIC_API_URL: http://localhost:3002
-      - name: Unit tests (Markdown conversion, content negotiation, JSON-LD, MCP protocol)
+      - name: Unit tests (Markdown conversion, negotiation, JSON-LD, MCP, formats, pricing state, contact rules)
         run: npm test
-      - name: Cloud edition, built and started, answers agents and crawlers (Markdown, llms.txt, sitemap, JSON-LD, MCP)
+      - name: Cloud edition, built and started - agents and crawlers (Markdown, llms.txt, sitemap, JSON-LD, MCP) and the public site's UI
         env:
           NEXT_PUBLIC_EDITION: cloud
           NEXT_PUBLIC_API_URL: /api
@@ -95,6 +95,7 @@ jobs:
           PORT=3111 npm start > web.log 2>&1 &
           for i in $(seq 1 30); do curl -sf http://localhost:3111/login > /dev/null && break; sleep 1; done
           BASE=http://localhost:3111 npm run test:agents
+          BASE=http://localhost:3111 npm run test:site
       - name: Web log on failure
         if: failure()
         run: cat web.log || true
