@@ -13,7 +13,7 @@ export default function TeamPage() {
   const q = useManagerDashboard();
   return (
     <>
-      <PageHeader title="Team overview" description="Who is in today and what needs your attention." />
+      <PageHeader title="Team" description="Who is in today and what needs your attention." />
       <QueryBoundary query={q} rows={5}>
         {(d) => (
           <div className="space-y-6">

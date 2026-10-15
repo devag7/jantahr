@@ -36,7 +36,9 @@ export default function RecruitmentPage() {
   const selected = applicants.data?.find((a) => a.id === openApplicant);
   return (
     <>
-      <PageHeader title="Recruitment" description="Job openings, applicant tracking, interviews and offers." actions={<>{careersUrl && <Button variant="outline" asChild><a href={careersUrl} target="_blank" rel="noreferrer"><ExternalLink className="mr-2 h-4 w-4" />Public careers page</a></Button>}{admin && <Button onClick={() => setNewJob(true)}><Plus className="mr-2 h-4 w-4" />New job</Button>}</>} />
+      <PageHeader title="Recruitment" description="Job openings, applicant tracking, interviews and offers." actions={admin ? <Button onClick={() => setNewJob(true)}><Plus className="mr-2 h-4 w-4" />New job</Button>
+          : careersUrl && <Button variant="outline" asChild><a href={careersUrl} target="_blank" rel="noreferrer"><ExternalLink className="mr-2 h-4 w-4" />Public careers page</a></Button>}
+        more={admin && careersUrl ? [{ label: 'Public careers page', icon: ExternalLink, href: careersUrl, external: true }] : undefined} />
       <Tabs defaultValue="pipeline">
         <TabsList><TabsTrigger value="pipeline">Pipeline</TabsTrigger><TabsTrigger value="jobs">Job openings</TabsTrigger></TabsList>
         <TabsContent value="pipeline" className="mt-4 space-y-4">

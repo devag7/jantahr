@@ -27,7 +27,7 @@ export default function OrgChartPage() {
   const q = useOrgChart();
   return (
     <>
-      <PageHeader title="Organisation chart" description="Reporting lines across the company." />
+      <PageHeader title="Org chart" description="Reporting lines across the company." />
       <QueryBoundary query={q} empty={{ when: (d) => d.length === 0, title: 'No employees yet' }}>{(roots) => <ul className="space-y-1 rounded-md border bg-card p-4">{roots.map((r) => <Node key={r.id} n={r} depth={0} />)}</ul>}</QueryBoundary>
     </>
   );

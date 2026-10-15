@@ -24,7 +24,8 @@ export default function MyExpensesPage() {
   const remove = useDeleteClaim();
   return (
     <>
-      <PageHeader title="Expenses & travel" description="Claim reimbursements and request business travel." actions={<><Button variant="outline" onClick={() => setTravelOpen(true)}><Plane className="mr-2 h-4 w-4" />Travel request</Button><Button onClick={() => setClaimOpen(true)}><Plus className="mr-2 h-4 w-4" />New claim</Button></>} />
+      <PageHeader title="Expenses" description="Claim reimbursements and request business travel." actions={<Button onClick={() => setClaimOpen(true)}><Plus className="mr-2 h-4 w-4" />New claim</Button>}
+        more={[{ label: 'Travel request', icon: Plane, onSelect: () => setTravelOpen(true) }]} />
       <Tabs defaultValue="claims">
         <TabsList><TabsTrigger value="claims">Expense claims</TabsTrigger><TabsTrigger value="travel">Travel requests</TabsTrigger></TabsList>
         <TabsContent value="claims" className="mt-4">

@@ -9,7 +9,7 @@ import { QueryBoundary } from '@/components/common/states';
 import { StatusBadge } from '@/components/common/status-badge';
 import { SlipDetailModal } from '@/components/payroll/slip-detail';
 import { useMySlips } from '@/hooks/payroll/use-payroll';
-import { formatINR, monthLabel } from '@/lib/format';
+import { formatINR, formatPayMonth } from '@/lib/format';
 import { payrollService } from '@/services/payroll/payroll.service';
 import type { Slip } from '@/types/payroll';
 
@@ -29,7 +29,7 @@ export default function PayslipsPage() {
             {slips.map((s) => (
               <Card key={s.id} className="p-4">
                 <button className="flex w-full items-start justify-between text-left" onClick={() => setOpen(s)}>
-                  <div><p className="font-semibold">{monthLabel(s.month, s.year)}</p><p className="mt-1 text-display-sm font-semibold tabular-nums">{formatINR(s.netPay)}</p><p className="text-fine text-muted-foreground">Gross {formatINR(s.grossPay)} · Deductions {formatINR(s.totalDeductions)}</p></div>
+                  <div><p className="font-semibold">{formatPayMonth(s.month, s.year)}</p><p className="mt-1 text-display-sm font-semibold tabular-nums">{formatINR(s.netPay)}</p><p className="text-fine text-muted-foreground">Gross {formatINR(s.grossPay)} · Deductions {formatINR(s.totalDeductions)}</p></div>
                   <div className="flex flex-col items-end gap-2"><FileText className="h-5 w-5 text-muted-foreground" /><StatusBadge status={s.status} label={s.status === 'PAID' ? 'Paid' : 'Published'} /></div>
                 </button>
               </Card>

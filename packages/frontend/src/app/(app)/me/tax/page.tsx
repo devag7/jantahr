@@ -75,7 +75,7 @@ export default function TaxPage() {
   const compare = useTaxComparison();
   return (
     <>
-      <PageHeader title="Tax & investments" description="Declare investments so TDS is projected correctly, and compare tax regimes." />
+      <PageHeader title="Tax" description="Declare investments so TDS is projected correctly, and compare tax regimes." />
       <Tabs defaultValue="declaration">
         <TabsList><TabsTrigger value="declaration">Investment declaration</TabsTrigger><TabsTrigger value="compare">Regime comparison</TabsTrigger></TabsList>
         <TabsContent value="declaration" className="mt-4">

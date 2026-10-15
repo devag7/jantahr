@@ -27,7 +27,7 @@ export default function MyAttendancePage() {
 
   return (
     <>
-      <PageHeader title="My attendance" description="Check in, review your month, and request corrections." actions={<Button onClick={() => { setPicked(null); setReqOpen(true); }}><FilePenLine className="mr-2 h-4 w-4" />Attendance request</Button>} />
+      <PageHeader title="Attendance" description="Check in, review your month, and request corrections." actions={<Button onClick={() => { setPicked(null); setReqOpen(true); }}><FilePenLine className="mr-2 h-4 w-4" />Attendance request</Button>} />
       <div className="space-y-6">
         <PunchCard />
         <QueryBoundary query={log} rows={6}>

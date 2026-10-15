@@ -14,7 +14,7 @@ import { PageHeader } from '@/components/common/page-header';
 import { StatusBadge } from '@/components/common/status-badge';
 import { useAuth } from '@/hooks/auth/use-auth';
 import { useCreateRun, useDecideDeclaration, useDeclarations, useRuns } from '@/hooks/payroll/use-payroll';
-import { formatDate, formatINR, monthLabel } from '@/lib/format';
+import { formatDate, formatINR, formatPayMonth } from '@/lib/format';
 import { PAYROLL } from '@/lib/permissions';
 import type { RunResult } from '@/types/payroll';
 
@@ -33,12 +33,12 @@ export default function PayrollPage() {
   const [result, setResult] = React.useState<RunResult | null>(null);
   return (
     <>
-      <PageHeader title="Payroll" description="Monthly runs with PF, ESI, professional tax, LWF and TDS. Generate → review → approve → pay." actions={canRun && <Button onClick={() => setOpen(true)}><Play className="mr-2 h-4 w-4" />Run payroll</Button>} />
+      <PageHeader title="Runs" description="Monthly runs with PF, ESI, professional tax, LWF and TDS. Generate → review → approve → pay." actions={canRun && <Button onClick={() => setOpen(true)}><Play className="mr-2 h-4 w-4" />Run payroll</Button>} />
       <Tabs defaultValue="runs">
         <TabsList><TabsTrigger value="runs">Payroll runs</TabsTrigger><TabsTrigger value="declarations">Tax declarations{decls.data && decls.data.length > 0 && <Badge variant="warning" className="ml-2 px-1.5 py-0">{decls.data.length}</Badge>}</TabsTrigger></TabsList>
         <TabsContent value="runs" className="mt-4">
           <DataTable rows={runs.data} loading={runs.isLoading} error={runs.error} rowKey={(r) => r.id} onRowClick={(r) => router.push(`/hr/payroll/runs/${r.id}`)} emptyTitle="No payroll runs yet" emptyDescription="Run payroll for a month once salary structures are assigned to employees." columns={[
-            { key: 'm', header: 'Month', cell: (r) => <span className="font-semibold">{monthLabel(r.month, r.year)}</span> }, { key: 'e', header: 'Employees', cell: (r) => r.employeeCount, align: 'right' },
+            { key: 'm', header: 'Month', cell: (r) => <span className="font-semibold">{formatPayMonth(r.month, r.year)}</span> }, { key: 'e', header: 'Employees', cell: (r) => r.employeeCount, align: 'right' },
             { key: 'g', header: 'Gross', cell: (r) => formatINR(r.totalGross), align: 'right' }, { key: 'n', header: 'Net pay', cell: (r) => <b className="tabular-nums">{formatINR(r.totalNet)}</b>, align: 'right' },
             { key: 'c', header: 'Employer contrib.', cell: (r) => formatINR(r.totalEmployerContribution), align: 'right', hideOnMobile: true }, { key: 's', header: 'Status', cell: (r) => <StatusBadge status={r.status} /> },
           ]} />
@@ -62,7 +62,7 @@ export default function PayrollPage() {
           </div>
         ) : (
           <div className="space-y-4">
-            <p className="text-caption"><b>{result.generated}</b> salary slips generated for {monthLabel(result.run.month, result.run.year)}. Total net pay <b>{formatINR(result.run.totalNet)}</b>.</p>
+            <p className="text-caption"><b>{result.generated}</b> salary slips generated for {formatPayMonth(result.run.month, result.run.year)}. Total net pay <b>{formatINR(result.run.totalNet)}</b>.</p>
             {result.skipped.length > 0 && <div className="rounded-md border bg-muted p-3 text-caption"><p className="mb-1 flex items-center gap-2 font-semibold"><AlertTriangle className="h-4 w-4 text-warning" />{result.skipped.length} employee(s) skipped</p><ul className="max-h-40 space-y-0.5 overflow-y-auto text-fine">{result.skipped.map((s) => <li key={s.employeeId}>{s.name} ({s.employeeCode}): {s.reason}</li>)}</ul></div>}
             <div className="flex justify-end gap-2"><Button variant="outline" onClick={() => setOpen(false)}>Close</Button><Button onClick={() => router.push(`/hr/payroll/runs/${result.run.id}`)}>Review & approve</Button></div>
           </div>

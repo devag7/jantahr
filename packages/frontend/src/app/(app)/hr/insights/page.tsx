@@ -56,7 +56,7 @@ export default function InsightsPage() {
   const { hasRole } = useAuth();
   return (
     <>
-      <PageHeader title="People analytics" description="Explainable signals to start conversations, not automated decisions." />
+      <PageHeader title="Analytics" description="Explainable signals to start conversations, not automated decisions." />
       <Tabs defaultValue="anomalies"><TabsList><TabsTrigger value="anomalies">Attendance anomalies</TabsTrigger>{hasRole(ADMIN) && <TabsTrigger value="attrition">Attrition risk</TabsTrigger>}</TabsList>
         <TabsContent value="anomalies" className="mt-4"><AnomaliesTab /></TabsContent>{hasRole(ADMIN) && <TabsContent value="attrition" className="mt-4"><AttritionTab /></TabsContent>}</Tabs>
     </>

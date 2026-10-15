@@ -53,7 +53,7 @@ export default function StatutoryPage() {
 
   return (
     <>
-      <PageHeader title="Statutory & bank" description="Filing and payment files generated from approved payroll. Validate with your CA before filing."
+      <PageHeader title="Statutory" description="Filing and payment files generated from approved payroll. Validate with your CA before filing."
         actions={<MonthPicker month={ym.m} year={ym.y} onChange={(m, y) => setYm({ m, y })} />} />
       <p className="mb-4 rounded-md border bg-muted p-3 text-caption">Statutory rates and slabs are seeded defaults stored in the database (PF/ESI ceilings, professional-tax and LWF tables, tax-year 2026-27 income-tax slabs). Have them verified for your state and filing period before submitting to EPFO / ESIC / TRACES.</p>
       <div className="grid gap-4 lg:grid-cols-2">

@@ -14,7 +14,7 @@ import { StatusBadge } from '@/components/common/status-badge';
 import { SlipDetailModal } from '@/components/payroll/slip-detail';
 import { useAuth } from '@/hooks/auth/use-auth';
 import { useDeleteRun, useRun, useRunAction } from '@/hooks/payroll/use-payroll';
-import { formatINR, monthLabel } from '@/lib/format';
+import { formatINR, formatPayMonth } from '@/lib/format';
 import { PAYROLL } from '@/lib/permissions';
 import { cn } from '@/lib/utils';
 import type { PayrollStatus, Slip } from '@/types/payroll';
@@ -44,7 +44,7 @@ export default function PayrollRunPage() {
           return (
             <div className="space-y-6">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div><h1 className="text-display-sm font-semibold sm:text-title">{monthLabel(run.month, run.year)} payroll</h1><p className="mt-1 text-caption text-muted-foreground">{run.employeeCount} employees</p></div>
+                <div><h1 className="text-display-sm font-semibold sm:text-title">{formatPayMonth(run.month, run.year)} payroll</h1><p className="mt-1 text-caption text-muted-foreground">{run.employeeCount} employees</p></div>
                 {canAct && (
                   <div className="flex flex-wrap items-center gap-2">
                     {run.status === 'GENERATED' && <><label className="flex items-center gap-2 text-fine text-muted-foreground"><Checkbox checked={lop} onCheckedChange={setLop} />Unmarked days = LOP</label><Button variant="outline" disabled={action.isPending} onClick={() => action.mutate({ id, action: 'generate', treatUnmarkedAsLop: lop })}>{action.isPending && <Spinner className="mr-2" />}Regenerate</Button><Button disabled={action.isPending || negative.length > 0} onClick={() => setConfirm('approve')}><Check className="mr-2 h-4 w-4" />Approve payroll</Button></>}
@@ -54,9 +54,9 @@ export default function PayrollRunPage() {
                 )}
               </div>
 
-              <ol className="flex items-center gap-2 text-caption" aria-label="Payroll progress">
+              <ol className="flex flex-wrap items-center gap-x-1 gap-y-2 text-caption sm:gap-x-2" aria-label="Payroll progress">
                 {(['Generated', 'Approved', 'Paid'] as const).map((l, i) => (
-                  <li key={l} className="flex items-center gap-2"><span className={cn('flex h-6 w-6 items-center justify-center rounded-full text-fine font-semibold', i <= step ? 'bg-muted text-success' : 'bg-muted text-muted-foreground')}>{i <= step ? <Check className="h-3.5 w-3.5" strokeWidth={2.5} aria-label="done" /> : i + 1}</span><span className={i <= step ? 'font-semibold' : 'text-muted-foreground'}>{l}</span>{i < 2 && <span className="mx-2 h-px w-8 bg-border" />}</li>
+                  <li key={l} aria-current={i === step ? 'step' : undefined} className="flex items-center gap-2"><span className={cn('flex h-6 w-6 items-center justify-center rounded-full text-fine font-semibold', i <= step ? 'bg-muted text-success' : 'bg-muted text-muted-foreground')}>{i <= step ? <Check className="h-3.5 w-3.5" strokeWidth={2.5} aria-label="done" /> : i + 1}</span><span className={i <= step ? 'font-semibold' : 'text-muted-foreground'}>{l}</span>{i < 2 && <span className="mx-1 h-px w-4 bg-border sm:mx-2 sm:w-8" aria-hidden />}</li>
                 ))}
               </ol>
 
@@ -71,13 +71,14 @@ export default function PayrollRunPage() {
 
               <DataTable rows={run.slips} rowKey={(s) => s.id} onRowClick={setSlip} dense emptyTitle="No slips" columns={[
                 { key: 'e', header: 'Employee', cell: (s) => <div><p className="font-semibold">{s.employee?.name}</p><p className="text-fine text-muted-foreground">{s.employee?.employeeCode} · {s.employee?.department ?? '-'}</p></div> },
-                { key: 'p', header: 'Paid days', cell: (s) => <span className={s.leaveWithoutPay + s.absentDays > 0 ? 'font-semibold text-destructive' : ''}>{s.paymentDays}</span>, align: 'right', hideOnMobile: true },
+                // loss of pay is named in words as well as colour (WCAG 1.4.1)
+                { key: 'p', header: 'Paid days', cell: (s) => { const lop = s.leaveWithoutPay + s.absentDays; return lop > 0 ? <span><span className="font-semibold text-destructive">{s.paymentDays}</span><span className="ml-1.5 text-fine text-muted-foreground">LOP {lop}</span></span> : s.paymentDays; }, align: 'right', hideOnMobile: true },
                 { key: 'g', header: 'Gross', cell: (s) => formatINR(s.grossPay), align: 'right' }, { key: 'pf', header: 'PF', cell: (s) => formatINR(s.pfEmployee), align: 'right', hideOnMobile: true },
                 { key: 'esi', header: 'ESI', cell: (s) => (s.esiEmployee ? formatINR(s.esiEmployee) : '-'), align: 'right', hideOnMobile: true }, { key: 'pt', header: 'PT', cell: (s) => (s.professionalTax ? formatINR(s.professionalTax) : '-'), align: 'right', hideOnMobile: true },
                 { key: 'tds', header: 'TDS', cell: (s) => (s.tds ? formatINR(s.tds) : '-'), align: 'right' }, { key: 'n', header: 'Net pay', cell: (s) => <b className={cn('tabular-nums', s.netPay < 0 && 'text-destructive')}>{formatINR(s.netPay)}</b>, align: 'right' },
                 { key: 'w', header: '', cell: (s) => (s.remarks ? <AlertTriangle className="h-4 w-4 text-warning" aria-label="Has warnings" /> : null) },
               ]} />
-              {run.status !== 'GENERATED' && run.status !== 'DRAFT' && <p className="text-caption text-muted-foreground">Download statutory & bank files for this month from <Link href="/hr/payroll/statutory" className="text-primary hover:underline">Statutory & bank</Link>.</p>}
+              {run.status !== 'GENERATED' && run.status !== 'DRAFT' && <p className="text-caption text-muted-foreground">Download statutory & bank files for this month from <Link href="/hr/payroll/statutory" className="text-primary underline underline-offset-2">Statutory</Link>.</p>}
 
               <SlipDetailModal slip={slip} onClose={() => setSlip(null)} />
               <ConfirmModal open={!!confirm} onOpenChange={(o) => !o && setConfirm(null)} destructive={confirm === 'delete'} loading={action.isPending || del.isPending}

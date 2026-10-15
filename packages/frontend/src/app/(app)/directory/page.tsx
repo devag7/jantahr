@@ -20,7 +20,7 @@ export default function DirectoryPage() {
   const q = useDirectory(search || undefined, dept || undefined);
   return (
     <>
-      <PageHeader title="Company directory" description="Find colleagues, their teams and contact details." actions={<><SearchInput key={initial} defaultValue={initial} onSearch={setSearch} placeholder="Search name, ID or email" className="w-64" /><NativeSelect aria-label="Department" className="w-44" value={dept} onChange={(e) => setDept(e.target.value)}><option value="">All departments</option>{depts.data?.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}</NativeSelect></>} />
+      <PageHeader title="Directory" description="Find colleagues, their teams and contact details." actions={<><SearchInput key={initial} defaultValue={initial} onSearch={setSearch} placeholder="Search name, ID or email" className="w-64" /><NativeSelect aria-label="Department" className="w-44" value={dept} onChange={(e) => setDept(e.target.value)}><option value="">All departments</option>{depts.data?.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}</NativeSelect></>} />
       <QueryBoundary query={q} empty={{ when: (d) => d.length === 0, title: 'No colleagues found', description: 'Try a different search.' }}>
         {(rows) => (
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">

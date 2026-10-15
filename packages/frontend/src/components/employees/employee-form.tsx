@@ -6,7 +6,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { NativeSelect } from '@/components/ui/native-select';
 import { Textarea } from '@/components/ui/textarea';
-import { Field, FormGrid } from '@/components/common/field';
+import { Field, FormGrid, SaveBar } from '@/components/common/field';
 import { Spinner } from '@/components/common/states';
 import { useAuth } from '@/hooks/auth/use-auth';
 import { useDepartments, useDesignations, useStates } from '@/hooks/org/use-org';
@@ -112,7 +112,7 @@ export function EmployeeForm({ initial, mode, submitting, onSubmit, onCancel }: 
         </div>
       </FormGrid></CardContent></Card>
 
-      <div className="flex justify-end gap-2"><Button type="button" variant="outline" onClick={onCancel}>Cancel</Button><Button type="submit" disabled={submitting}>{submitting && <Spinner className="mr-2" />}{mode === 'create' ? 'Create employee' : 'Save changes'}</Button></div>
+      <SaveBar><Button type="button" variant="outline" onClick={onCancel}>Cancel</Button><Button type="submit" disabled={submitting}>{submitting && <Spinner className="mr-2" />}{mode === 'create' ? 'Create employee' : 'Save changes'}</Button></SaveBar>
     </form>
   );
 }

@@ -34,7 +34,7 @@ export default function HrAttendancePage() {
     <>
       <PageHeader title="Attendance" description="Daily status, monthly summaries, regularisation requests, shifts and devices." />
       <Tabs defaultValue="daily">
-        <TabsList className="h-auto flex-wrap justify-start"><TabsTrigger value="daily">Daily</TabsTrigger><TabsTrigger value="monthly">Monthly summary</TabsTrigger><TabsTrigger value="requests">Requests</TabsTrigger>{admin && <><TabsTrigger value="shifts">Shifts & roster</TabsTrigger><TabsTrigger value="geo">Geo-fence & devices</TabsTrigger><TabsTrigger value="tools">Tools</TabsTrigger></>}</TabsList>
+        <TabsList className="justify-start"><TabsTrigger value="daily">Daily</TabsTrigger><TabsTrigger value="monthly">Monthly summary</TabsTrigger><TabsTrigger value="requests">Requests</TabsTrigger>{admin && <><TabsTrigger value="shifts">Shifts & roster</TabsTrigger><TabsTrigger value="geo">Geo-fence & devices</TabsTrigger><TabsTrigger value="tools">Tools</TabsTrigger></>}</TabsList>
         <TabsContent value="daily" className="mt-4"><DailyTab /></TabsContent>
         <TabsContent value="monthly" className="mt-4"><MonthlyTab /></TabsContent>
         <TabsContent value="requests" className="mt-4"><RequestsTab canDecide={admin} /></TabsContent>

@@ -11,7 +11,7 @@ import { StatusBadge } from '@/components/common/status-badge';
 import { SelfieCapture } from '@/components/attendance/selfie-capture';
 import { usePunch, usePunchStatus } from '@/hooks/attendance/use-attendance';
 import { errorMessage } from '@/lib/api/client';
-import { formatDuration, formatTime } from '@/lib/format';
+import { formatDate, formatDuration, formatTime, todayISO } from '@/lib/format';
 import type { PunchInput } from '@/types/attendance';
 
 function getPosition(): Promise<{ latitude: number; longitude: number } | null> {
@@ -50,7 +50,8 @@ export function PunchCard() {
   const busy = punch.isPending || locating;
   const elapsed = (s?.elapsedSeconds ?? 0) + (s?.checkedIn ? tick : 0);
 
-  const today = new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' });
+  const now = new Date();
+  const today = `${now.toLocaleDateString('en-IN', { weekday: 'long' })}, ${formatDate(todayISO())}`;
   const lastOut = s && !s.checkedIn && s.lastPunch?.type === 'OUT' ? s.lastPunch.time : null;
   return (
     <Card>

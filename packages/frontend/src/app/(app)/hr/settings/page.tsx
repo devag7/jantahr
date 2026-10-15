@@ -10,7 +10,7 @@ import { NativeSelect } from '@/components/ui/native-select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { DataTable } from '@/components/common/data-table';
-import { Field, FormGrid } from '@/components/common/field';
+import { Field, FormGrid, SaveBar } from '@/components/common/field';
 import { Modal } from '@/components/common/modal';
 import { PageHeader } from '@/components/common/page-header';
 import { QueryBoundary, Spinner } from '@/components/common/states';
@@ -35,7 +35,7 @@ export default function SettingsPage() {
     <>
       <PageHeader title="Settings" description={`${user?.company.name}: company profile, statutory configuration, organisation and communication.`} />
       <Tabs value={tab} onValueChange={setTab}>
-        <TabsList className="h-auto flex-wrap justify-start"><TabsTrigger value="company">Company & statutory</TabsTrigger><TabsTrigger value="org">Departments & designations</TabsTrigger><TabsTrigger value="holidays">Holidays</TabsTrigger><TabsTrigger value="announcements">Announcements</TabsTrigger><TabsTrigger value="policies">Policies</TabsTrigger></TabsList>
+        <TabsList className="justify-start"><TabsTrigger value="company">Company & statutory</TabsTrigger><TabsTrigger value="org">Departments & designations</TabsTrigger><TabsTrigger value="holidays">Holidays</TabsTrigger><TabsTrigger value="announcements">Announcements</TabsTrigger><TabsTrigger value="policies">Policies</TabsTrigger></TabsList>
         <TabsContent value="company" className="mt-4"><CompanyTab /></TabsContent>
         <TabsContent value="org" className="mt-4"><OrgTab /></TabsContent>
         <TabsContent value="holidays" className="mt-4"><HolidaysTab /></TabsContent>
@@ -76,7 +76,7 @@ function CompanyForm({ c }: { c: CompanyProfile }) {
         <div className="grid gap-2 sm:grid-cols-2">{flags.map(([k, l]) => <label key={k} className="flex items-center gap-2 text-caption"><Checkbox checked={!!f[k]} onCheckedChange={(v) => setF({ ...f, [k]: v })} />{l}</label>)}</div>
         <div><p className="mb-2 text-caption font-semibold">Weekly offs</p><div className="flex flex-wrap gap-2">{WEEKDAYS.map((d, i) => { const on = f.weeklyOffDays.includes(i); return <button key={d} type="button" aria-pressed={on} onClick={() => setF({ ...f, weeklyOffDays: on ? f.weeklyOffDays.filter((x) => x !== i) : [...f.weeklyOffDays, i].sort() })} className={`rounded-md border px-3 py-1.5 text-caption ${on ? 'border-primary bg-accent font-semibold' : ''}`}>{d}</button>; })}</div></div>
       </CardContent></Card>
-      <div className="flex justify-end"><Button type="submit" disabled={update.isPending}>{update.isPending && <Spinner className="mr-2" />}Save settings</Button></div>
+      <SaveBar><Button type="submit" disabled={update.isPending}>{update.isPending && <Spinner className="mr-2" />}Save settings</Button></SaveBar>
     </form>
   );
 }
