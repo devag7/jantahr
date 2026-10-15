@@ -56,12 +56,24 @@ key, but it takes days.
    18+, data safety (see below), category Business, contact email `jantahr@devshipit.com`, website
    `https://jantahr.devshipit.com`.
 3. **Store listing**: short and full description, the icon `docs/android/store/play-icon-512.png`, the feature
-   graphic `docs/android/store/feature-graphic-1024x500.png`, and at least two phone screenshots (take them in the
-   app, or use `packages/frontend/public/marketing/mobile.webp` converted to PNG).
+   graphic `docs/android/store/feature-graphic-1024x500.png`, and the phone screenshots in
+   `docs/android/store/phone/` (1080x1920, the seeded demo company on a local stack, 360x640 at 3x).
 
-Data safety, in short: the app collects name, email, phone, address, employment and payroll details, approximate
-and precise location (attendance check-in) and photos (attendance selfie), for app functionality and account
-management; data is encrypted in transit; users can request deletion (`/me/privacy` in the app).
+Data safety, as submitted: no data shared with third parties (Supabase, Vercel, Resend and Razorpay process it on
+our behalf); encrypted in transit; account deletion at `/legal/delete-account`, partial deletion through erasure
+requests (`#employees` on the same page). Collected, not processed ephemerally:
+
+| Data type | Required | Purposes |
+|---|---|---|
+| Name, email address, user IDs | Yes | App functionality, account management (email also developer communications, IDs also security) |
+| Address, phone number, religion (optional employee field) | No | App functionality (phone also account management) |
+| Other info (date of birth, gender, PAN, Aadhaar) | Yes | App functionality, compliance |
+| Purchase history (subscription invoices), other financial info (salary, bank account) | Yes | App functionality, account management / compliance |
+| Health info (blood group, optional) | No | App functionality |
+| Approximate and precise location (check-in at geo-fenced offices) | No | App functionality, fraud prevention |
+| Photos (profile photo, check-in selfie), files and docs | No | App functionality (selfies also fraud prevention) |
+| Other in-app messages (helpdesk), other user-generated content | No | App functionality |
+| App interactions (audit log) | Yes | Security and compliance |
 
 ### 2. First upload, by hand
 
