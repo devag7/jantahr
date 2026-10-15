@@ -142,7 +142,7 @@ secret) so they match the legal name and address on your Razorpay account and GS
 | `BILLING_SELLER_NAME` | legal business name (also the seller on GST invoices) |
 | `BILLING_SELLER_ADDRESS` | registered address, one line (also on invoices) |
 | `OPERATOR_URL` | optional: your own website (for example the studio the product belongs to), linked from the footer and contact page |
-| `SUPPORT_EMAIL` | contact email, a mailbox you read |
+| `SUPPORT_EMAIL` | contact email, a mailbox you read; messages from the contact form at `/contact` are sent here (needs `SMTP_*`), with Reply-To set to the sender |
 | `SUPPORT_PHONE` | contact phone, with country code |
 | `NEXT_PUBLIC_SITE_URL` | the site's public address, e.g. `https://hr.example.in`, once you use your own domain (Vercel's production address is used until then) |
 | `BILLING_SELLER_GSTIN` | your GST number, **only if you are registered under GST** (see below) |

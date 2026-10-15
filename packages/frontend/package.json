@@ -9,8 +9,9 @@
     "screens:audit": "node scripts/ui-screens.mjs",
     "start": "next start",
     "lint": "next lint",
-    "test": "node --experimental-strip-types --no-warnings --test src/lib/agents/agents.test.mjs src/components/marketing/pricing.params.test.mjs",
-    "test:agents": "node test/agent-readiness.mjs"
+    "test": "node --experimental-strip-types --no-warnings --test src/lib/agents/agents.test.mjs src/components/marketing/pricing.params.test.mjs src/components/marketing/marketing.test.mjs",
+    "test:agents": "node test/agent-readiness.mjs",
+    "test:site": "node test/site-ui.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",

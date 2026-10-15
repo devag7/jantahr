@@ -4,7 +4,7 @@ import './globals.css';
 import { AuthLinkForwarder } from '@/components/auth/auth-link-forwarder';
 import { AppProviders } from '@/components/providers/app-providers';
 import { isCloudWeb } from '@/lib/edition';
-import { SITE_DESCRIPTION, SITE_IMAGE, SITE_NAME, SITE_URL } from '@/lib/site';
+import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '@/lib/site';
 
 // SF Pro via the system stack on Apple devices; Inter (the reference's named substitute) everywhere else
 const inter = Inter({ subsets: ['latin'], display: 'swap', variable: '--font-inter' });
@@ -18,7 +18,8 @@ export const metadata: Metadata = {
   // the public site (cloud edition) has an address of its own, so its pages carry absolute links and a share card
   ...(isCloudWeb ? {
     metadataBase: new URL(SITE_URL),
-    openGraph: { type: 'website' as const, siteName: SITE_NAME, locale: 'en_IN', images: [{ url: SITE_IMAGE, width: 2880, height: 1800, alt: 'JantaHR company overview' }] },
+    // share images come from the opengraph-image files (app/ and app/(marketing)/pricing)
+    openGraph: { type: 'website' as const, siteName: SITE_NAME, locale: 'en_IN' },
     twitter: { card: 'summary_large_image' as const },
   } : {}),
 };

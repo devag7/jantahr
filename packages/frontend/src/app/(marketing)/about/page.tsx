@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { ContactLine, LegalPage } from '@/components/marketing/legal-page';
+import { ContactLine, INLINE_LINK, LegalPage } from '@/components/marketing/legal-page';
 import { OPERATOR } from '@/lib/operator';
 import { REPO_URL } from '@/lib/site';
 
@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   alternates: { canonical: '/about' },
 };
 
-const link = 'text-primary hover:underline';
+const link = INLINE_LINK;
 
 export default function AboutPage() {
   return (

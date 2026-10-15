@@ -1,8 +1,9 @@
 import type { Metadata } from 'next';
+import { pageDescription } from '@/lib/site';
 import { ContactLine, LegalPage } from '@/components/marketing/legal-page';
 import { INVOICE, OPERATOR, PLUS_GST } from '@/lib/operator';
 
-export const metadata: Metadata = { title: 'Cancellation and refunds', alternates: { canonical: '/legal/refunds' } };
+export const metadata: Metadata = { title: 'Cancellation and refunds', description: pageDescription('/legal/refunds'), alternates: { canonical: '/legal/refunds' } };
 
 const SECTIONS: [string, string][] = [
   ['Free trial and Free plan', 'Every new company starts with a 14-day trial of the Professional plan. No payment details are taken for the trial and nothing is charged when it ends: the company moves to the Free plan, which costs nothing for up to 20 employees.'],

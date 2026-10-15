@@ -77,8 +77,8 @@ export function htmlToMarkdown(html: string, options: { baseUrl?: string } = {})
       if (tag === hidden.tag && !VOID.has(tag)) { hidden.depth += closing ? -1 : 1; if (hidden.depth === 0) hidden = null; }
       continue;
     }
-    // decoration and controls (a billing-cycle toggle) are not content
-    if (!closing && !VOID.has(tag) && (tag === 'button' || /aria-hidden\s*=\s*["']?true/i.test(attrs))) { hidden = { tag, depth: 1 }; continue; }
+    // decoration and controls (a billing-cycle toggle, the contact form) are not content
+    if (!closing && !VOID.has(tag) && (tag === 'button' || tag === 'form' || /aria-hidden\s*=\s*["']?true/i.test(attrs))) { hidden = { tag, depth: 1 }; continue; }
 
     if (/^h[1-6]$/.test(tag)) { block(); if (!closing) out += '#'.repeat(Number(tag[1])) + ' '; continue; }
     if (BLOCK.has(tag)) {
