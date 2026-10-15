@@ -6,6 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "screenshots": "node scripts/capture-screenshots.mjs",
+    "screens:audit": "node scripts/ui-screens.mjs",
     "start": "next start",
     "lint": "next lint",
     "test": "node --experimental-strip-types --no-warnings --test src/lib/agents/agents.test.mjs",
