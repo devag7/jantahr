@@ -29,7 +29,7 @@ export default function MyExpensesPage() {
       <Tabs defaultValue="claims">
         <TabsList><TabsTrigger value="claims">Expense claims</TabsTrigger><TabsTrigger value="travel">Travel requests</TabsTrigger></TabsList>
         <TabsContent value="claims" className="mt-4">
-          <DataTable rows={claims.data} loading={claims.isLoading} error={claims.error} rowKey={(r) => r.id} emptyTitle="No expense claims" emptyDescription="Create a claim with your receipts to get reimbursed."
+          <DataTable stackOnMobile rows={claims.data} loading={claims.isLoading} error={claims.error} rowKey={(r) => r.id} emptyTitle="No expense claims" emptyDescription="Create a claim with your receipts to get reimbursed."
             emptyAction={<Button onClick={() => setClaimOpen(true)}><Receipt className="mr-2 h-4 w-4" />New claim</Button>}
             columns={[
               { key: 't', header: 'Title', cell: (r) => <div><p className="font-semibold">{r.title}</p><p className="text-fine text-muted-foreground">{r.items.length} item(s)</p></div> },

@@ -30,7 +30,7 @@ export default function MyPerformancePage() {
         <TabsList><TabsTrigger value="goals">My goals</TabsTrigger><TabsTrigger value="appraisals">Appraisals</TabsTrigger></TabsList>
         <TabsContent value="goals" className="mt-4 space-y-3">
           <p className="text-caption text-muted-foreground">Total weightage of active goals: <b className={total > 100 ? 'text-destructive' : 'text-foreground'}>{total}%</b> (must not exceed 100%)</p>
-          <DataTable rows={goals.data} loading={goals.isLoading} error={goals.error} rowKey={(g) => g.id} emptyTitle="No goals yet" emptyDescription="Add goals for the cycle; your manager approves them." columns={[
+          <DataTable stackOnMobile rows={goals.data} loading={goals.isLoading} error={goals.error} rowKey={(g) => g.id} emptyTitle="No goals yet" emptyDescription="Add goals for the cycle; your manager approves them." columns={[
             { key: 't', header: 'Goal', cell: (g) => <div><p className="font-semibold">{g.title}</p>{g.description && <p className="line-clamp-1 text-fine text-muted-foreground">{g.description}</p>}</div> },
             { key: 'w', header: 'Weight', cell: (g) => `${g.weightage}%`, align: 'right' },
             { key: 'p', header: 'Period', cell: (g) => `${formatDate(g.startDate, false)} - ${formatDate(g.endDate, false)}`, hideOnMobile: true },
@@ -41,7 +41,7 @@ export default function MyPerformancePage() {
           ]} />
         </TabsContent>
         <TabsContent value="appraisals" className="mt-4">
-          <DataTable rows={appraisals.data} loading={appraisals.isLoading} error={appraisals.error} rowKey={(a) => a.id} onRowClick={(a) => setOpenId(a.id)} emptyTitle="No appraisals" emptyDescription="You'll see appraisal cycles here when HR launches them." columns={[
+          <DataTable stackOnMobile rows={appraisals.data} loading={appraisals.isLoading} error={appraisals.error} rowKey={(a) => a.id} onRowClick={(a) => setOpenId(a.id)} emptyTitle="No appraisals" emptyDescription="You'll see appraisal cycles here when HR launches them." columns={[
             { key: 'c', header: 'Cycle', cell: (a) => <span className="font-semibold">{a.appraisalCycle.name}</span> },
             { key: 's', header: 'Status', cell: (a) => <StatusBadge status={a.status} /> },
             { key: 'sr', header: 'Self', cell: (a) => <RatingDisplay value={a.selfRating} /> },

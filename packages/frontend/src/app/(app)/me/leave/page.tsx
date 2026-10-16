@@ -33,7 +33,7 @@ export default function MyLeavePage() {
       <Tabs defaultValue="applications" className="mt-6">
         <TabsList><TabsTrigger value="applications">My applications</TabsTrigger><TabsTrigger value="calendar">Calendar</TabsTrigger><TabsTrigger value="encash">Encashment</TabsTrigger><TabsTrigger value="comp">Comp-off</TabsTrigger></TabsList>
         <TabsContent value="applications" className="mt-4">
-          <DataTable rows={list.data?.items} loading={list.isLoading} error={list.error} rowKey={(r) => r.id} emptyTitle="No leave applications yet" emptyDescription="Applications you submit will appear here with their approval status."
+          <DataTable stackOnMobile rows={list.data?.items} loading={list.isLoading} error={list.error} rowKey={(r) => r.id} emptyTitle="No leave applications yet" emptyDescription="Applications you submit will appear here with their approval status."
             columns={[
               { key: 't', header: 'Type', cell: (r) => <span className="font-semibold">{r.leaveType.name}</span> },
               { key: 'd', header: 'Dates', cell: (r) => `${formatDate(r.fromDate, false)}${r.fromDate !== r.toDate ? ` → ${formatDate(r.toDate, false)}` : ''}${r.halfDay ? ' (half day)' : ''}` },
