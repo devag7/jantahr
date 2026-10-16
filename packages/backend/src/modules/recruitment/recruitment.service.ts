@@ -148,7 +148,7 @@ export class RecruitmentService {
     const a = await this.prisma.jobApplicant.create({
       data: { companyId: j.companyId, jobOpeningId: j.id, name: dto.name, email: dto.email.toLowerCase(), phone: dto.phone, coverNote: dto.coverNote, currentCtc: dto.currentCtc, expectedCtc: dto.expectedCtc, noticeDays: dto.noticeDays, source: dto.source || 'Career Page', resumeUrl: saved?.key, privacyAcceptedAt: new Date() },
     });
-    await this.notifications.notifyRoles(j.companyId, ['HR_ADMIN'], { title: 'New job application', message: `${dto.name} applied for ${j.title}`, type: 'RECRUITMENT', link: '/admin/lifecycle' });
+    await this.notifications.notifyRoles(j.companyId, ['HR_ADMIN'], { title: 'New job application', message: `${dto.name} applied for ${j.title}`, type: 'RECRUITMENT', link: '/hr/recruitment' });
     return { ok: true, applicationId: a.id, message: 'Thank you. Your application has been received.' };
   }
 
@@ -181,7 +181,7 @@ export class RecruitmentService {
     if (new Date(dto.scheduledAt) < new Date()) throw new BadRequestException('Interview time is in the past');
     const i = await this.prisma.interview.create({ data: { companyId, applicantId: a.id, round: dto.round, scheduledAt: new Date(dto.scheduledAt), durationMins: dto.durationMins ?? 45, mode: dto.mode ?? 'Video', interviewerId: dto.interviewerId } });
     if (a.stage === 'APPLIED' || a.stage === 'SCREENING') await this.prisma.jobApplicant.update({ where: { id: a.id }, data: { stage: 'INTERVIEW' } });
-    await this.notifications.notifyEmployee(dto.interviewerId, { title: 'Interview scheduled', message: `${a.name}: ${dto.round} on ${new Date(dto.scheduledAt).toISOString().slice(0, 16).replace('T', ' ')} UTC`, type: 'RECRUITMENT', link: '/admin/lifecycle' });
+    await this.notifications.notifyEmployee(dto.interviewerId, { title: 'Interview scheduled', message: `${a.name}: ${dto.round} on ${new Date(dto.scheduledAt).toISOString().slice(0, 16).replace('T', ' ')} UTC`, type: 'RECRUITMENT', link: '/hr/recruitment' });
     return i;
   }
 

@@ -36,7 +36,15 @@ const nextConfig = {
   },
   // browsers ask for /favicon.ico on pages that declare no icon (raw JSON, text files); the icon is an SVG
   async redirects() {
-    return [{ source: '/favicon.ico', destination: '/icon.svg', permanent: true }];
+    return [
+      { source: '/favicon.ico', destination: '/icon.svg', permanent: true },
+      // notifications created before the routes were renamed still carry the old links; send them somewhere useful
+      { source: '/ess/:path*', destination: '/dashboard', permanent: false },
+      { source: '/admin/dashboard', destination: '/dashboard', permanent: false },
+      { source: '/admin/:area(leave|attendance|performance)', destination: '/approvals', permanent: false },
+      { source: '/admin/lifecycle', destination: '/hr/lifecycle', permanent: false },
+      { source: '/admin/payroll', destination: '/hr/payroll', permanent: false },
+    ];
   },
   async headers() {
     // the service worker must be re-checked on every visit so an update reaches installed apps promptly

@@ -48,7 +48,7 @@ export class SeparationService {
       data: { employeeId: empId, companyId: user.companyId, separationType: 'RESIGNATION', resignationDate: today, lastWorkingDate: lwd, noticePeriodDays: notice, exitInterviewNotes: dto.reason },
       include: SEP_INCLUDE,
     });
-    await this.notifications.notifyApproverOf(empId, user.companyId, { title: 'Resignation submitted', message: `${emp.firstName} ${emp.lastName} has resigned (LWD ${isoDate(lwd)})`, type: 'APPROVAL', link: '/admin/lifecycle' });
+    await this.notifications.notifyApproverOf(empId, user.companyId, { title: 'Resignation submitted', message: `${emp.firstName} ${emp.lastName} has resigned (LWD ${isoDate(lwd)})`, type: 'APPROVAL', link: '/approvals' });
     return sep;
   }
 
@@ -87,7 +87,7 @@ export class SeparationService {
     if (s.status !== 'PENDING') throw new BadRequestException('Already processed');
     if (!approve) {
       await this.prisma.employeeSeparation.delete({ where: { id } });
-      await this.notifications.notifyEmployee(s.employeeId, { title: 'Resignation not accepted', message: dto.comment || 'Please speak to HR', type: 'LIFECYCLE', link: '/ess/dashboard' });
+      await this.notifications.notifyEmployee(s.employeeId, { title: 'Resignation not accepted', message: dto.comment || 'Please speak to HR', type: 'LIFECYCLE', link: '/me/profile' });
       return { rejected: true };
     }
     const lwd = dto.lastWorkingDate ? toDateOnly(dto.lastWorkingDate) : s.lastWorkingDate!;
@@ -95,7 +95,7 @@ export class SeparationService {
       this.prisma.employeeSeparation.update({ where: { id }, data: { status: 'APPROVED', lastWorkingDate: lwd, clearances: { create: CLEARANCE_DEPARTMENTS.map((department) => ({ department })) } } }),
       this.prisma.employee.update({ where: { id: s.employeeId }, data: { dateOfResignation: s.resignationDate, lastWorkingDate: lwd } }),
     ]);
-    await this.notifications.notifyEmployee(s.employeeId, { title: 'Resignation accepted', message: `Your last working day is ${isoDate(lwd)}`, type: 'LIFECYCLE', link: '/ess/dashboard' });
+    await this.notifications.notifyEmployee(s.employeeId, { title: 'Resignation accepted', message: `Your last working day is ${isoDate(lwd)}`, type: 'LIFECYCLE', link: '/me/profile' });
     return this.getOne(user, id);
   }
 

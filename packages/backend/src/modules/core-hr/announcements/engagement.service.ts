@@ -41,7 +41,7 @@ export class EngagementService {
       data: { companyId: user.companyId, title: dto.title, body: dto.body, pinned: !!dto.pinned, createdBy: user.userId, ...(dto.publishAt ? { publishAt: new Date(dto.publishAt) } : {}), ...(dto.expiresAt ? { expiresAt: new Date(dto.expiresAt) } : {}) },
     });
     const users = await this.prisma.user.findMany({ where: { companyId: user.companyId, isActive: true, id: { not: user.userId } }, select: { id: true } });
-    await this.prisma.notification.createMany({ data: users.map((u) => ({ userId: u.id, title: 'New announcement', message: dto.title, type: 'ANNOUNCEMENT', link: '/ess/dashboard' })) });
+    await this.prisma.notification.createMany({ data: users.map((u) => ({ userId: u.id, title: 'New announcement', message: dto.title, type: 'ANNOUNCEMENT', link: '/dashboard' })) });
     return a;
   }
 

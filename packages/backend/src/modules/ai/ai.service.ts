@@ -55,7 +55,7 @@ export class AiService {
     if (empId && has(/leave.*(balance|left|remaining|available)|(balance|remaining).*leave|how many (leaves|days off)/)) {
       const b = await this.balances.getBalances(empId, new Date());
       if (!b.length) return { intent: 'leave_balance', reply: 'No leave has been allocated to you yet. Please contact HR.' };
-      return { intent: 'leave_balance', reply: 'Here is your leave balance:\n' + b.filter((x) => !x.isLWP).map((x) => `• ${x.leaveType}: ${x.available} available (${x.used} used${x.pending ? `, ${x.pending} pending approval` : ''})`).join('\n'), links: [{ label: 'Apply for leave', href: '/ess/dashboard' }] };
+      return { intent: 'leave_balance', reply: 'Here is your leave balance:\n' + b.filter((x) => !x.isLWP).map((x) => `• ${x.leaveType}: ${x.available} available (${x.used} used${x.pending ? `, ${x.pending} pending approval` : ''})`).join('\n'), links: [{ label: 'Apply for leave', href: '/me/leave' }] };
     }
     if (has(/holiday/)) {
       const hol = await this.prisma.holiday.findMany({ where: { holidayList: { companyId: user.companyId }, date: { gte: todayIST() }, isOptional: false }, orderBy: { date: 'asc' }, take: 5 });
@@ -76,7 +76,7 @@ export class AiService {
     if (empId && has(/(tax|regime|tds|80c|section 80)/)) {
       try {
         const r = await this.tax.compareRegimes(user);
-        return { intent: 'tax', reply: `Based on your current CTC and declared investments for FY ${r.fyStartYear}-${String(r.fyStartYear + 1).slice(2)}: the ${r.recommended === 'NEW' ? 'New' : 'Old'} regime saves you about ${inr(r.saving)}. Estimated tax: Old: ${inr(r.old.totalTax)}, New: ${inr(r.new.totalTax)}.`, links: [{ label: 'Update investment declaration', href: '/ess/dashboard' }] };
+        return { intent: 'tax', reply: `Based on your current CTC and declared investments for FY ${r.fyStartYear}-${String(r.fyStartYear + 1).slice(2)}: the ${r.recommended === 'NEW' ? 'New' : 'Old'} regime saves you about ${inr(r.saving)}. Estimated tax: Old: ${inr(r.old.totalTax)}, New: ${inr(r.new.totalTax)}.`, links: [{ label: 'Update investment declaration', href: '/me/tax' }] };
       } catch (e) {
         return { intent: 'tax', reply: (e instanceof HttpException ? errorMessage(e) : '') || 'I could not estimate your tax yet: your salary structure may not be assigned.' };
       }
@@ -90,14 +90,14 @@ export class AiService {
       return { intent: 'resignation', reply: `To resign, submit a resignation from the Exit section. Your notice period is ${e?.noticeperiodDays ?? 30} days. Your manager and HR will review it and start exit clearance.` };
     }
     if (has(/(apply|take|request).*(leave|day off)/)) {
-      return { intent: 'apply_leave', reply: 'You can apply for leave from your dashboard: choose the leave type, dates (half-day supported) and a reason. Your manager gets notified for approval.', links: [{ label: 'Open dashboard', href: '/ess/dashboard' }] };
+      return { intent: 'apply_leave', reply: 'Apply for leave on the Leave page: choose the leave type, dates (half-day supported) and a reason. Your manager gets notified for approval.', links: [{ label: 'Apply for leave', href: '/me/leave' }] };
     }
     return this.policyAnswer(user, message);
   }
 
   private async policyAnswer(user: AuthUser, message: string): Promise<ChatReply> {
     const policies = await this.prisma.policy.findMany({ where: { companyId: user.companyId, isActive: true }, select: { title: true, content: true } });
-    if (!policies.length) return { intent: 'unknown', reply: "I don't have company policies to search yet. You can raise a helpdesk ticket and HR will help you.", links: [{ label: 'Raise a ticket', href: '/ess/dashboard' }] };
+    if (!policies.length) return { intent: 'unknown', reply: "I don't have company policies to search yet. You can raise a helpdesk ticket and HR will help you.", links: [{ label: 'Raise a ticket', href: '/me/helpdesk' }] };
 
     const q = tokens(message);
     const scored = policies
@@ -116,11 +116,11 @@ export class AiService {
       const llm = await this.askLlm(apiKey, message, context);
       if (llm) return { intent: 'policy_llm', reply: llm };
     }
-    if (!scored.length) return { intent: 'unknown', reply: "I couldn't find that in the company policies. Try rephrasing, or raise a helpdesk ticket for HR.", links: [{ label: 'Raise a ticket', href: '/ess/dashboard' }] };
+    if (!scored.length) return { intent: 'unknown', reply: "I couldn't find that in the company policies. Try rephrasing, or raise a helpdesk ticket for HR.", links: [{ label: 'Raise a ticket', href: '/me/helpdesk' }] };
     const best = scored[0].p;
     const sentences = best.content.split(/(?<=[.!?\n])\s+/);
     const relevant = sentences.filter((s) => q.some((t) => s.toLowerCase().includes(t))).slice(0, 3);
-    return { intent: 'policy', reply: `From the "${best.title}" policy:\n${(relevant.length ? relevant : sentences.slice(0, 3)).join(' ')}`, links: [{ label: 'View all policies', href: '/ess/dashboard' }] };
+    return { intent: 'policy', reply: `From the "${best.title}" policy:\n${(relevant.length ? relevant : sentences.slice(0, 3)).join(' ')}`, links: [{ label: 'View all policies', href: '/me/policies' }] };
   }
 
   private async askLlm(apiKey: string, question: string, context: string): Promise<string | null> {

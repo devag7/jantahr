@@ -97,7 +97,7 @@ export class OnboardingService {
 
   async remind(companyId: string) {
     const overdue = await this.prisma.employeeOnboardingTask.findMany({ where: { onboarding: { companyId }, status: { in: ['PENDING', 'IN_PROGRESS'] }, dueDate: { lt: todayIST() } }, include: { onboarding: { include: { employee: true } } } });
-    if (overdue.length) await this.notifications.notifyRoles(companyId, ['HR_ADMIN'], { title: 'Overdue onboarding tasks', message: `${overdue.length} onboarding task(s) are overdue`, type: 'REMINDER', link: '/admin/lifecycle' });
+    if (overdue.length) await this.notifications.notifyRoles(companyId, ['HR_ADMIN'], { title: 'Overdue onboarding tasks', message: `${overdue.length} onboarding task(s) are overdue`, type: 'REMINDER', link: '/hr/lifecycle' });
     return { overdue: overdue.length };
   }
 }

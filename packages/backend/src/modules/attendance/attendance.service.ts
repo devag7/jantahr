@@ -272,7 +272,7 @@ export class AttendanceService {
       data: { employeeId: empId, companyId: user.companyId, fromDate: from, toDate: to, reason: dto.reason, requestType: dto.requestType, halfDay: !!dto.halfDay, halfDayDate: dto.halfDay ? from : null },
     });
     const me = await this.prisma.employee.findUniqueOrThrow({ where: { id: empId } });
-    await this.notifications.notifyApproverOf(empId, user.companyId, { title: 'Attendance request', message: `${me.firstName} ${me.lastName} requested ${dto.requestType.toLowerCase().replace('_', ' ')} for ${isoDate(from)}`, type: 'APPROVAL', link: '/admin/attendance' });
+    await this.notifications.notifyApproverOf(empId, user.companyId, { title: 'Attendance request', message: `${me.firstName} ${me.lastName} requested ${dto.requestType.toLowerCase().replace('_', ' ')} for ${isoDate(from)}`, type: 'APPROVAL', link: '/approvals' });
     return req;
   }
 
@@ -293,7 +293,7 @@ export class AttendanceService {
     if (r.status !== 'PENDING') throw new BadRequestException('Already processed');
     if (!approve) {
       const upd = await this.prisma.attendanceRequest.update({ where: { id }, data: { status: 'REJECTED', approverId: user.employeeId, approverComment: comment } });
-      await this.notifications.notifyEmployee(r.employeeId, { title: 'Attendance request rejected', message: comment || 'Your attendance request was rejected', type: 'ATTENDANCE', link: '/ess/dashboard' });
+      await this.notifications.notifyEmployee(r.employeeId, { title: 'Attendance request rejected', message: comment || 'Your attendance request was rejected', type: 'ATTENDANCE', link: '/me/attendance' });
       return upd;
     }
     await this.assertPayrollOpen(r.employeeId, r.fromDate, r.toDate);
@@ -314,7 +314,7 @@ export class AttendanceService {
       }
       await tx.attendanceRequest.update({ where: { id }, data: { status: 'APPROVED', approverId: user.employeeId, approverComment: comment } });
     });
-    await this.notifications.notifyEmployee(r.employeeId, { title: 'Attendance request approved', message: `Your ${r.requestType.toLowerCase().replace('_', ' ')} request for ${isoDate(r.fromDate)} was approved`, type: 'ATTENDANCE', link: '/ess/dashboard' });
+    await this.notifications.notifyEmployee(r.employeeId, { title: 'Attendance request approved', message: `Your ${r.requestType.toLowerCase().replace('_', ' ')} request for ${isoDate(r.fromDate)} was approved`, type: 'ATTENDANCE', link: '/me/attendance' });
     return this.prisma.attendanceRequest.findUniqueOrThrow({ where: { id } });
   }
 }

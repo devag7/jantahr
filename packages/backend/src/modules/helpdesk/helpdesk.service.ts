@@ -32,7 +32,7 @@ export class HelpdeskService {
     const empId = this.access.requireEmployee(user);
     const category = dto.category && TICKET_CATEGORIES.includes(dto.category) ? dto.category : 'Other';
     const t = await this.prisma.helpdeskTicket.create({ data: { companyId: user.companyId, employeeId: empId, subject: dto.subject, description: dto.description, category, priority: dto.priority || 'MEDIUM' } });
-    await this.notifications.notifyRoles(user.companyId, ['HR_ADMIN'], { title: 'New helpdesk ticket', message: dto.subject, type: 'TICKET', link: '/admin/dashboard' });
+    await this.notifications.notifyRoles(user.companyId, ['HR_ADMIN'], { title: 'New helpdesk ticket', message: dto.subject, type: 'TICKET', link: '/me/helpdesk' });
     return t;
   }
 
@@ -58,7 +58,7 @@ export class HelpdeskService {
     if (t.status === 'CLOSED') throw new BadRequestException('Ticket is closed');
     const me = user.employeeId ? await this.prisma.employee.findUnique({ where: { id: user.employeeId }, select: { firstName: true, lastName: true } }) : null;
     const c = await this.prisma.helpdeskComment.create({ data: { ticketId: id, authorId: user.userId, authorName: me ? `${me.firstName} ${me.lastName}`.trim() : user.email, message: dto.message } });
-    if (t.employeeId !== user.employeeId) await this.notifications.notifyEmployee(t.employeeId, { title: 'Reply on your ticket', message: t.subject, type: 'TICKET', link: '/ess/dashboard' });
+    if (t.employeeId !== user.employeeId) await this.notifications.notifyEmployee(t.employeeId, { title: 'Reply on your ticket', message: t.subject, type: 'TICKET', link: '/me/helpdesk' });
     return c;
   }
 
@@ -69,7 +69,7 @@ export class HelpdeskService {
       if (dto.status !== 'CLOSED' || Object.keys(dto).length > 1) throw new ForbiddenException('You can only close your own ticket');
     }
     const r = await this.prisma.helpdeskTicket.update({ where: { id }, data: dto });
-    if (isAdmin && dto.status && dto.status !== t.status) await this.notifications.notifyEmployee(t.employeeId, { title: `Ticket ${dto.status.toLowerCase().replace('_', ' ')}`, message: t.subject, type: 'TICKET', link: '/ess/dashboard' });
+    if (isAdmin && dto.status && dto.status !== t.status) await this.notifications.notifyEmployee(t.employeeId, { title: `Ticket ${dto.status.toLowerCase().replace('_', ' ')}`, message: t.subject, type: 'TICKET', link: '/me/helpdesk' });
     return r;
   }
 }

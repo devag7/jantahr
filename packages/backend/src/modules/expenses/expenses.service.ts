@@ -79,7 +79,7 @@ export class ExpensesService {
 
   private async notifyApprover(user: AuthUser, employeeId: string, title: string) {
     const me = await this.prisma.employee.findUniqueOrThrow({ where: { id: employeeId }, select: { firstName: true, lastName: true, expenseApproverId: true, reportingManagerId: true } });
-    const msg = { title: 'Expense claim to approve', message: `${me.firstName} ${me.lastName}: ${title}`, type: 'APPROVAL', link: '/admin/dashboard' };
+    const msg = { title: 'Expense claim to approve', message: `${me.firstName} ${me.lastName}: ${title}`, type: 'APPROVAL', link: '/approvals' };
     if (me.expenseApproverId || me.reportingManagerId) await this.notifications.notifyEmployee(me.expenseApproverId || me.reportingManagerId, msg);
     else await this.notifications.notifyRoles(user.companyId, ['HR_ADMIN', 'SUPER_ADMIN'], msg);
   }
@@ -158,7 +158,7 @@ export class ExpensesService {
     if (c.status !== 'SUBMITTED') throw new BadRequestException('Claim is not awaiting approval');
     if (!approve) {
       const r = await this.prisma.expenseClaim.update({ where: { id }, data: { status: 'REJECTED', approverId: user.employeeId, approverComment: dto.comment }, include: INCLUDE });
-      await this.notifications.notifyEmployee(c.employeeId, { title: 'Expense claim rejected', message: dto.comment || c.title, type: 'EXPENSE', link: '/ess/dashboard' });
+      await this.notifications.notifyEmployee(c.employeeId, { title: 'Expense claim rejected', message: dto.comment || c.title, type: 'EXPENSE', link: '/me/expenses' });
       return r;
     }
     const overrides = new Map((dto.items || []).map((i) => [i.itemId, i.approvedAmount]));
@@ -171,7 +171,7 @@ export class ExpensesService {
       }
       await tx.expenseClaim.update({ where: { id }, data: { status: 'APPROVED', totalApproved: round2(total), approverId: user.employeeId, approverComment: dto.comment } });
     });
-    await this.notifications.notifyEmployee(c.employeeId, { title: 'Expense claim approved', message: `₹${round2(total)} approved: it will be reimbursed with your next salary`, type: 'EXPENSE', link: '/ess/dashboard' });
+    await this.notifications.notifyEmployee(c.employeeId, { title: 'Expense claim approved', message: `₹${round2(total)} approved: it will be reimbursed with your next salary`, type: 'EXPENSE', link: '/me/expenses' });
     return this.own(user, id);
   }
 
@@ -195,7 +195,7 @@ export class ExpensesService {
     await this.access.assertCanApproveFor(user, t.employeeId);
     if (t.status !== 'PENDING') throw new BadRequestException('Already processed');
     const r = await this.prisma.travelRequest.update({ where: { id }, data: { status: approve ? 'APPROVED' : 'REJECTED', approverComment: comment } });
-    await this.notifications.notifyEmployee(t.employeeId, { title: `Travel request ${approve ? 'approved' : 'rejected'}`, message: t.purpose, type: 'EXPENSE', link: '/ess/dashboard' });
+    await this.notifications.notifyEmployee(t.employeeId, { title: `Travel request ${approve ? 'approved' : 'rejected'}`, message: t.purpose, type: 'EXPENSE', link: '/me/expenses' });
     return r;
   }
 }

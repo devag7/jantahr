@@ -118,7 +118,7 @@ export class PayrollRunService {
     });
     const users = await this.prisma.employee.findMany({ where: { id: { in: slips.map((s) => s.employeeId) } }, select: { userId: true } });
     await this.prisma.notification.createMany({
-      data: users.map((u) => ({ userId: u.userId, title: 'Payslip available', message: `Your payslip for ${String(run.month).padStart(2, '0')}/${run.year} is ready`, type: 'PAYROLL', link: '/ess/dashboard' })),
+      data: users.map((u) => ({ userId: u.userId, title: 'Payslip available', message: `Your payslip for ${String(run.month).padStart(2, '0')}/${run.year} is ready`, type: 'PAYROLL', link: '/me/payslips' })),
     });
     return this.getRun(user.companyId, runId);
   }

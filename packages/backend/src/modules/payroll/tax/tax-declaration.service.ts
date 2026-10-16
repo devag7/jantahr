@@ -75,7 +75,7 @@ export class TaxDeclarationService {
       }
       return tx.employeeTaxDeclaration.findUniqueOrThrow({ where: { id: rec.id }, include: { details: { include: { subCategory: true } } } });
     }).then(async (rec) => {
-      if (dto.submit) await this.notifications.notifyRoles(user.companyId, ['HR_ADMIN', 'PAYROLL_ADMIN'], { title: 'Tax declaration submitted', message: 'An employee submitted an investment declaration for review', type: 'APPROVAL', link: '/admin/payroll' });
+      if (dto.submit) await this.notifications.notifyRoles(user.companyId, ['HR_ADMIN', 'PAYROLL_ADMIN'], { title: 'Tax declaration submitted', message: 'An employee submitted an investment declaration for review', type: 'APPROVAL', link: '/hr/payroll' });
       return rec;
     });
   }
@@ -93,7 +93,7 @@ export class TaxDeclarationService {
     const d = await this.prisma.employeeTaxDeclaration.findFirst({ where: { id, companyId: user.companyId } });
     if (!d) throw new NotFoundException('Declaration not found');
     const updated = await this.prisma.employeeTaxDeclaration.update({ where: { id }, data: { status: approve ? 'APPROVED' : 'REJECTED', ...(approve ? {} : { isSubmitted: false }) } });
-    await this.notifications.notifyEmployee(d.employeeId, { title: `Tax declaration ${approve ? 'approved' : 'needs changes'}`, message: approve ? 'Your investment declaration was approved' : 'HR rejected your declaration. Please review and resubmit.', type: 'TAX', link: '/ess/dashboard' });
+    await this.notifications.notifyEmployee(d.employeeId, { title: `Tax declaration ${approve ? 'approved' : 'needs changes'}`, message: approve ? 'Your investment declaration was approved' : 'HR rejected your declaration. Please review and resubmit.', type: 'TAX', link: '/me/tax' });
     return updated;
   }
 

@@ -113,7 +113,7 @@ export class LeaveApplicationService {
       include: APP_INCLUDE,
     });
     await this.notifications.notifyApproverOf(emp.id, user.companyId, {
-      title: 'Leave approval pending', message: `${emp.firstName} ${emp.lastName} applied for ${preview.totalDays} day(s) ${lt.name} (${isoDate(from)} → ${isoDate(to)})`, type: 'APPROVAL', link: '/admin/leave',
+      title: 'Leave approval pending', message: `${emp.firstName} ${emp.lastName} applied for ${preview.totalDays} day(s) ${lt.name} (${isoDate(from)} → ${isoDate(to)})`, type: 'APPROVAL', link: '/approvals',
     });
     return app;
   }
@@ -156,7 +156,7 @@ export class LeaveApplicationService {
       if (errorMessage(e) === 'Insufficient leave balance') throw new BadRequestException('Employee no longer has sufficient balance for this leave');
       throw e;
     }
-    await this.notifications.notifyEmployee(app.employeeId, { title: 'Leave approved', message: `Your ${lt.name} (${isoDate(app.fromDate)} → ${isoDate(app.toDate)}) was approved`, type: 'LEAVE', link: '/ess/dashboard' });
+    await this.notifications.notifyEmployee(app.employeeId, { title: 'Leave approved', message: `Your ${lt.name} (${isoDate(app.fromDate)} → ${isoDate(app.toDate)}) was approved`, type: 'LEAVE', link: '/me/leave' });
     return this.getForDecision(user, id);
   }
 
@@ -165,7 +165,7 @@ export class LeaveApplicationService {
     await this.access.assertCanApproveFor(user, app.employeeId);
     if (app.status !== 'OPEN') throw new BadRequestException(`Application is already ${app.status.toLowerCase()}`);
     const updated = await this.prisma.leaveApplication.update({ where: { id }, data: { status: 'REJECTED', approverComment: comment }, include: APP_INCLUDE });
-    await this.notifications.notifyEmployee(app.employeeId, { title: 'Leave rejected', message: `Your ${app.leaveType.name} request was rejected${comment ? `: ${comment}` : ''}`, type: 'LEAVE', link: '/ess/dashboard' });
+    await this.notifications.notifyEmployee(app.employeeId, { title: 'Leave rejected', message: `Your ${app.leaveType.name} request was rejected${comment ? `: ${comment}` : ''}`, type: 'LEAVE', link: '/me/leave' });
     return updated;
   }
 
@@ -303,7 +303,7 @@ export class LeaveApplicationService {
     const nw = await this.calendar.nonWorkingDays(user.companyId, emp.state || emp.professionalTaxState, from, to);
     if (eachDay(from, to).some((d) => !nw.isNonWorking(d))) throw new BadRequestException('Comp-off applies only to work done on holidays or weekly offs');
     const created = await this.prisma.compensatoryLeaveRequest.create({ data: { employeeId: empId, companyId: user.companyId, leaveTypeId: lt.id, workFromDate: from, workEndDate: to, halfDay: !!dto.halfDay, reason: dto.reason } });
-    await this.notifications.notifyApproverOf(empId, user.companyId, { title: 'Comp-off request', message: `${emp.firstName} requested comp-off for work on ${isoDate(from)}`, type: 'APPROVAL', link: '/admin/leave' });
+    await this.notifications.notifyApproverOf(empId, user.companyId, { title: 'Comp-off request', message: `${emp.firstName} requested comp-off for work on ${isoDate(from)}`, type: 'APPROVAL', link: '/approvals' });
     return created;
   }
 
