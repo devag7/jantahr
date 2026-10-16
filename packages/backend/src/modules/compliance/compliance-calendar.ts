@@ -8,6 +8,9 @@
  *  - Gratuity: within 30 days of becoming payable.
  *  - OSH Code Central Rules 2026: overtime capped at 125 hours per quarter.
  */
+
+import { isoDate, todayIST } from '../../common/utils/dates';
+
 export type ComplianceCategory = 'WAGES' | 'TAX' | 'PF' | 'ESI' | 'BONUS' | 'EXIT' | 'PRIVACY' | 'PT' | 'LWF';
 
 export interface DueItem {
@@ -63,6 +66,15 @@ export function addWorkingDays(from: Date, n: number, weeklyOff: number[] = [0])
     if (!weeklyOff.includes(d.getUTCDay())) left--;
   }
   return d;
+}
+
+/**
+ * First day the calendar holds a company to (YYYY-MM-DD): its sign-up day in India, or the first payroll period on
+ * record when history was brought in. The sign-up instant is read in IST, because "today" is: a company created at
+ * 1 am IST on the 16th is still the 15th in UTC, and the 15th's PF and ESI deadlines must not count against it.
+ */
+export function trackedFrom(createdAt: Date, firstPeriodStart: Date | null): string {
+  return isoDate(firstPeriodStart && firstPeriodStart < createdAt ? firstPeriodStart : todayIST(createdAt));
 }
 
 /** Final wages for separated staff: within 2 working days of the last working day (Code on Wages s.17(2)). */

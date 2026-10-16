@@ -6,7 +6,7 @@ import { fiscalYearStartYear, isoDate, todayIST } from '../../common/utils/dates
 import { num } from '../../common/utils/money';
 import { PrismaService } from '../../prisma/prisma.service';
 import { salaryTdsLaw } from '../payroll/engine/tax-forms';
-import { annualDueDates, calendarQuarter, DueItem, fnfDueDate, gratuityDueDate, monthlyDueDates, OT_QUARTER_CAP_HOURS } from './compliance-calendar';
+import { annualDueDates, calendarQuarter, DueItem, fnfDueDate, gratuityDueDate, monthlyDueDates, OT_QUARTER_CAP_HOURS, trackedFrom } from './compliance-calendar';
 
 export class MarkFiledDto {
   @IsOptional() @IsString() @MaxLength(120) reference?: string;
@@ -51,8 +51,8 @@ export class ComplianceService {
     // Nothing was due from a company before it existed here: statutory items start at sign-up, or at the first
     // payroll period on record when history was brought in.
     const firstRun = await this.prisma.payrollEntry.findFirst({ where: { companyId }, orderBy: { startDate: 'asc' }, select: { startDate: true } });
-    const trackedFrom = isoDate(firstRun && firstRun.startDate < company.createdAt ? firstRun.startDate : company.createdAt);
-    for (let n = due.length - 1; n >= 0; n--) if (due[n].dueDate < trackedFrom) due.splice(n, 1);
+    const since = trackedFrom(company.createdAt, firstRun?.startDate ?? null);
+    for (let n = due.length - 1; n >= 0; n--) if (due[n].dueDate < since) due.splice(n, 1);
     for (const i of due) {
       if (i.category !== 'WAGES') continue;
       const [, y, m] = i.key.split('-').map(Number);

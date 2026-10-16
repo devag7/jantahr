@@ -1,4 +1,4 @@
-import { addWorkingDays, annualDueDates, calendarQuarter, fnfDueDate, gratuityDueDate, monthlyDueDates } from './compliance-calendar';
+import { addWorkingDays, annualDueDates, calendarQuarter, fnfDueDate, gratuityDueDate, monthlyDueDates, trackedFrom } from './compliance-calendar';
 
 const d = (s: string) => new Date(`${s}T00:00:00Z`);
 const iso = (x: Date) => x.toISOString().slice(0, 10);
@@ -37,5 +37,16 @@ describe('exit deadlines', () => {
   it('calendar quarter bounds', () => {
     const q = calendarQuarter(d('2026-08-14'));
     expect([iso(q.start), iso(q.end)]).toEqual(['2026-07-01', '2026-09-30']);
+  });
+});
+
+describe('calendar start for a company', () => {
+  it('reads the sign-up instant in IST: 1 am IST on the 16th is the 16th, not the 15th', () => {
+    expect(trackedFrom(new Date('2026-10-15T19:41:00Z'), null)).toBe('2026-10-16');
+    expect(trackedFrom(new Date('2026-10-15T18:29:00Z'), null)).toBe('2026-10-15');
+  });
+  it('starts at the first payroll period when history was imported', () => {
+    expect(trackedFrom(new Date('2026-10-15T10:00:00Z'), d('2026-04-01'))).toBe('2026-04-01');
+    expect(trackedFrom(new Date('2026-10-15T10:00:00Z'), d('2026-11-01'))).toBe('2026-10-15');
   });
 });
