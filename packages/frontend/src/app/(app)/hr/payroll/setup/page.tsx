@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { NativeSelect } from '@/components/ui/native-select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DataTable } from '@/components/common/data-table';
+import { BulkAssignModal } from '@/components/payroll/bulk-assign-modal';
 import { Field, FormGrid } from '@/components/common/field';
 import { Modal } from '@/components/common/modal';
 import { PageHeader } from '@/components/common/page-header';
@@ -18,7 +19,7 @@ import { useEmployees } from '@/hooks/employees/use-employees';
 import { useAdditional, useCloseLoan, useComponents, useCreateAdditional, useCreateComponent, useCreateLoan, useCreateStructure, useDeleteAdditional, useDeleteComponent, useDeleteStructure, useLoans, usePreviewStructure, useStructures } from '@/hooks/payroll/use-payroll';
 import { formatDate, formatINR, todayISO } from '@/lib/format';
 import { PAYROLL } from '@/lib/permissions';
-import type { StructurePreview } from '@/types/payroll';
+import type { SalaryStructure, StructurePreview } from '@/types/payroll';
 
 export default function PayrollSetupPage() {
   const { hasRole } = useAuth();
@@ -77,6 +78,7 @@ function StructuresTab({ canEdit }: { canEdit: boolean }) {
   const [rows, setRows] = React.useState<StructRow[]>([]);
   const [previewCtc, setPreviewCtc] = React.useState('1200000');
   const [pv, setPv] = React.useState<{ id: string; data: StructurePreview } | null>(null);
+  const [assignTo, setAssignTo] = React.useState<SalaryStructure | null>(null);
   const earnings = comps.data?.filter((c) => c.type === 'EARNING' && !c.isStatutory) ?? [];
   const addRow = () => setRows((r) => [...r, { componentId: earnings.find((c) => !r.some((x) => x.componentId === c.id))?.id ?? '', kind: 'formula', value: '' }]);
   const setRow = (i: number, p: Partial<StructRow>) => setRows((r) => r.map((x, k) => (k === i ? { ...x, ...p } : x)));
@@ -88,12 +90,13 @@ function StructuresTab({ canEdit }: { canEdit: boolean }) {
         { key: 'n', header: 'Structure', cell: (s) => <div><p className="font-semibold">{s.name}</p><p className="text-fine text-muted-foreground">{s.description}</p></div> },
         { key: 'c', header: 'Components', cell: (s) => <div className="flex flex-wrap gap-1">{s.components.map((c) => <Badge key={c.id} variant="muted" title={c.formula ?? String(c.amount)}>{c.component.abbr}{c.formula ? ` = ${c.formula}` : ` ₹${c.amount}`}</Badge>)}</div> },
         { key: 'a', header: 'Employees', cell: (s) => s._count.assignments, align: 'right' },
-        { key: 'x', header: '', align: 'right', cell: (s) => <div className="flex justify-end gap-1"><Button size="sm" variant="outline" onClick={() => preview.mutate({ salaryStructureId: s.id, ctc: Number(previewCtc) || 1200000 }, { onSuccess: (d) => setPv({ id: s.id, data: d }) })}>Preview</Button>{canEdit && s._count.assignments === 0 && <Button size="icon" variant="ghost" aria-label="Delete" onClick={() => del.mutate(s.id)}><Trash2 className="h-4 w-4" /></Button>}</div> },
+        { key: 'x', header: '', align: 'right', cell: (s) => <div className="flex justify-end gap-1">{canEdit && <Button size="sm" onClick={() => setAssignTo(s)}>Assign</Button>}<Button size="sm" variant="outline" onClick={() => preview.mutate({ salaryStructureId: s.id, ctc: Number(previewCtc) || 1200000 }, { onSuccess: (d) => setPv({ id: s.id, data: d }) })}>Preview</Button>{canEdit && s._count.assignments === 0 && <Button size="icon" variant="ghost" aria-label="Delete" onClick={() => del.mutate(s.id)}><Trash2 className="h-4 w-4" /></Button>}</div> },
       ]} />
       {pv && (
         <div className="rounded-md border p-4"><div className="mb-3 flex items-center gap-3"><b className="text-caption">Preview for CTC</b><Input type="number" className="w-40" value={previewCtc} onChange={(e) => setPreviewCtc(e.target.value)} aria-label="CTC" /><Button size="sm" variant="outline" onClick={() => preview.mutate({ salaryStructureId: pv.id, ctc: Number(previewCtc) || 1 }, { onSuccess: (d) => setPv({ id: pv.id, data: d }) })}>Recalculate</Button><button className="ml-auto text-fine text-muted-foreground hover:underline" onClick={() => setPv(null)}>Close</button></div>
           <table className="w-full text-caption"><tbody className="divide-y">{pv.data.monthly.map((m) => <tr key={m.abbr}><td className="py-1.5">{m.name} <span className="text-fine text-muted-foreground">({m.abbr})</span></td><td className="py-1.5 text-right tabular-nums">{formatINR(m.monthly)}/mo</td><td className="py-1.5 text-right tabular-nums text-muted-foreground">{formatINR(m.annual)}/yr</td></tr>)}<tr className="font-semibold"><td className="py-2">Gross</td><td className="py-2 text-right tabular-nums">{formatINR(pv.data.grossMonthly)}</td><td className="py-2 text-right tabular-nums">{formatINR(pv.data.grossAnnual)}</td></tr></tbody></table></div>
       )}
+      <BulkAssignModal structure={assignTo} onClose={() => setAssignTo(null)} />
       <Modal open={open} onOpenChange={setOpen} size="xl" title="New salary structure" description="Components are evaluated top to bottom. Formulas can use CTC, MONTHLY_CTC, ER_PF, GRATUITY and any component above (e.g. BASIC * 0.5; MAX(0, MONTHLY_CTC - BASIC - HRA - ER_PF - GRATUITY))."
         footer={<><Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button><Button disabled={!name || !rows.length || create.isPending} onClick={() => create.mutate({ name, components: rows.map((r) => ({ componentId: r.componentId, ...(r.kind === 'formula' ? { formula: r.value } : { amount: Number(r.value) }) })) }, { onSuccess: () => setOpen(false) })}>{create.isPending && <Spinner className="mr-2" />}Save structure</Button></>}>
         <div className="space-y-4">

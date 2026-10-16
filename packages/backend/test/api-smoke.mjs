@@ -524,6 +524,14 @@ ok('mass-assignment stripped (companyId ignored)', (await call('POST', '/departm
 ok('validation error 400', (await call('POST', '/leave/applications', emp, { leaveTypeId: 1 })).status === 400);
 ok('swagger docs', (await fetch(BASE + '/docs')).status === 200);
 
+// bulk structure assignment keeps each person's tax regime (Vikram chose the old regime)
+const vik = (await call('GET', '/employees?search=EMP005', pay)).data?.items?.[0];
+const bulkFrom = (() => { const d = new Date(); d.setUTCMonth(d.getUTCMonth() + 2, 1); return d.toISOString().slice(0, 10); })();
+const bulkRes = await call('POST', '/payroll/assignments/bulk', pay, { employeeIds: [vik.id], salaryStructureId: structs.data[0].id, fromDate: bulkFrom });
+ok('bulk assign assigns', bulkRes.status === 201 && bulkRes.data.assigned === 1, bulkRes.data);
+const vikAssign = (await call('GET', `/payroll/assignments?employeeId=${vik.id}`, pay)).data?.find((a) => a.fromDate.slice(0, 10) === bulkFrom);
+ok('bulk assign keeps the old tax regime', vikAssign?.taxRegime === 'OLD', vikAssign);
+
 // every notification opens a page that exists (old /ess and /admin routes are gone)
 const links = [];
 for (const t of [emp, mgr, hr]) { const d = (await call('GET', '/notifications', t)).data; for (const n of d?.items ?? d ?? []) if (n.link) links.push(n.link); }

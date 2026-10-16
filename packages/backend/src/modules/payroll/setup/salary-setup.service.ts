@@ -171,7 +171,9 @@ export class SalarySetupService {
     for (const e of emps) {
       if (!e.ctc) { failed.push({ employeeId: e.id, reason: 'CTC is not set on the employee profile' }); continue; }
       try {
-        await this.assign(user, { employeeId: e.id, salaryStructureId: dto.salaryStructureId, fromDate: dto.fromDate, base: num(e.ctc), taxRegime: dto.taxRegime });
+        // a structure change is not a regime choice: keep the regime the employee already has unless one is given
+        const current = dto.taxRegime ? null : await this.prisma.salaryStructureAssignment.findFirst({ where: { employeeId: e.id }, orderBy: { fromDate: 'desc' }, select: { taxRegime: true } });
+        await this.assign(user, { employeeId: e.id, salaryStructureId: dto.salaryStructureId, fromDate: dto.fromDate, base: num(e.ctc), taxRegime: dto.taxRegime ?? current?.taxRegime });
         done.push(e.id);
       } catch (err) {
         failed.push({ employeeId: e.id, reason: errorMessage(err) });
