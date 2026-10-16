@@ -11,7 +11,7 @@ import { Modal } from '@/components/common/modal';
 import { PageHeader } from '@/components/common/page-header';
 import { StatCard } from '@/components/common/stat-card';
 import { StatusBadge } from '@/components/common/status-badge';
-import { CHART_COLORS } from '@/components/charts/charts';
+import { CHART_COLORS } from '@/components/charts/chart-colors';
 import { AppraisalModal } from '@/components/performance/appraisal-modal';
 import { RatingDisplay } from '@/components/performance/rating';
 import { useAuth } from '@/hooks/auth/use-auth';

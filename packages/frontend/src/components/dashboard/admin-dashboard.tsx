@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { CalendarCheck, ClipboardList, FileWarning, LifeBuoy, TrendingDown, UserMinus, UserPlus, Users } from 'lucide-react';
-import { DonutChart, GroupedBarChart, HBarChart } from '@/components/charts/charts';
+import { DonutChart, GroupedBarChart, HBarChart } from '@/components/charts/lazy-charts';
 import { QueryBoundary } from '@/components/common/states';
 import { StatCard } from '@/components/common/stat-card';
 import { CelebrationsCard, SectionCard } from '@/components/dashboard/widgets';
