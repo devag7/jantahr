@@ -36,7 +36,7 @@ export function AdminDashboard() {
                       ['Overdue onboarding tasks', pending.overdueOnboarding, '/hr/lifecycle', FileWarning],
                     ].filter((x) => (x[1] as number) > 0).map(([label, count, href, Icon]) => {
                       const I = Icon as typeof ClipboardList;
-                      return <li key={String(label)}><button onClick={() => router.push(String(href))} className="flex w-full items-center justify-between px-6 py-2 text-caption hover:bg-accent/50"><span className="flex items-center gap-2"><I className="h-4 w-4 text-muted-foreground" />{String(label)}</span><span className="min-w-6 rounded-full bg-muted px-2 text-center text-fine font-semibold text-warning">{String(count)}</span></button></li>;
+                      return <li key={String(label)}><button onClick={() => router.push(String(href))} className="flex min-h-11 w-full items-center justify-between px-6 py-2 text-caption hover:bg-accent/50"><span className="flex items-center gap-2"><I className="h-4 w-4 text-muted-foreground" />{String(label)}</span><span className="min-w-6 rounded-full bg-muted px-2 text-center text-fine font-semibold text-warning">{String(count)}</span></button></li>;
                     })}
                   </ul>
                 )}
@@ -52,7 +52,7 @@ export function AdminDashboard() {
                 <StatCard label="Exits this FY" value={d.headcount.exitsThisFY} hint={`${d.headcount.attritionRatePercent}% attrition`} icon={UserMinus} tone={d.headcount.attritionRatePercent > 15 ? 'destructive' : 'default'} />
                 <StatCard label="Open positions" value={d.recruitment.openPositions} hint={`${d.recruitment.activeApplicants} active applicants`} icon={TrendingDown} tone="info" onClick={() => router.push('/hr/recruitment')} />
               </div>
-              <SectionCard title="Attendance today" flush action={<button onClick={() => router.push('/hr/attendance')} className="text-fine font-semibold text-primary hover:underline">Details</button>}>
+              <SectionCard title="Attendance today" flush action={<button onClick={() => router.push('/hr/attendance')} className="hit text-fine font-semibold text-primary hover:underline">Details</button>}>
                 <ul className="divide-y text-caption">
                   {[['Present / WFH', a.present, 'bg-success'], ['On leave', a.onLeave, 'bg-info'], ['Half day', a.halfDay, 'bg-warning'], ['Absent', a.absent, 'bg-destructive'], ['Not marked', a.notMarked, 'bg-muted-foreground']].map(([l, v, c]) => (
                     <li key={String(l)} className="flex items-center justify-between px-6 py-2"><span className="flex items-center gap-2"><span className={`h-2 w-2 rounded-full ${c}`} aria-hidden />{l}</span><span className="font-semibold tabular-nums">{v}</span></li>
@@ -96,7 +96,7 @@ function DeadlinesCard() {
   const q = useComplianceCalendar();
   const open = (q.data?.items ?? []).filter((i) => i.status !== 'DONE').slice(0, 6);
   return (
-    <SectionCard title="Statutory deadlines" flush action={<button onClick={() => router.push('/hr/compliance')} className="text-fine font-semibold text-primary hover:underline">Calendar</button>}>
+    <SectionCard title="Statutory deadlines" flush action={<button onClick={() => router.push('/hr/compliance')} className="hit text-fine font-semibold text-primary hover:underline">Calendar</button>}>
       {q.isLoading ? <p className="px-6 py-3 text-caption text-muted-foreground">Loading…</p> : open.length === 0 ? <p className="px-6 py-3 text-caption text-muted-foreground">No open deadlines in the next 60 days.</p> : (
         <ul className="divide-y">{open.map((i) => (
           <li key={i.key} className="flex items-center gap-3 px-6 py-2 text-caption">

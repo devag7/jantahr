@@ -84,6 +84,16 @@ export function navFor(viewer: NavViewer): NavSection[] {
     .filter((s) => s.items.length);
 }
 
+/**
+ * Phone tab bar (below 834px, docs/design-system.md rule 12): the pages people open from their phone, in this order,
+ * four at most; the fifth slot is the menu with everything else. Approvers get Approvals second.
+ */
+const TAB_HREFS = ['/dashboard', '/approvals', '/me/attendance', '/me/leave', '/me/payslips'];
+export function tabsFor(viewer: NavViewer): NavItem[] {
+  const items = navFor(viewer).flatMap((s) => s.items);
+  return TAB_HREFS.flatMap((href) => items.filter((i) => i.href === href));
+}
+
 /** Longest-prefix match so /hr/payroll isn't active while on /hr/payroll/setup. */
 export function isNavActive(pathname: string, href: string, all: string[]): boolean {
   if (pathname === href) return true;

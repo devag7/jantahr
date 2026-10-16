@@ -31,7 +31,7 @@ export default function DirectoryPage() {
                   <div className="min-w-0"><p className="truncate font-semibold">{p.fullName}</p><p className="truncate text-caption text-muted-foreground">{p.designation ?? '-'}</p><p className="truncate text-fine text-muted-foreground">{p.department ?? '-'} · {p.employeeCode}</p></div>
                 </div>
                 <ul className="mt-3 space-y-1 text-fine text-muted-foreground">
-                  <li className="flex items-center gap-2"><Mail className="h-3.5 w-3.5" /><a href={`mailto:${p.email}`} className="truncate hover:text-foreground hover:underline">{p.email}</a></li>
+                  <li className="flex items-center gap-2"><Mail className="h-3.5 w-3.5" /><a href={`mailto:${p.email}`} className="-my-3.5 truncate py-3.5 hover:text-foreground hover:underline">{p.email}</a></li>
                   {p.phone && <li className="flex items-center gap-2"><Phone className="h-3.5 w-3.5" />{p.phone}</li>}
                   {p.workLocation && <li className="flex items-center gap-2"><MapPin className="h-3.5 w-3.5" />{p.workLocation}</li>}
                   {p.manager && <li>Reports to {p.manager}</li>}

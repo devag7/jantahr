@@ -17,9 +17,9 @@ export function NotificationBell() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className="relative rounded-sm p-2 text-white/80 hover:text-white" aria-label={`Notifications${unread ? `, ${unread} unread` : ''}`}>
+        <button className="relative flex h-11 w-11 items-center justify-center rounded-sm text-white/80 hover:text-white min-[834px]:h-auto min-[834px]:w-auto min-[834px]:p-2" aria-label={`Notifications${unread ? `, ${unread} unread` : ''}`}>
           <Bell className="h-[17px] w-[17px]" />
-          {unread > 0 && <span className="absolute right-0.5 top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-micro font-semibold text-white">{unread > 9 ? '9+' : unread}</span>}
+          {unread > 0 && <span className="absolute right-1 top-1.5 min-[834px]:right-0.5 min-[834px]:top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-micro font-semibold text-white">{unread > 9 ? '9+' : unread}</span>}
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-[22rem] p-0">

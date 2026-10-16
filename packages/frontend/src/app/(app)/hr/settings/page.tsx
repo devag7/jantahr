@@ -74,7 +74,7 @@ function CompanyForm({ c }: { c: CompanyProfile }) {
       </FormGrid></CardContent></Card>
       <Card><CardHeader><CardTitle>Payroll & attendance rules</CardTitle></CardHeader><CardContent className="space-y-4">
         <div className="grid gap-2 sm:grid-cols-2">{flags.map(([k, l]) => <label key={k} className="flex items-center gap-2 text-caption"><Checkbox checked={!!f[k]} onCheckedChange={(v) => setF({ ...f, [k]: v })} />{l}</label>)}</div>
-        <div><p className="mb-2 text-caption font-semibold">Weekly offs</p><div className="flex flex-wrap gap-2">{WEEKDAYS.map((d, i) => { const on = f.weeklyOffDays.includes(i); return <button key={d} type="button" aria-pressed={on} onClick={() => setF({ ...f, weeklyOffDays: on ? f.weeklyOffDays.filter((x) => x !== i) : [...f.weeklyOffDays, i].sort() })} className={`rounded-md border px-3 py-1.5 text-caption ${on ? 'border-primary bg-accent font-semibold' : ''}`}>{d}</button>; })}</div></div>
+        <div><p className="mb-2 text-caption font-semibold">Weekly offs</p><div className="flex flex-wrap gap-x-2 gap-y-3">{WEEKDAYS.map((d, i) => { const on = f.weeklyOffDays.includes(i); return <button key={d} type="button" aria-pressed={on} onClick={() => setF({ ...f, weeklyOffDays: on ? f.weeklyOffDays.filter((x) => x !== i) : [...f.weeklyOffDays, i].sort() })} className={`hit rounded-md border px-3 py-1.5 text-caption ${on ? 'border-primary bg-accent font-semibold' : ''}`}>{d}</button>; })}</div></div>
       </CardContent></Card>
       <SaveBar><Button type="submit" disabled={update.isPending}>{update.isPending && <Spinner className="mr-2" />}Save settings</Button></SaveBar>
     </form>

@@ -28,7 +28,8 @@ export function FormGrid({ children, cols = 2 }: { children: React.ReactNode; co
  */
 export function SaveBar({ children }: { children: React.ReactNode }) {
   return (
-    // right padding keeps the buttons clear of the floating Help button (bottom-right, 44px on phones, labelled from 640px)
-    <div className="frosted sticky bottom-0 z-20 -mx-4 flex justify-end gap-2 border-t py-3 pl-4 pr-[4.25rem] sm:pr-32 lg:-mx-6 lg:pl-6">{children}</div>
+    // sits on the phone tab bar (--tabbar, set by the app shell); right padding keeps the buttons clear of the floating
+    // Help button (bottom-right, 44px on phones, labelled from 640px)
+    <div className="frosted sticky bottom-[var(--tabbar,0px)] z-20 -mx-4 flex justify-end gap-2 border-t py-3 pl-4 pr-[4.25rem] sm:pr-32 lg:-mx-6 lg:pl-6">{children}</div>
   );
 }

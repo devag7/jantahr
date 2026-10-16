@@ -81,7 +81,8 @@ const config = {
         /* the only shadow in the system: product imagery resting on a surface */
         product: "3px 5px 30px 0 rgba(0, 0, 0, 0.22)",
       },
-      height: { nav: "44px", subnav: "52px" },
+      /* bar heights as spacing tokens, so `top-nav`, `pt-tabbar` and friends exist as well as `h-nav` */
+      spacing: { nav: "44px", subnav: "52px", tabbar: "56px" },
       keyframes: {
         "accordion-down": {
           from: { height: "0" },

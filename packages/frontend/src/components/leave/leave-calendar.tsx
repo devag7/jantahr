@@ -20,7 +20,7 @@ export function LeaveCalendar() {
   return (
     <Card>
       <CardHeader className="flex-row items-center justify-between space-y-0"><CardTitle>{monthLabel(ym.m, ym.y)}</CardTitle>
-        <div className="flex gap-1"><Button variant="outline" size="icon" onClick={() => shift(-1)} aria-label="Previous month"><ChevronLeft className="h-4 w-4" /></Button><Button variant="outline" size="icon" onClick={() => shift(1)} aria-label="Next month"><ChevronRight className="h-4 w-4" /></Button></div>
+        <div className="flex gap-2"><Button variant="outline" size="icon" onClick={() => shift(-1)} aria-label="Previous month"><ChevronLeft className="h-4 w-4" /></Button><Button variant="outline" size="icon" onClick={() => shift(1)} aria-label="Next month"><ChevronRight className="h-4 w-4" /></Button></div>
       </CardHeader>
       <CardContent>
         <QueryBoundary query={q}>

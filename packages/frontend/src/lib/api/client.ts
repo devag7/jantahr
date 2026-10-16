@@ -124,6 +124,9 @@ export function planError(e: unknown): { code: 'PLAN_REQUIRED' | 'SEAT_LIMIT'; m
   return { code: d?.code ?? 'PLAN_REQUIRED', message: d?.message ?? 'This needs a different plan.' };
 }
 
+/** 403 from the API: the signed-in role may not see this (a bookmark or shared link to someone else's page). */
+export const isForbidden = (e: unknown) => axios.isAxiosError(e) && e.response?.status === 403;
+
 /** Normalises API/validation errors into one human string. */
 export function errorMessage(e: unknown): string {
   if (axios.isAxiosError(e)) {

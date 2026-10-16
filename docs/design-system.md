@@ -89,13 +89,24 @@ bars) use a Parchment 80% fill with `backdrop-filter: saturate(180%) blur(20px)`
 Rule 9. Every button presses with `scale(0.95)`. *Test: `buttonVariants` base includes `active:scale-[0.95]`.*
 Rule 10. Focus is a 2px solid Focus Blue outline, offset 2px. *Test: no custom focus styles bypass `--ring`.*
 Rule 11. Touch targets ≥ 44px for primary actions and form fields; 32px compact actions are allowed only inside tables
-and the desktop global nav (the reference's precision-desktop exception).
+and the desktop global nav (the reference's precision-desktop exception). On touch screens (`pointer: coarse`) every
+other control's tap area is at least 44 x 44 too: the `hit` utility (small and icon buttons, segmented tabs, sub-nav
+pages, card links) grows the tap area with an invisible `::after` without changing how the control looks, and a
+scrolling track gets the padding to hold it. *Test: `scripts/phone-audit.mjs` taps 21px from the centre of every small
+control on every page, for four roles, at 360 and 412 px, and reports none missed.*
 
 ## Navigation
 
 Rule 12. **Two bars, one line each.** A 44px black global nav (brand, sections at 12px, search, notifications,
 account) and a 52px frosted sub-nav (section name in tagline type on the left, section pages at 14px, one primary CTA
-on the right when the page has one). No sidebar. *Test: at 1024px neither bar wraps.*
+on the right when the page has one), pinned under the global nav. No sidebar. *Test: at 1024px neither bar wraps.*
+Below 834px (phones, the Android app, the iPhone web app) the sections leave the global nav for a **tab bar**: frosted,
+56px plus the home indicator, at the bottom in the thumb's reach (`tab-bar.tsx`). Home, then Approvals for approvers,
+then the viewer's Attendance, Leave and Payslips, four at most (a page outside the plan gives its slot to the next),
+and Menu, a sheet with every section and page. Icon and 12px label on each; the current page in Action Blue, the
+others in secondary ink; Menu is current on any page that is not a tab. The sub-nav scrolls with the page there, so
+the screen keeps the room between the two bars. Anything fixed to the bottom (Help, save bars) sits on `--tabbar`.
+*Test: phone-audit; at 834px and wider the tab bar is not displayed.*
 
 ## Marketing rhythm
 
@@ -146,8 +157,8 @@ Rule 16. One format, from `lib/format`: `07 Oct 2026` for dates, `Oct 2026` for 
 - **Tables** (`DataTable`). Header row sticky under the two bars from 1024 px; below that the table scrolls inside
   its card with the first column pinned and text columns at least 8rem wide. Numeric columns are right-aligned in
   tabular figures. *Test: no screen in `scripts/ui-screens.mjs` reports horizontal overflow at 390 px.*
-- **Save bar** (`SaveBar`). Long forms keep their save action in a frosted bar stuck to the bottom of the screen,
-  padded clear of the Help button. *Test: the employee and settings forms end in `SaveBar`.*
+- **Save bar** (`SaveBar`). Long forms keep their save action in a frosted bar stuck to the bottom of the screen
+  (on the tab bar on phones), padded clear of the Help button. *Test: the employee and settings forms end in `SaveBar`.*
 - **Forms.** Label above, hint below, error below the field (replacing the hint), `aria-invalid` and
   `aria-describedby` on the control, required fields marked with `*` and `aria-required`, a disabled and labelled
   sending state, and a success state that says what happens next (`contact-form.tsx`). *Test: site-ui "contact".*

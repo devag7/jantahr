@@ -1,8 +1,8 @@
 import * as React from 'react';
-import { AlertCircle, Inbox, Loader2 } from 'lucide-react';
+import { AlertCircle, Inbox, Loader2, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { errorMessage } from '@/lib/api/client';
+import { errorMessage, isForbidden } from '@/lib/api/client';
 
 export function EmptyState({ title, description, action, icon: Icon = Inbox }: { title: string; description?: string; action?: React.ReactNode; icon?: React.ComponentType<{ className?: string }> }) {
   return (
@@ -16,6 +16,8 @@ export function EmptyState({ title, description, action, icon: Icon = Inbox }: {
 }
 
 export function ErrorState({ error, onRetry }: { error: unknown; onRetry?: () => void }) {
+  // retrying cannot fix a permission, so say what it is and who can change it
+  if (isForbidden(error)) return <EmptyState icon={Lock} title="You don't have access to this page" description="Your role cannot see this information. Ask your HR team if you need it." />;
   return (
     <div role="alert" className="flex flex-col items-center gap-3 rounded-lg bg-card px-6 py-12 text-center">
       <AlertCircle className="h-7 w-7 text-destructive" />

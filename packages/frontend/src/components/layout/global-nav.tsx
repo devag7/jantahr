@@ -2,25 +2,25 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, Search, X } from 'lucide-react';
-import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Search, X } from 'lucide-react';
 import { BrandMark } from '@/components/auth/brand-mark';
 import { GlobalSearch } from '@/components/layout/global-search';
-import { isNavActive, locate, navFor } from '@/components/layout/nav.constants';
+import { locate, navFor } from '@/components/layout/nav.constants';
 import { NotificationBell } from '@/components/layout/notification-bell';
 import { UserMenu } from '@/components/layout/user-menu';
 import { useAuth } from '@/hooks/auth/use-auth';
 import { cn } from '@/lib/utils';
 
-/** Reference `global-nav`: black, 44px, 12px links, quiet; collapses to brand + menu below 834px. */
+/**
+ * Reference `global-nav`: black, 44px, 12px links, quiet. Below 834px the sections move to the tab bar and the menu
+ * behind it (`tab-bar.tsx`), leaving brand, search, notifications and account, each a 44px target (rule 11).
+ */
 export function GlobalNav() {
   const pathname = usePathname();
   const { user } = useAuth();
   const sections = navFor(user);
   const { section: current } = locate(pathname, user);
-  const hrefs = sections.flatMap((s) => s.items.map((i) => i.href));
   const [searching, setSearching] = React.useState(false);
-  const [menu, setMenu] = React.useState(false);
 
   React.useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -30,34 +30,13 @@ export function GlobalNav() {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, []);
-  React.useEffect(() => { setSearching(false); setMenu(false); }, [pathname]);
+  React.useEffect(() => { setSearching(false); }, [pathname]);
 
   return (
     <>
-      <nav aria-label="Sections" className="no-print sticky top-0 z-40 bg-nav text-nav-foreground">
+      <nav aria-label="Sections" className="no-print sticky top-0 z-40 bg-nav pt-[env(safe-area-inset-top)] text-nav-foreground">
         <div className="mx-auto flex h-nav max-w-[1440px] items-center gap-6 px-4 lg:px-6">
-          <Sheet open={menu} onOpenChange={setMenu}>
-            <SheetTrigger asChild>
-              <button className="-ml-3 flex h-11 w-11 items-center justify-center rounded-sm text-white/80 hover:text-white min-[834px]:hidden" aria-label="Open menu" data-tour="nav-menu"><Menu className="h-5 w-5" /></button>
-            </SheetTrigger>
-            <SheetContent side="left" className="w-80 overflow-y-auto border-0 bg-nav p-0 text-white">
-              <SheetTitle className="sr-only">Menu</SheetTitle>
-              <div className="px-6 pb-10 pt-6">
-                <BrandMark light />
-                {sections.map((s) => (
-                  <div key={s.key} className="mt-7">
-                    <p className="text-fine text-white/55">{s.label}</p>
-                    <ul className="mt-1">{s.items.map((i) => {
-                      const here = isNavActive(pathname, i.href, hrefs);
-                      return <li key={i.href}><Link href={i.href} aria-current={here ? 'page' : undefined} className={cn('flex min-h-[44px] items-center text-body', here ? 'font-semibold text-white' : 'text-white/85 hover:text-white')}>{i.label}</Link></li>;
-                    })}</ul>
-                  </div>
-                ))}
-              </div>
-            </SheetContent>
-          </Sheet>
-
-          <Link href="/dashboard" className="shrink-0"><span aria-hidden className="contents"><BrandMark light compact className="min-[834px]:hidden" /><BrandMark light className="hidden min-[834px]:inline-flex" /></span><span className="sr-only">JantaHR home</span></Link>
+          <Link href="/dashboard" className="-ml-2 flex h-11 min-w-11 shrink-0 items-center px-2 min-[834px]:ml-0 min-[834px]:h-auto min-[834px]:px-0"><span aria-hidden className="contents"><BrandMark light compact className="min-[834px]:hidden" /><BrandMark light className="hidden min-[834px]:inline-flex" /></span><span className="sr-only">JantaHR home</span></Link>
 
           <ul className="hidden flex-1 items-center justify-center gap-7 min-[834px]:flex">
             {sections.map((s) => {
@@ -73,14 +52,14 @@ export function GlobalNav() {
 
           <div className="ml-auto flex items-center gap-1 min-[834px]:ml-0">
             <button onClick={() => setSearching((s) => !s)} aria-label="Search employees (⌘K)" aria-expanded={searching} data-tour="search"
-              className="rounded-sm p-2 text-white/80 hover:text-white">{searching ? <X className="h-[17px] w-[17px]" /> : <Search className="h-[17px] w-[17px]" />}</button>
+              className="flex h-11 w-11 items-center justify-center rounded-sm text-white/80 hover:text-white min-[834px]:h-auto min-[834px]:w-auto min-[834px]:p-2">{searching ? <X className="h-[17px] w-[17px]" /> : <Search className="h-[17px] w-[17px]" />}</button>
             <span data-tour="notifications" className="inline-flex"><NotificationBell /></span>
             <span data-tour="account" className="inline-flex"><UserMenu /></span>
           </div>
         </div>
       </nav>
       {searching && (
-        <div className="fixed inset-x-0 top-nav z-30 border-b border-white/10 bg-nav/95 pb-8 pt-4 backdrop-blur-xl">
+        <div className="fixed inset-x-0 top-[calc(theme(spacing.nav)+env(safe-area-inset-top))] z-30 border-b border-white/10 bg-nav/95 pb-8 pt-4 backdrop-blur-xl">
           <div className="mx-auto max-w-2xl px-4"><GlobalSearch autoFocus onDone={() => setSearching(false)} /></div>
         </div>
       )}

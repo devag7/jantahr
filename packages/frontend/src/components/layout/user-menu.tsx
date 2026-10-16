@@ -31,7 +31,7 @@ export function UserMenu() {
     <>
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className="ml-1 rounded-full" aria-label="Account menu">
+        <button className="flex h-11 w-11 items-center justify-center rounded-full min-[834px]:ml-1 min-[834px]:h-auto min-[834px]:w-auto" aria-label="Account menu">
           <UserAvatar name={name} className="h-7 w-7" />
         </button>
       </DropdownMenuTrigger>

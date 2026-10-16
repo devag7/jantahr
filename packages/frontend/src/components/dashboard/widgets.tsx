@@ -65,7 +65,7 @@ export function CelebrationsCard({ data }: { data: Celebrations }) {
 
 export function HolidaysCard({ items }: { items: { date: string; name: string }[] }) {
   return (
-    <SectionCard title="Upcoming holidays" flush action={<Link href="/me/leave" className="text-fine font-semibold text-primary hover:underline">Holiday calendar</Link>}>
+    <SectionCard title="Upcoming holidays" flush action={<Link href="/me/leave" className="hit text-fine font-semibold text-primary hover:underline">Holiday calendar</Link>}>
       {items.length === 0 ? <p className="px-6 py-3 text-caption text-muted-foreground">No upcoming holidays.</p> : (
         <ul className="divide-y">{items.map((h) => (
           <li key={h.date + h.name} className="flex items-center gap-3 px-6 py-2 text-caption"><DateTile iso={h.date} /><span className="flex-1"><span className="block font-semibold">{h.name}</span><span className="block text-fine text-muted-foreground">{new Date(h.date).toLocaleDateString('en-IN', { weekday: 'long' })}</span></span></li>

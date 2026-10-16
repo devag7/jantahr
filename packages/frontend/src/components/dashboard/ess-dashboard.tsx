@@ -30,7 +30,7 @@ export function EssDashboard() {
             <div className="grid gap-4 xl:grid-cols-3">
               <div className="min-w-0 space-y-4 xl:col-span-2">
                 <PunchCard />
-                <SectionCard title="This month" flush action={<Link href="/me/attendance" className="text-fine font-semibold text-primary hover:underline">Attendance log</Link>}>
+                <SectionCard title="This month" flush action={<Link href="/me/attendance" className="hit text-fine font-semibold text-primary hover:underline">Attendance log</Link>}>
                   <dl className="grid grid-cols-2 gap-px bg-border sm:grid-cols-5">
                     {[
                       ['Present', s.present + s.wfh, ''], ['Half days', s.halfDay, ''], ['Absent', s.absent, s.absent ? 'text-destructive' : ''],
@@ -38,7 +38,7 @@ export function EssDashboard() {
                     ].map(([l, v, c]) => <div key={l as string} className="bg-card px-6 py-3"><dt className="text-fine text-muted-foreground">{l}</dt><dd className={`mt-0.5 text-tagline font-semibold tabular-nums ${c}`}>{v}</dd></div>)}
                   </dl>
                 </SectionCard>
-                <SectionCard title="Leave balance" flush action={<Link href="/me/leave" className="text-fine font-semibold text-primary hover:underline">Apply leave</Link>}>
+                <SectionCard title="Leave balance" flush action={<Link href="/me/leave" className="hit text-fine font-semibold text-primary hover:underline">Apply leave</Link>}>
                   <LeaveBalanceTable balances={d.leaveBalances} />
                   {d.openLeaveRequests.length > 0 && (
                     <div className="border-t px-6 py-2.5 text-caption">
@@ -47,9 +47,9 @@ export function EssDashboard() {
                     </div>
                   )}
                 </SectionCard>
-                <SectionCard title="Payslips" flush action={<Link href="/me/payslips" className="text-fine font-semibold text-primary hover:underline">View all</Link>}>
+                <SectionCard title="Payslips" flush action={<Link href="/me/payslips" className="hit text-fine font-semibold text-primary hover:underline">View all</Link>}>
                   {d.latestPayslips.length === 0 ? <p className="px-6 py-3 text-caption text-muted-foreground">No payslip published yet.</p> : (
-                    <ul className="divide-y">{d.latestPayslips.map((p) => <li key={p.id}><Link href="/me/payslips" className="flex items-center justify-between px-6 py-2.5 text-caption hover:bg-accent/50"><span>{formatPayMonth(p.month, p.year)}</span><span className="flex items-center gap-3"><span className="font-semibold tabular-nums">{formatINR(p.net)}</span><Badge variant={p.status === 'PAID' ? 'success' : 'muted'}>{p.status === 'PAID' ? 'Paid' : 'Published'}</Badge></span></Link></li>)}</ul>
+                    <ul className="divide-y">{d.latestPayslips.map((p) => <li key={p.id}><Link href="/me/payslips" className="flex min-h-11 items-center justify-between px-6 py-2.5 text-caption hover:bg-accent/50"><span>{formatPayMonth(p.month, p.year)}</span><span className="flex items-center gap-3"><span className="font-semibold tabular-nums">{formatINR(p.net)}</span><Badge variant={p.status === 'PAID' ? 'success' : 'muted'}>{p.status === 'PAID' ? 'Paid' : 'Published'}</Badge></span></Link></li>)}</ul>
                   )}
                 </SectionCard>
               </div>

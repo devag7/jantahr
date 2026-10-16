@@ -7,11 +7,13 @@ import { TrialBanner } from '@/components/billing/trial-banner';
 import { ProductTour } from '@/components/onboarding/product-tour';
 import { GlobalNav } from '@/components/layout/global-nav';
 import { SubNav } from '@/components/layout/sub-nav';
+import { TabBar } from '@/components/layout/tab-bar';
 import { Spinner } from '@/components/common/states';
 import { useAuth } from '@/hooks/auth/use-auth';
 import { ROUTES } from '@/lib/constants';
 
-/** Authenticated shell: black global nav, frosted sub-nav, Parchment canvas. Redirects anonymous users to sign-in. */
+/** Authenticated shell: black global nav, frosted sub-nav, Parchment canvas, and on phones a tab bar at the bottom.
+ * Redirects anonymous users to sign-in. */
 export function AppShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -27,11 +29,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     return <div className="flex min-h-[100dvh] items-center justify-center"><Spinner className="h-6 w-6 text-muted-foreground" /></div>;
   }
   return (
-    <div className="min-h-[100dvh]">
+    // --tabbar: room the phone tab bar takes at the bottom (0 from 834px), for the Help button and sticky save bars
+    <div className="min-h-[100dvh] [--tabbar:calc(theme(spacing.tabbar)+env(safe-area-inset-bottom))] min-[834px]:[--tabbar:0px]">
       <GlobalNav />
       <SubNav />
       <TrialBanner />
-      <main className="mx-auto max-w-[1440px] px-4 pb-24 pt-8 lg:px-6"><PlanGate>{children}</PlanGate></main>
+      <main className="mx-auto max-w-[1440px] px-4 pb-[calc(var(--tabbar)+6rem)] pt-8 lg:px-6"><PlanGate>{children}</PlanGate></main>
+      <TabBar />
       <AssistantWidget />
       <ProductTour />
     </div>

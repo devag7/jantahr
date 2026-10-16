@@ -12,8 +12,8 @@ function Node({ n, depth }: { n: OrgNode; depth: number }) {
   const has = n.children.length > 0;
   return (
     <li>
-      <div className="flex items-center gap-2 rounded-md py-1.5 pr-3 hover:bg-muted/60">
-        {has ? <button onClick={() => setOpen(!open)} aria-expanded={open} aria-label={`${open ? 'Collapse' : 'Expand'} ${n.name}`} className="rounded-sm p-0.5 hover:bg-muted">{open ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}</button> : <span className="w-5" />}
+      <div className="flex items-center gap-1 rounded-md py-1.5 pr-3 hover:bg-muted/60">
+        {has ? <button onClick={() => setOpen(!open)} aria-expanded={open} aria-label={`${open ? 'Collapse' : 'Expand'} ${n.name}`} className="-my-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-sm hover:bg-muted">{open ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}</button> : <span className="w-11 shrink-0" />}
         <UserAvatar name={n.name} className="h-9 w-9" />
         <div className="min-w-0"><p className="truncate text-caption font-semibold">{n.name} <span className="font-normal text-muted-foreground">· {n.employeeCode}</span></p><p className="truncate text-fine text-muted-foreground">{[n.designation, n.department].filter(Boolean).join(' · ')}</p></div>
         {has && <span className="ml-auto rounded-full bg-muted px-2 py-0.5 text-fine text-muted-foreground">{n.children.length}</span>}
