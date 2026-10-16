@@ -7,7 +7,6 @@ export interface InstallPromptEvent extends Event {
 }
 
 let deferred: InstallPromptEvent | null = null;
-const listeners = new Set<() => void>();
 
 /** Called once from the root layout: registers the service worker and keeps the install prompt for later. */
 export function startPwa() {
@@ -19,16 +18,11 @@ export function startPwa() {
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault(); // offer it from the account menu instead of Chrome's own banner
     deferred = e as InstallPromptEvent;
-    listeners.forEach((l) => l());
   });
-  window.addEventListener('appinstalled', () => { deferred = null; listeners.forEach((l) => l()); });
+  window.addEventListener('appinstalled', () => { deferred = null; });
 }
 
 export const installPrompt = () => deferred;
-export function onInstallPromptChange(fn: () => void) {
-  listeners.add(fn);
-  return () => { listeners.delete(fn); };
-}
 
 /** Already running as an installed app (home screen, Android app or desktop app window). */
 export const isInstalled = () =>

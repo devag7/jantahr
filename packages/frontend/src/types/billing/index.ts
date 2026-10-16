@@ -32,4 +32,3 @@ export interface BillingOverview {
   usage: { activeEmployees: number; seatLimit: number | null }; invoices: Invoice[];
 }
 export interface CheckoutResult { provider: 'razorpay' | 'mock'; subscriptionId: string; razorpayKeyId: string | null; amount: GstSplit; prefill: { name: string; email: string } }
-export interface RuntimeConfig { edition: 'self_hosted' | 'cloud'; supabase: { url: string; publishableKey: string; realtime: boolean } | null; googleSignIn: boolean; directUploads?: boolean }

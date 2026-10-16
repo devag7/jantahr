@@ -1,5 +1,5 @@
 'use client';
-import { Bar, BarChart, CartesianGrid, Cell, Legend, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { Bar, BarChart, CartesianGrid, Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
 export const CHART_COLORS = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))', 'hsl(var(--chart-6))'];
 const axis = { stroke: 'hsl(var(--muted-foreground))', fontSize: 12 } as const;
@@ -54,20 +54,6 @@ export function GroupedBarChart({ data, keys, xKey, label, height = 260, formatV
         <Legend iconType="circle" wrapperStyle={{ fontSize: 12 }} />
         {keys.map((k, i) => <Bar key={k.key} dataKey={k.key} name={k.label} fill={CHART_COLORS[i % CHART_COLORS.length]} radius={[4, 4, 0, 0]} />)}
       </BarChart>
-    </ResponsiveContainer></Described>
-  );
-}
-
-export function TrendChart({ data, xKey, yKey, label, height = 220 }: { data: Record<string, string | number>[]; xKey: string; yKey: string; label: string; height?: number }) {
-  return (
-    <Described label={label} summary={data.map((row) => `${row[xKey]} ${row[yKey]}`).join(', ')}><ResponsiveContainer width="100%" height={height}>
-      <LineChart data={data}>
-        <CartesianGrid vertical={false} stroke="hsl(var(--border))" />
-        <XAxis dataKey={xKey} {...axis} />
-        <YAxis {...axis} width={40} />
-        <Tooltip contentStyle={tooltipStyle} />
-        <Line type="monotone" dataKey={yKey} stroke={CHART_COLORS[0]} strokeWidth={2} dot={{ r: 3 }} />
-      </LineChart>
     </ResponsiveContainer></Described>
   );
 }
