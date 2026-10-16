@@ -49,10 +49,6 @@ export class HrFinalizeDto {
 export class ApplyRevisionDto {
   @IsDateString() effectiveFrom: string;
 }
-export class GoalListDto {
-  @IsOptional() @IsString() employeeId?: string;
-  @IsOptional() @IsIn(['PENDING', 'APPROVED', 'REJECTED']) status?: string;
-}
 export class GoalDecisionDto {
   @IsOptional() @IsString() @MaxLength(500) comment?: string;
 }
