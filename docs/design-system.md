@@ -157,6 +157,9 @@ Rule 16. One format, from `lib/format`: `07 Oct 2026` for dates, `Oct 2026` for 
 - **Tables** (`DataTable`). Header row sticky under the two bars from 1024 px; below that the table scrolls inside
   its card with the first column pinned and text columns at least 8rem wide. Numeric columns are right-aligned in
   tabular figures. *Test: no screen in `scripts/ui-screens.mjs` reports horizontal overflow at 390 px.*
+  Lists people act on from a phone (`stackOnMobile`, every tab of Approvals) turn each row into a card below
+  768 px instead: the first column as its title, the other columns as label and value, and the action column as a
+  full-width row of 44px buttons, so Approve and Reject never sit off screen. *Test: phone-audit.*
 - **Save bar** (`SaveBar`). Long forms keep their save action in a frosted bar stuck to the bottom of the screen
   (on the tab bar on phones), padded clear of the Help button. *Test: the employee and settings forms end in `SaveBar`.*
 - **Forms.** Label above, hint below, error below the field (replacing the hint), `aria-invalid` and

@@ -1,6 +1,6 @@
 import { PartialType } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsBoolean, IsDateString, IsIn, IsNumber, IsOptional, IsString, Max, Min, MinLength } from 'class-validator';
+import { IsBoolean, IsDateString, IsIn, IsNumber, IsOptional, IsString, Max, MaxLength, Min, MinLength } from 'class-validator';
 
 export class CycleDto {
   @IsString() @MinLength(2) name: string;
@@ -52,4 +52,7 @@ export class ApplyRevisionDto {
 export class GoalListDto {
   @IsOptional() @IsString() employeeId?: string;
   @IsOptional() @IsIn(['PENDING', 'APPROVED', 'REJECTED']) status?: string;
+}
+export class GoalDecisionDto {
+  @IsOptional() @IsString() @MaxLength(500) comment?: string;
 }

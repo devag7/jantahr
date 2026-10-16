@@ -4,7 +4,7 @@ import { Role } from '@prisma/client';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { ADMIN_ROLES, APPROVER_ROLES, AuthUser, PAYROLL_ROLES, READ_ALL_ROLES } from '../../common/types';
-import { ApplyRevisionDto, CycleDto, GoalDto, HrFinalizeDto, LaunchDto, ManagerReviewDto, SelfReviewDto, UpdateCycleDto, UpdateGoalDto } from './performance.dto';
+import { ApplyRevisionDto, CycleDto, GoalDecisionDto, GoalDto, HrFinalizeDto, LaunchDto, ManagerReviewDto, SelfReviewDto, UpdateCycleDto, UpdateGoalDto } from './performance.dto';
 import { PerformanceService } from './performance.service';
 
 @RequiresFeature('performance')
@@ -21,8 +21,9 @@ export class PerformanceController {
   @Get('goals') goals(@CurrentUser() u: AuthUser, @Query('employeeId') employeeId?: string) { return this.service.goals(u, employeeId); }
   @Post('goals') createGoal(@CurrentUser() u: AuthUser, @Body() dto: GoalDto) { return this.service.createGoal(u, dto); }
   @Patch('goals/:id') updateGoal(@CurrentUser() u: AuthUser, @Param('id') id: string, @Body() dto: UpdateGoalDto) { return this.service.updateGoal(u, id, dto); }
-  @Roles(...APPROVER_ROLES) @Post('goals/:id/approve') approveGoal(@CurrentUser() u: AuthUser, @Param('id') id: string) { return this.service.decideGoal(u, id, true); }
-  @Roles(...APPROVER_ROLES) @Post('goals/:id/reject') rejectGoal(@CurrentUser() u: AuthUser, @Param('id') id: string) { return this.service.decideGoal(u, id, false); }
+  @Roles(...APPROVER_ROLES) @Get('goals/pending') pendingGoals(@CurrentUser() u: AuthUser) { return this.service.pendingGoals(u); }
+  @Roles(...APPROVER_ROLES) @Post('goals/:id/approve') approveGoal(@CurrentUser() u: AuthUser, @Param('id') id: string, @Body() dto: GoalDecisionDto) { return this.service.decideGoal(u, id, true, dto.comment); }
+  @Roles(...APPROVER_ROLES) @Post('goals/:id/reject') rejectGoal(@CurrentUser() u: AuthUser, @Param('id') id: string, @Body() dto: GoalDecisionDto) { return this.service.decideGoal(u, id, false, dto.comment); }
 
   @Get('appraisals/mine') mine(@CurrentUser() u: AuthUser) { return this.service.myAppraisals(u); }
   @Roles(...APPROVER_ROLES) @Get('appraisals/pending') pending(@CurrentUser() u: AuthUser) { return this.service.pendingReviews(u); }

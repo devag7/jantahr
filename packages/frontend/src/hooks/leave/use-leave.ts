@@ -31,4 +31,4 @@ export const useRunAccrual = () => useApiMutation(() => leaveService.runAccrual(
 export const useRequestEncashment = () => useApiMutation(leaveService.requestEncashment, { invalidate: [['leave']], success: 'Encashment requested' });
 export const useDecideEncashment = () => useApiMutation((v: { id: string; action: 'approve' | 'reject' }) => leaveService.decideEncashment(v.id, v.action), { invalidate: [['leave']], success: 'Updated' });
 export const useRequestCompOff = () => useApiMutation(leaveService.requestCompOff, { invalidate: [['leave']], success: 'Comp-off requested' });
-export const useDecideCompOff = () => useApiMutation((v: { id: string; action: 'approve' | 'reject' }) => leaveService.decideCompOff(v.id, v.action), { invalidate: [['leave']], success: 'Updated' });
+export const useDecideCompOff = () => useApiMutation((v: { id: string; action: 'approve' | 'reject'; comment?: string }) => leaveService.decideCompOff(v.id, v.action, v.comment), { invalidate: [['leave']], success: 'Updated' });

@@ -50,7 +50,7 @@ export const ENDPOINTS = {
   },
   performance: {
     cycles: '/performance/cycles', cycle: (id: string) => `/performance/cycles/${id}`, launch: (id: string) => `/performance/cycles/${id}/launch`, summary: (id: string) => `/performance/cycles/${id}/summary`,
-    goals: '/performance/goals', goal: (id: string) => `/performance/goals/${id}`, goalDecision: (id: string, a: 'approve' | 'reject') => `/performance/goals/${id}/${a}`,
+    goals: '/performance/goals', goalsPending: '/performance/goals/pending', goal: (id: string) => `/performance/goals/${id}`, goalDecision: (id: string, a: 'approve' | 'reject') => `/performance/goals/${id}/${a}`,
     mine: '/performance/appraisals/mine', pending: '/performance/appraisals/pending', byCycle: (id: string) => `/performance/appraisals/cycle/${id}`, appraisal: (id: string) => `/performance/appraisals/${id}`,
     appraisalAction: (id: string, a: 'self-review' | 'manager-review' | 'finalize' | 'apply-revision') => `/performance/appraisals/${id}/${a}`,
   },

@@ -48,7 +48,7 @@ export class PerformanceService {
     const fresh = emps.filter((e) => !existing.has(e.id));
     if (fresh.length) {
       await this.prisma.appraisal.createMany({ data: fresh.map((e) => ({ employeeId: e.id, companyId: user.companyId, appraisalCycleId: cycleId, reviewerId: e.reportingManagerId, status: 'SELF_REVIEW' as const })) });
-      await this.prisma.notification.createMany({ data: fresh.map((e) => ({ userId: e.userId, title: 'Appraisal started', message: `${cycle.name}: please complete your self-review`, type: 'PERFORMANCE', link: '/admin/performance' })) });
+      await this.prisma.notification.createMany({ data: fresh.map((e) => ({ userId: e.userId, title: 'Appraisal started', message: `${cycle.name}: please complete your self-review`, type: 'PERFORMANCE', link: '/me/performance' })) });
     }
     return { launched: fresh.length, alreadyExisting: emps.length - fresh.length };
   }
@@ -67,9 +67,11 @@ export class PerformanceService {
     const open = await this.prisma.goal.aggregate({ where: { employeeId: target, endDate: { gte: toDateOnly(dto.startDate) }, startDate: { lte: toDateOnly(dto.endDate) }, status: { not: 'REJECTED' } }, _sum: { weightage: true } });
     if (num(open._sum.weightage) + dto.weightage > 100) throw new BadRequestException(`Total goal weightage for the period would be ${num(open._sum.weightage) + dto.weightage}% (max 100%)`);
     const isManager = target !== user.employeeId;
-    return this.prisma.goal.create({
+    const goal = await this.prisma.goal.create({
       data: { employeeId: target, companyId: user.companyId, title: dto.title, description: dto.description, weightage: dto.weightage, targetValue: dto.targetValue, startDate: toDateOnly(dto.startDate), endDate: toDateOnly(dto.endDate), status: isManager ? 'APPROVED' : 'PENDING' },
     });
+    if (!isManager) await this.notifications.notifyApproverOf(target, user.companyId, { title: 'Goal to approve', message: dto.title, type: 'APPROVAL', link: '/approvals' });
+    return goal;
   }
 
   async updateGoal(user: AuthUser, id: string, dto: UpdateGoalDto) {
@@ -86,11 +88,23 @@ export class PerformanceService {
     return this.prisma.goal.update({ where: { id }, data });
   }
 
-  async decideGoal(user: AuthUser, id: string, approve: boolean) {
+  /** Goals people set for themselves wait here for their manager (or HR, for anyone) before they count. */
+  async pendingGoals(user: AuthUser) {
+    return this.prisma.goal.findMany({
+      where: { companyId: user.companyId, status: 'PENDING', ...(await this.access.approvalFilter(user)) },
+      include: { employee: { select: { id: true, firstName: true, lastName: true, employeeCode: true } } },
+      orderBy: { createdAt: 'asc' }, take: 200,
+    });
+  }
+
+  async decideGoal(user: AuthUser, id: string, approve: boolean, comment?: string) {
     const g = await this.prisma.goal.findFirst({ where: { id, companyId: user.companyId } });
     if (!g) throw new NotFoundException('Goal not found');
     await this.access.assertCanApproveFor(user, g.employeeId);
-    return this.prisma.goal.update({ where: { id }, data: { status: approve ? 'APPROVED' : 'REJECTED' } });
+    if (g.status !== 'PENDING') throw new BadRequestException('This goal has already been decided');
+    const updated = await this.prisma.goal.update({ where: { id }, data: { status: approve ? 'APPROVED' : 'REJECTED' } });
+    await this.notifications.notifyEmployee(g.employeeId, { title: `Goal ${approve ? 'approved' : 'not approved'}`, message: comment ? `${g.title}: ${comment}` : g.title, type: 'PERFORMANCE', link: '/me/performance' });
+    return updated;
   }
 
   // ---- appraisals ----
@@ -131,7 +145,7 @@ export class PerformanceService {
     if (a.employeeId !== user.employeeId) throw new ForbiddenException('You can only review yourself');
     if (a.status !== 'SELF_REVIEW') throw new BadRequestException('Self review is not open');
     const updated = await this.prisma.appraisal.update({ where: { id }, data: { selfRating: dto.selfRating, selfComment: dto.selfComment, status: 'MANAGER_REVIEW' } });
-    await this.notifications.notifyEmployee(a.reviewerId, { title: 'Appraisal ready for review', message: `${a.employee.firstName} ${a.employee.lastName} submitted a self-review`, type: 'APPROVAL', link: '/admin/performance' });
+    await this.notifications.notifyEmployee(a.reviewerId, { title: 'Appraisal ready for review', message: `${a.employee.firstName} ${a.employee.lastName} submitted a self-review`, type: 'APPROVAL', link: '/approvals' });
     return updated;
   }
 
@@ -140,7 +154,7 @@ export class PerformanceService {
     await this.access.assertCanApproveFor(user, a.employeeId);
     if (a.status !== 'MANAGER_REVIEW') throw new BadRequestException('Manager review is not open');
     const updated = await this.prisma.appraisal.update({ where: { id }, data: { managerRating: dto.managerRating, managerComment: dto.managerComment, promotionRecommended: !!dto.promotionRecommended, status: 'HR_REVIEW' } });
-    await this.notifications.notifyRoles(user.companyId, ['HR_ADMIN'], { title: 'Appraisal awaiting HR review', message: `${a.employee.firstName} ${a.employee.lastName}`, type: 'APPROVAL', link: '/admin/performance' });
+    await this.notifications.notifyRoles(user.companyId, ['HR_ADMIN'], { title: 'Appraisal awaiting HR review', message: `${a.employee.firstName} ${a.employee.lastName}`, type: 'APPROVAL', link: '/hr/performance' });
     return updated;
   }
 
@@ -150,7 +164,7 @@ export class PerformanceService {
     const updated = await this.prisma.appraisal.update({
       where: { id }, data: { finalRating: dto.finalRating, hrComment: dto.hrComment, promotionRecommended: dto.promotionRecommended ?? a.promotionRecommended, salaryRevisionPercent: dto.salaryRevisionPercent, status: 'COMPLETED', completedAt: new Date() },
     });
-    await this.notifications.notifyEmployee(a.employeeId, { title: 'Appraisal completed', message: `Your ${a.appraisalCycle.name} appraisal is complete`, type: 'PERFORMANCE', link: '/ess/dashboard' });
+    await this.notifications.notifyEmployee(a.employeeId, { title: 'Appraisal completed', message: `Your ${a.appraisalCycle.name} appraisal is complete`, type: 'PERFORMANCE', link: '/me/performance' });
     return updated;
   }
 
@@ -164,7 +178,7 @@ export class PerformanceService {
     if (!current) throw new BadRequestException('Employee has no salary structure to revise');
     const newBase = Math.round(num(current.base) * (1 + pct / 100));
     const assignment = await this.setup.assign(user, { employeeId: a.employeeId, salaryStructureId: current.salaryStructureId, fromDate: dto.effectiveFrom, base: newBase, variable: num(current.variable), taxRegime: current.taxRegime });
-    await this.notifications.notifyEmployee(a.employeeId, { title: 'Salary revised', message: `Your compensation has been revised effective ${dto.effectiveFrom}`, type: 'PAYROLL', link: '/ess/dashboard' });
+    await this.notifications.notifyEmployee(a.employeeId, { title: 'Salary revised', message: `Your compensation has been revised effective ${dto.effectiveFrom}`, type: 'PAYROLL', link: '/me/payslips' });
     return { previousCtc: num(current.base), newCtc: newBase, assignment };
   }
 

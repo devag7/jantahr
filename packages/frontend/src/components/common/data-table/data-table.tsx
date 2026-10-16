@@ -29,9 +29,12 @@ interface Props<T> {
   page?: { page: number; totalPages: number; total: number; onChange: (p: number) => void };
   dense?: boolean;
   bare?: boolean;
+  /** Below 768px each row becomes a card (first column as its title, the others as label and value, a column with
+   * an empty header as a full-width action row), so lists people act on from a phone keep their buttons on screen. */
+  stackOnMobile?: boolean;
 }
 
-export function DataTable<T>({ columns, rows, rowKey, loading, error, onRetry, emptyTitle = 'Nothing here yet', emptyDescription, emptyAction, onRowClick, page, dense, bare }: Props<T>) {
+export function DataTable<T>({ columns, rows, rowKey, loading, error, onRetry, emptyTitle = 'Nothing here yet', emptyDescription, emptyAction, onRowClick, page, dense, bare, stackOnMobile }: Props<T>) {
   if (error) return <ErrorState error={error} onRetry={onRetry} />;
   if (loading && !rows) return <LoadingBlock rows={5} />;
   if (!rows?.length) return <EmptyState title={emptyTitle} description={emptyDescription} action={emptyAction} />;
@@ -61,10 +64,29 @@ export function DataTable<T>({ columns, rows, rowKey, loading, error, onRetry, e
       </TableBody>
     </Table>
   );
+  const [title, ...rest] = columns;
+  const stacked = stackOnMobile && (
+    <ul className="divide-y divide-divider md:hidden">
+      {rows.map((row) => (
+        <li key={rowKey(row)} className={cn('space-y-3 px-4 py-4', onRowClick && 'cursor-pointer')} onClick={onRowClick ? () => onRowClick(row) : undefined}>
+          <div className="text-caption">{title.cell(row)}</div>
+          <dl className="grid grid-cols-[minmax(6rem,auto)_1fr] gap-x-4 gap-y-1.5 text-caption">
+            {rest.filter((c) => c.header !== '').map((c) => (
+              <React.Fragment key={c.key}><dt className="text-muted-foreground">{c.header}</dt><dd className={cn('min-w-0', c.align === 'right' && 'tabular')}>{c.cell(row)}</dd></React.Fragment>
+            ))}
+          </dl>
+          {/* actions get the full width and 44px buttons, in reach of the thumb */}
+          {rest.filter((c) => c.header === '').map((c) => <div key={c.key} className="[&>div]:w-full [&_button]:h-11 [&_button]:flex-1">{c.cell(row)}</div>)}
+        </li>
+      ))}
+    </ul>
+  );
   return (
     <div className={cn(loading && 'opacity-60 transition-opacity')}>
       {/* clip, not hidden: a hidden overflow would make the card a scroll container and unstick the header */}
-      {bare ? table : <Card className="overflow-clip">{table}</Card>}
+      {stacked ? (
+        bare ? <>{stacked}<div className="max-md:hidden">{table}</div></> : <Card className="overflow-clip">{stacked}<div className="max-md:hidden">{table}</div></Card>
+      ) : bare ? table : <Card className="overflow-clip">{table}</Card>}
       {page && page.totalPages > 1 && <Pagination {...page} />}
     </div>
   );

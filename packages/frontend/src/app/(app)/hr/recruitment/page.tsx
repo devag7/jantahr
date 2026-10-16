@@ -50,7 +50,7 @@ export default function RecruitmentPage() {
               return (
                 <div key={stage} className="min-w-60 rounded-md bg-muted/40 p-2"><div className="mb-2 flex items-center justify-between px-1"><StatusBadge status={stage} /><span className="text-fine text-muted-foreground">{items.length}</span></div>
                   <div className="space-y-2">{items.map((a) => (
-                    <Card key={a.id} className="cursor-pointer p-3 text-caption"><button className="w-full text-left" onClick={() => setOpenApplicant(a.id)}><p className="font-semibold">{a.name}</p><p className="truncate text-fine text-muted-foreground">{a.jobOpening.title}</p>{a.expectedCtc && <p className="mt-1 text-fine">Expects {formatINR(a.expectedCtc)}</p>}{a.interviews.some((i) => i.status === 'SCHEDULED') && <Badge variant="info" className="mt-1">Interview scheduled</Badge>}</button></Card>
+                    <Card key={a.id} className="cursor-pointer p-3 text-caption"><button className="min-h-11 w-full text-left" onClick={() => setOpenApplicant(a.id)}><p className="font-semibold">{a.name}</p><p className="truncate text-fine text-muted-foreground">{a.jobOpening.title}</p>{a.expectedCtc && <p className="mt-1 text-fine">Expects {formatINR(a.expectedCtc)}</p>}{a.interviews.some((i) => i.status === 'SCHEDULED') && <Badge variant="info" className="mt-1">Interview scheduled</Badge>}</button></Card>
                   ))}{items.length === 0 && <p className="px-1 py-4 text-center text-fine text-muted-foreground">Empty</p>}</div></div>
               );
             })}

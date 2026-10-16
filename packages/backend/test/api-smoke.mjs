@@ -333,6 +333,16 @@ const apps = await call('GET', `/performance/appraisals/cycle/${prevCycle.id}`, 
 const done = apps.data.find((a) => a.status === 'COMPLETED' && Number(a.salaryRevisionPercent) > 0 && a.employee.employeeCode === 'EMP005');
 ok('completed appraisal w/ revision', !!done, apps.data?.map((a) => a.status));
 ok('goals visible', (await call('GET', '/performance/goals', emp)).data?.length >= 1);
+// a goal someone sets for themselves waits for their manager, who can now see and decide it
+const ownGoal = await call('POST', '/performance/goals', emp, { title: 'Ship the leave calendar export', weightage: 10, startDate: '2027-01-01', endDate: '2027-03-31' });
+ok('own goal waits for approval', ownGoal.status === 201 && ownGoal.data.status === 'PENDING', ownGoal.data);
+const pendingGoals = await call('GET', '/performance/goals/pending', mgr);
+ok('manager sees the goal to approve', pendingGoals.data?.some?.((g) => g.id === ownGoal.data.id && g.employee?.employeeCode), pendingGoals.data);
+const empPending = await call('GET', '/performance/goals/pending', emp);
+ok('someone without reportees has no goals to approve', empPending.status === 200 && empPending.data.length === 0, empPending.data);
+ok('manager approves the goal', (await call('POST', `/performance/goals/${ownGoal.data.id}/approve`, mgr)).data?.status === 'APPROVED');
+ok('a decided goal cannot be decided again', (await call('POST', `/performance/goals/${ownGoal.data.id}/reject`, mgr)).status === 400);
+ok('employee told the goal was approved', JSON.stringify((await call('GET', '/notifications', emp)).data).includes('Goal approved'));
 const exps = await call('GET', '/expenses/claims?scope=team', mgr);
 ok('team expense claims', exps.data?.length >= 1);
 ok('helpdesk tickets', (await call('GET', '/helpdesk/tickets?scope=all', hr)).data?.length === 1);
@@ -513,6 +523,11 @@ ok('setup status: new company still has steps to do', setupB.complete === false 
 ok('mass-assignment stripped (companyId ignored)', (await call('POST', '/departments', hr, { name: 'Sneaky', companyId: 'other' })).data?.companyId === admin.user.company.id);
 ok('validation error 400', (await call('POST', '/leave/applications', emp, { leaveTypeId: 1 })).status === 400);
 ok('swagger docs', (await fetch(BASE + '/docs')).status === 200);
+
+// every notification opens a page that exists (old /ess and /admin routes are gone)
+const links = [];
+for (const t of [emp, mgr, hr]) { const d = (await call('GET', '/notifications', t)).data; for (const n of d?.items ?? d ?? []) if (n.link) links.push(n.link); }
+ok('notification links point at current pages', links.length > 0 && !links.some((l) => /^\/(ess|admin)\//.test(l)), [...new Set(links)]);
 
 console.log(`\n${passes} passed, ${failures} failed`);
 process.exit(failures ? 1 : 0);

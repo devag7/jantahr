@@ -14,4 +14,4 @@ export const useDeleteClaim = () => useApiMutation(expensesService.remove, { inv
 export const useDecideClaim = () => useApiMutation((v: { id: string; action: 'approve' | 'reject'; comment?: string }) => expensesService.decide(v.id, v.action, v.comment), { invalidate: [...EX], success: 'Claim updated' });
 export const useUploadReceipt = () => useApiMutation((f: File) => expensesService.uploadReceipt(f));
 export const useCreateTravel = () => useApiMutation(expensesService.createTravel, { invalidate: [...EX], success: 'Travel request submitted' });
-export const useDecideTravel = () => useApiMutation((v: { id: string; action: 'approve' | 'reject' }) => expensesService.decideTravel(v.id, v.action), { invalidate: [...EX], success: 'Travel request updated' });
+export const useDecideTravel = () => useApiMutation((v: { id: string; action: 'approve' | 'reject'; comment?: string }) => expensesService.decideTravel(v.id, v.action, v.comment), { invalidate: [...EX], success: 'Travel request updated' });

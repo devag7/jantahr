@@ -1,6 +1,6 @@
 import { get, patch, post } from '@/lib/api/client';
 import { ENDPOINTS as E } from '@/lib/api/endpoints';
-import type { Appraisal, AppraisalCycle, AppraisalDetail, CycleSummary, Goal, GoalInput } from '@/types/performance';
+import type { Appraisal, AppraisalCycle, AppraisalDetail, CycleSummary, Goal, GoalInput, PendingGoal } from '@/types/performance';
 
 export const performanceService = {
   cycles: () => get<AppraisalCycle[]>(E.performance.cycles),
@@ -10,7 +10,8 @@ export const performanceService = {
   goals: (employeeId?: string) => get<Goal[]>(E.performance.goals, { employeeId }),
   createGoal: (d: GoalInput) => post<Goal>(E.performance.goals, d),
   updateGoal: (id: string, d: Partial<Goal>) => patch<Goal>(E.performance.goal(id), d),
-  decideGoal: (id: string, a: 'approve' | 'reject') => post<Goal>(E.performance.goalDecision(id, a)),
+  pendingGoals: () => get<PendingGoal[]>(E.performance.goalsPending),
+  decideGoal: (id: string, a: 'approve' | 'reject', comment?: string) => post<Goal>(E.performance.goalDecision(id, a), { comment }),
   mine: () => get<Appraisal[]>(E.performance.mine),
   pending: () => get<Appraisal[]>(E.performance.pending),
   byCycle: (id: string) => get<Appraisal[]>(E.performance.byCycle(id)),

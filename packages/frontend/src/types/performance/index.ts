@@ -1,5 +1,7 @@
 export interface AppraisalCycle { id: string; name: string; startDate: string; endDate: string; isActive: boolean; _count: { appraisals: number } }
 export interface Goal { id: string; title: string; description: string | null; weightage: number; targetValue: string | null; achievedValue: string | null; startDate: string; endDate: string; status: 'PENDING' | 'APPROVED' | 'REJECTED'; selfRating: number | null; managerRating: number | null; selfComment: string | null; managerComment: string | null }
+/** A goal someone set for themselves, waiting for their approver. */
+export interface PendingGoal extends Goal { employee: { id: string; employeeCode: string; firstName: string; lastName: string } }
 export type AppraisalStatus = 'DRAFT' | 'SELF_REVIEW' | 'MANAGER_REVIEW' | 'HR_REVIEW' | 'COMPLETED' | 'CANCELLED';
 export interface Appraisal {
   id: string; employeeId: string; status: AppraisalStatus; selfRating: number | null; managerRating: number | null; finalRating: number | null; selfComment: string | null; managerComment: string | null; hrComment: string | null;
