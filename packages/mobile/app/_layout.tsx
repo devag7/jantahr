@@ -1,33 +1,59 @@
 import * as React from 'react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Slot, useRouter, useSegments } from 'expo-router';
+import { AppState, Platform } from 'react-native';
+import { Stack } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { ActivityIndicator, View } from 'react-native';
-import { AuthProvider, useAuth } from '@/auth';
+import * as SystemUI from 'expo-system-ui';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { QueryClient, QueryClientProvider, focusManager } from '@tanstack/react-query';
+import { AuthProvider, useAuth } from '@/auth/auth';
+import { AppLockProvider } from '@/auth/lock';
+import { ToastProvider } from '@/ui/overlays';
+import { useTheme } from '@/ui/theme';
 
-const client = new QueryClient({ defaultOptions: { queries: { staleTime: 30_000, retry: 1 } } });
+void SplashScreen.preventAutoHideAsync().catch(() => undefined);
 
-function Gate() {
-  const { user, loading } = useAuth();
-  const segments = useSegments();
-  const router = useRouter();
-  React.useEffect(() => {
-    if (loading) return;
-    const onLogin = segments[0] === 'login';
-    if (!user && !onLogin) router.replace('/login');
-    else if (user && onLogin) router.replace('/');
-  }, [user, loading, segments, router]);
-  if (loading) return <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}><ActivityIndicator /></View>;
-  return <Slot />;
+const queryClient = new QueryClient({
+  defaultOptions: { queries: { staleTime: 30_000, retry: 1, refetchOnWindowFocus: true } },
+});
+// "window focus" on a phone is the app coming back to the foreground
+if (Platform.OS !== 'web') AppState.addEventListener('change', (s) => focusManager.setFocused(s === 'active'));
+
+function Routes() {
+  const { status } = useAuth();
+  const { colors, dark } = useTheme();
+  React.useEffect(() => { void SystemUI.setBackgroundColorAsync(colors.background); }, [colors.background]);
+  React.useEffect(() => { if (status !== 'loading') void SplashScreen.hideAsync().catch(() => undefined); }, [status]);
+  if (status === 'loading') return null;
+  const signedIn = status === 'authenticated';
+  return (
+    <AppLockProvider active={signedIn}>
+      <StatusBar style={dark ? 'light' : 'dark'} />
+      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}>
+        <Stack.Protected guard={signedIn}>
+          <Stack.Screen name="(app)" />
+        </Stack.Protected>
+        <Stack.Protected guard={!signedIn}>
+          <Stack.Screen name="sign-in" />
+        </Stack.Protected>
+      </Stack>
+    </AppLockProvider>
+  );
 }
 
 export default function RootLayout() {
   return (
-    <QueryClientProvider client={client}>
-      <AuthProvider>
-        <StatusBar style="auto" />
-        <Gate />
-      </AuthProvider>
-    </QueryClientProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <QueryClientProvider client={queryClient}>
+          <ToastProvider>
+            <AuthProvider>
+              <Routes />
+            </AuthProvider>
+          </ToastProvider>
+        </QueryClientProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }

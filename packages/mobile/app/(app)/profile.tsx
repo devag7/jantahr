@@ -1,0 +1,72 @@
+import * as React from 'react';
+import { View } from 'react-native';
+import { Stack } from 'expo-router';
+import { useMyProfile, useUpdateMyProfile } from '@/features/queries';
+import { errorMessage } from '@/lib/api';
+import { formatDate } from '@/lib/format';
+import { Button, Card, ErrorState, Field, Loading, Page, Row, Section, Text } from '@/ui/kit';
+import { space } from '@/ui/theme';
+import type { Employee } from '@/types/employees';
+
+/** The fields employees may change themselves (the API's UpdateSelfDto); the rest is shown, and HR changes it. */
+const EDITABLE = [
+  { key: 'phone', label: 'Mobile number', keyboard: 'phone-pad' },
+  { key: 'personalEmail', label: 'Personal email', keyboard: 'email-address' },
+  { key: 'currentAddress', label: 'Current address', multiline: true },
+  { key: 'city', label: 'City' },
+  { key: 'state', label: 'State' },
+  { key: 'pincode', label: 'PIN code', keyboard: 'number-pad' },
+  { key: 'bloodGroup', label: 'Blood group' },
+  { key: 'emergencyContactName', label: 'Emergency contact name' },
+  { key: 'emergencyContactPhone', label: 'Emergency contact phone', keyboard: 'phone-pad' },
+  { key: 'emergencyContactRelation', label: 'Relationship' },
+] as const;
+type Key = (typeof EDITABLE)[number]['key'];
+
+export default function Profile() {
+  const q = useMyProfile();
+  const update = useUpdateMyProfile();
+  const [edit, setEdit] = React.useState<Partial<Record<Key, string>> | null>(null);
+  const e = q.data;
+  const start = () => e && setEdit(Object.fromEntries(EDITABLE.map((f) => [f.key, (e[f.key as keyof Employee] as string | null) ?? ''])));
+  const save = () => {
+    if (!edit) return;
+    const changed = Object.fromEntries(Object.entries(edit).filter(([k, v]) => v !== ((e?.[k as keyof Employee] as string | null) ?? '')).map(([k, v]) => [k, v?.trim() || undefined]));
+    if (!Object.keys(changed).length) return setEdit(null);
+    update.mutate(changed as Partial<Employee>, { onSuccess: () => setEdit(null) });
+  };
+
+  if (q.isLoading) return <Loading />;
+  if (q.isError || !e) return <ErrorState message={errorMessage(q.error)} onRetry={() => void q.refetch()} />;
+  return (
+    <Page>
+      <Stack.Screen options={{ headerRight: () => (edit ? <Text tone="accent" bold onPress={save} accessibilityRole="button">{update.isPending ? 'Saving…' : 'Save'}</Text> : <Text tone="accent" onPress={start} accessibilityRole="button">Edit</Text>) }} />
+      <Section title="Work">
+        <Card padded={false}>
+          <Row title="Employee code" value={e.employeeCode} />
+          <Row title="Work email" subtitle={e.email} />
+          <Row title="Department" value={e.department?.name ?? '-'} />
+          <Row title="Designation" value={e.designation?.name ?? '-'} />
+          <Row title="Joined" value={formatDate(e.dateOfJoining)} last />
+        </Card>
+      </Section>
+      <Section title="Personal">
+        {edit ? (
+          <View style={{ gap: space.lg }}>
+            {EDITABLE.map((f) => (
+              <Field key={f.key} label={f.label} value={edit[f.key] ?? ''} onChangeText={(t) => setEdit({ ...edit, [f.key]: t })}
+                keyboardType={'keyboard' in f ? f.keyboard : 'default'} multiline={'multiline' in f} autoCapitalize={f.key === 'personalEmail' ? 'none' : 'sentences'} />
+            ))}
+            <Button title="Save changes" loading={update.isPending} onPress={save} />
+            <Button title="Cancel" kind="ghost" onPress={() => setEdit(null)} />
+          </View>
+        ) : (
+          <Card padded={false}>
+            {EDITABLE.map((f, i) => <Row key={f.key} title={f.label} subtitle={(e[f.key as keyof Employee] as string | null) || 'Not added'} last={i === EDITABLE.length - 1} />)}
+          </Card>
+        )}
+      </Section>
+      {!edit && <Text variant="caption" tone="tertiary">Name, date of birth, bank and ID details are changed by your HR team.</Text>}
+    </Page>
+  );
+}

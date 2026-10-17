@@ -1,10 +1,11 @@
 import 'react-native-url-polyfill/auto';
+import { AppState, Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
-import { AppState } from 'react-native';
 import { createClient } from '@supabase/supabase-js';
+import { SUPABASE_KEY, SUPABASE_URL } from './config';
 
-// SecureStore (Keychain / Keystore) warns above ~2 KB per value and a Supabase session is larger, so the session is
-// stored in chunks under `<key>.0`, `<key>.1`… with the count in `<key>.n`.
+// SecureStore (Android Keystore / iOS Keychain) warns above ~2 KB per value and a Supabase session is larger, so the
+// session is stored in chunks under `<key>.0`, `<key>.1`… with the count in `<key>.n`.
 const CHUNK = 1800;
 const safeKey = (k: string) => k.replace(/[^A-Za-z0-9._-]/g, '_');
 const secureStorage = {
@@ -31,17 +32,20 @@ const secureStorage = {
   },
 };
 
-const url = process.env.EXPO_PUBLIC_SUPABASE_URL;
-const key = process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-if (!url || !key) throw new Error('Set EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sign-in uses Supabase Auth.');
-
-/** Supabase Auth is JantaHR's only identity provider; the API accepts this session's access token. */
-export const supabase = createClient(url, key, {
-  auth: { storage: secureStorage, persistSession: true, autoRefreshToken: true, detectSessionInUrl: false },
+/** Supabase Auth is JantaHR's identity provider; the API accepts this session's access token. */
+export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
+  // the browser preview (expo start --web) keeps the session in localStorage; phones use the secure store
+  auth: { storage: Platform.OS === 'web' ? undefined : secureStorage, persistSession: true, autoRefreshToken: true, detectSessionInUrl: false },
 });
 
-// Refresh only while the app is in the foreground (Supabase's React Native guidance).
-AppState.addEventListener('change', (state) => {
-  if (state === 'active') supabase.auth.startAutoRefresh();
-  else supabase.auth.stopAutoRefresh();
-});
+// Refresh tokens only while the app is in the foreground (Supabase's React Native guidance).
+if (Platform.OS !== 'web') {
+  AppState.addEventListener('change', (state) => {
+    if (state === 'active') supabase.auth.startAutoRefresh();
+    else supabase.auth.stopAutoRefresh();
+  });
+}
+
+export async function accessToken() {
+  return (await supabase.auth.getSession()).data.session?.access_token ?? null;
+}

@@ -1,5 +1,11 @@
 {
   "extends": "expo/tsconfig.base",
-  "compilerOptions": { "strict": true, "paths": { "@/*": ["./src/*"] } },
-  "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"]
+  "compilerOptions": {
+    "strict": true,
+    // "@/types/*" falls through to the web app's types (packages/frontend/src/types): the API's shapes are written
+    // once. Only `import type` may use them, so nothing from the web app is bundled into the phone app.
+    "paths": { "@/*": ["./src/*", "../frontend/src/*"] }
+  },
+  "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"],
+  "exclude": ["node_modules", "android", "ios"]
 }
