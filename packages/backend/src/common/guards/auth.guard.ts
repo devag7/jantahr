@@ -12,7 +12,8 @@ const deny = (message: string, code?: string) => new UnauthorizedException(code 
 /**
  * Every request carries a Supabase Auth access token. The guard verifies it (JWKS or the project's HS256 secret),
  * then resolves the JantaHR account linked to the Supabase user and enforces what Supabase cannot know about:
- * account deactivation, sessions ended by HR, two-factor when the user enrolled it, and Google sign-in by plan.
+ * account deactivation, sessions ended by HR, two-factor when the user enrolled it, and Google sign-in where the plan
+ * catalogue leaves it out (every plan includes it today).
  */
 @Injectable()
 export class AuthGuard implements CanActivate {

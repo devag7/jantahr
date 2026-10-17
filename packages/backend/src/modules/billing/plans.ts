@@ -19,12 +19,15 @@ export const FEATURES = {
   analytics: 'MIS reports, custom report builder, attrition and anomaly insights',
   aiAssistant: 'Policy answers written by an AI model',
   biometric: 'Biometric device integration',
-  googleSignIn: 'Sign in with Google (Supabase Auth)',
+  googleSignIn: 'Sign in with Google',
 } as const;
 export type FeatureKey = keyof typeof FEATURES;
 
-/** Available on every plan, including Free. Privacy tools are a legal duty, so they are never gated. */
-export const CORE_FEATURES: FeatureKey[] = ['core', 'leave', 'attendance', 'selfService', 'privacy'];
+/**
+ * Available on every plan, including Free. Privacy tools are a legal duty, so they are never gated; Google sign-in is
+ * how most people expect to sign in, so it is not a paid extra either.
+ */
+export const CORE_FEATURES: FeatureKey[] = ['core', 'leave', 'attendance', 'selfService', 'privacy', 'googleSignIn'];
 
 export type PlanKey = 'FREE' | 'STANDARD' | 'PROFESSIONAL' | 'ENTERPRISE';
 export type Cycle = 'MONTHLY' | 'ANNUAL';
@@ -43,13 +46,13 @@ export interface PlanDef {
 }
 
 const STANDARD_FEATURES: FeatureKey[] = [...CORE_FEATURES, 'payroll', 'statutory', 'lifecycle', 'expenses', 'helpdesk'];
-const PROFESSIONAL_FEATURES: FeatureKey[] = [...STANDARD_FEATURES, 'performance', 'recruitment', 'analytics', 'aiAssistant', 'biometric', 'googleSignIn'];
+const PROFESSIONAL_FEATURES: FeatureKey[] = [...STANDARD_FEATURES, 'performance', 'recruitment', 'analytics', 'aiAssistant', 'biometric'];
 
 export const PLANS: Record<PlanKey, PlanDef> = {
   FREE: {
     key: 'FREE', name: 'Free', summary: 'Core HR, leave and attendance for small teams.',
     pricePaise: { MONTHLY: 0, ANNUAL: 0 }, maxEmployees: 20, minSeats: 0, features: CORE_FEATURES,
-    highlights: ['Up to 20 employees', 'Leave and attendance', 'Web and mobile self-service', 'DPDP privacy tools'],
+    highlights: ['Up to 20 employees', 'Leave and attendance', 'Web and mobile self-service', 'DPDP privacy tools', 'Sign in with Google'],
   },
   STANDARD: {
     key: 'STANDARD', name: 'Standard', summary: 'Payroll and statutory compliance, done every month.',
@@ -59,7 +62,7 @@ export const PLANS: Record<PlanKey, PlanDef> = {
   PROFESSIONAL: {
     key: 'PROFESSIONAL', name: 'Professional', summary: 'The full suite for growing companies.',
     pricePaise: { MONTHLY: 11900, ANNUAL: 9900 }, maxEmployees: null, minSeats: 10, features: PROFESSIONAL_FEATURES,
-    highlights: ['Everything in Standard', 'Performance and appraisals', 'Recruitment and careers page', 'Analytics and custom reports', 'AI policy answers, biometric devices, Google sign-in'],
+    highlights: ['Everything in Standard', 'Performance and appraisals', 'Recruitment and careers page', 'Analytics and custom reports', 'AI policy answers and biometric devices'],
   },
   ENTERPRISE: {
     key: 'ENTERPRISE', name: 'Enterprise', summary: 'Dedicated database, SLA and assisted rollout.',

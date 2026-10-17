@@ -11,9 +11,9 @@ import type { Cycle, FeatureKey, PlanDef } from '@/types/billing';
 import { DEFAULTS, EMPLOYEES_MAX, EMPLOYEES_MIN, parseEmployees, readParams, toQuery } from './pricing.params';
 
 const GROUPS: { title: string; features: FeatureKey[] }[] = [
-  { title: 'Every plan', features: ['core', 'leave', 'attendance', 'selfService', 'privacy'] },
+  { title: 'Every plan', features: ['core', 'leave', 'attendance', 'selfService', 'privacy', 'googleSignIn'] },
   { title: 'Payroll and compliance', features: ['payroll', 'statutory', 'lifecycle', 'expenses', 'helpdesk'] },
-  { title: 'Growth', features: ['performance', 'recruitment', 'analytics', 'aiAssistant', 'biometric', 'googleSignIn'] },
+  { title: 'Growth', features: ['performance', 'recruitment', 'analytics', 'aiAssistant', 'biometric'] },
 ];
 
 function monthlyTotal(p: PlanDef, cycle: Cycle, employees: number) {

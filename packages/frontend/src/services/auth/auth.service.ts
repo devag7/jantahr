@@ -15,6 +15,19 @@ const mailer = () => createEmailFlowClient().auth;
 // listed `…/auth/callback`, so the user would be dropped on the site's home page. The callback reads the link type instead.
 const callbackUrl = () => `${window.location.origin}/auth/callback`;
 
+/**
+ * Google sign-in on the site's own address. With a Google client ID (cloud edition) the browser goes straight to
+ * Google and back to /auth/callback with an ID token that Supabase checks (signInWithIdToken), so Google's screen
+ * names this site, and the app name once Google has verified the branding, instead of the Supabase project address.
+ * Without one (self-hosted) Supabase runs the usual redirect flow.
+ */
+const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+const GOOGLE_PENDING = 'jantahr:google-sign-in';
+const GOOGLE_PENDING_MS = 15 * 60_000;
+const randomToken = () => Array.from(crypto.getRandomValues(new Uint8Array(32)), (b) => b.toString(16).padStart(2, '0')).join('');
+const sha256Hex = async (text: string) =>
+  Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text))), (b) => b.toString(16).padStart(2, '0')).join('');
+
 /** Kinds of emailed link Supabase Auth sends (the `type` query parameter of our email templates). */
 export const EMAIL_LINK_TYPES = ['email', 'signup', 'magiclink', 'recovery', 'invite', 'email_change'] as const;
 export type EmailLinkType = (typeof EMAIL_LINK_TYPES)[number];
@@ -46,7 +59,25 @@ export const authService = {
     // an unknown address answers "signups not allowed"; report success either way so accounts cannot be probed
     if (error?.code !== 'otp_disabled' && !/signups not allowed/i.test(error?.message ?? '')) fail(error);
   },
-  signInWithGoogle: async () => fail((await auth().signInWithOAuth({ provider: 'google', options: { redirectTo: callbackUrl() } })).error),
+  signInWithGoogle: async () => {
+    if (!GOOGLE_CLIENT_ID) return fail((await auth().signInWithOAuth({ provider: 'google', options: { redirectTo: callbackUrl() } })).error);
+    // Google signs the hash of the nonce into the ID token and Supabase checks it against the nonce itself, so a token
+    // taken from another sign-in cannot be replayed; the state ties the answer to this browser.
+    const nonce = randomToken(), state = randomToken();
+    localStorage.setItem(GOOGLE_PENDING, JSON.stringify({ nonce, state, at: Date.now() }));
+    const q = new URLSearchParams({ client_id: GOOGLE_CLIENT_ID, redirect_uri: callbackUrl(), response_type: 'id_token', scope: 'openid email profile', nonce: await sha256Hex(nonce), state, prompt: 'select_account' });
+    window.location.assign(`https://accounts.google.com/o/oauth2/v2/auth?${q}`);
+  },
+  /** Second half of signInWithGoogle, on /auth/callback: hands Google's ID token to Supabase. */
+  finishGoogle: async (idToken: string, state: string | null) => {
+    let pending: { nonce?: string; state?: string; at?: number } = {};
+    try { pending = JSON.parse(localStorage.getItem(GOOGLE_PENDING) ?? '{}'); } catch { /* treated as missing */ }
+    localStorage.removeItem(GOOGLE_PENDING);
+    if (!pending.nonce || !state || pending.state !== state || Date.now() - (pending.at ?? 0) > GOOGLE_PENDING_MS) {
+      throw new Error('This Google sign-in was started in another browser or took too long. Please try again.');
+    }
+    fail((await auth().signInWithIdToken({ provider: 'google', token: idToken, nonce: pending.nonce })).error);
+  },
   sendPasswordReset: async (email: string) => fail((await mailer().resetPasswordForEmail(email, { redirectTo: callbackUrl() })).error),
   /** Creates the Supabase account; returns whether the email must be confirmed before the workspace can be created. */
   signUp: async ({ email, password, ...company }: SignupInput) => {

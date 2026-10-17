@@ -24,6 +24,8 @@ const fromShared = {
   NEXT_PUBLIC_ANDROID_PLAY_LIVE: process.env.NEXT_PUBLIC_ANDROID_PLAY_LIVE ?? process.env.ANDROID_PLAY_LIVE,
   // Google Analytics 4 for the public pages, after the visitor's consent (components/analytics)
   NEXT_PUBLIC_GA_MEASUREMENT_ID: process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID ?? process.env.GA_MEASUREMENT_ID,
+  // Google sign-in on this site's own address (services/auth): the OAuth web client ID, which is public
+  NEXT_PUBLIC_GOOGLE_CLIENT_ID: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? process.env.GOOGLE_CLIENT_ID,
 };
 
 // The public site exists only in the cloud edition. There, a request that names text/markdown in Accept is answered by

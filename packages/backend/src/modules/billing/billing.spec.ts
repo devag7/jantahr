@@ -21,6 +21,10 @@ describe('entitlements', () => {
     expect(e.features).not.toContain('payroll');
     expect(e.seatLimit).toBe(20);
   });
+  it('Google sign-in is on every plan, including a lapsed one', () => {
+    for (const p of Object.values(PLANS)) expect(p.features).toContain('googleSignIn');
+    expect(resolveEntitlements(sub({ status: 'EXPIRED', lapsedPlan: 'STANDARD' }), now).features).toContain('googleSignIn');
+  });
   it('active trial unlocks Professional; expired trial falls back to Free with paid modules read-only', () => {
     const t = resolveEntitlements(sub({ status: 'TRIALING', plan: 'FREE', trialEndsAt: d('2026-10-05') }), now);
     expect(t.plan).toBe('PROFESSIONAL');

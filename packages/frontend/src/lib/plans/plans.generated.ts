@@ -17,13 +17,15 @@ export const PLANS: PlanDef[] = [
       "leave",
       "attendance",
       "selfService",
-      "privacy"
+      "privacy",
+      "googleSignIn"
     ],
     "highlights": [
       "Up to 20 employees",
       "Leave and attendance",
       "Web and mobile self-service",
-      "DPDP privacy tools"
+      "DPDP privacy tools",
+      "Sign in with Google"
     ]
   },
   {
@@ -42,6 +44,7 @@ export const PLANS: PlanDef[] = [
       "attendance",
       "selfService",
       "privacy",
+      "googleSignIn",
       "payroll",
       "statutory",
       "lifecycle",
@@ -72,6 +75,7 @@ export const PLANS: PlanDef[] = [
       "attendance",
       "selfService",
       "privacy",
+      "googleSignIn",
       "payroll",
       "statutory",
       "lifecycle",
@@ -81,15 +85,14 @@ export const PLANS: PlanDef[] = [
       "recruitment",
       "analytics",
       "aiAssistant",
-      "biometric",
-      "googleSignIn"
+      "biometric"
     ],
     "highlights": [
       "Everything in Standard",
       "Performance and appraisals",
       "Recruitment and careers page",
       "Analytics and custom reports",
-      "AI policy answers, biometric devices, Google sign-in"
+      "AI policy answers and biometric devices"
     ]
   },
   {
@@ -105,6 +108,7 @@ export const PLANS: PlanDef[] = [
       "attendance",
       "selfService",
       "privacy",
+      "googleSignIn",
       "payroll",
       "statutory",
       "lifecycle",
@@ -114,8 +118,7 @@ export const PLANS: PlanDef[] = [
       "recruitment",
       "analytics",
       "aiAssistant",
-      "biometric",
-      "googleSignIn"
+      "biometric"
     ],
     "highlights": [
       "Everything in Professional",
@@ -142,7 +145,7 @@ export const FEATURE_LABELS: Record<FeatureKey, string> = {
   "analytics": "MIS reports, custom report builder, attrition and anomaly insights",
   "aiAssistant": "Policy answers written by an AI model",
   "biometric": "Biometric device integration",
-  "googleSignIn": "Sign in with Google (Supabase Auth)"
+  "googleSignIn": "Sign in with Google"
 };
 
 export const TRIAL_DAYS = 14;

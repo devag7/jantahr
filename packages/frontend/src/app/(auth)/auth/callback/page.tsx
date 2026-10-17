@@ -12,7 +12,8 @@ import { useAuthStore } from '@/stores/auth/auth-store';
 
 /**
  * Return point for Supabase Auth emails and Google. Email links return the session in the URL fragment, or a token hash
- * when the project's email templates use one; both work in any browser. Google and older emails carry a PKCE code. Either way a session is established, then the page either continues to
+ * when the project's email templates use one; both work in any browser. Google returns an ID token in the fragment
+ * (or, self-hosted, a PKCE code, as older emails do). Either way a session is established, then the page either continues to
  * `next` (the password reset form) or resolves the JantaHR account like a normal sign-in (creating the workspace a
  * new owner started before confirming their email).
  */
@@ -32,6 +33,12 @@ export default function AuthCallbackPage() {
     const url = new URL(window.location.href);
     // emailed links return their result in the fragment (#access_token=… or #error_description=…)
     const hash = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+    // Google answers #error=access_denied when the person backs out of its account chooser: back to sign in, no error
+    if (hash.get('error') && hash.get('state')) {
+      if (hash.get('error') === 'access_denied') router.replace(ROUTES.LOGIN);
+      else setError(`Google sign-in did not complete (${hash.get('error')}). Please try again.`);
+      return;
+    }
     const fail = url.searchParams.get('error_description') || hash.get('error_description');
     if (fail) { setError(/expired|invalid/i.test(fail) ? 'This link has expired or was already used. Request a new one.' : fail); return; }
     const next = url.searchParams.get('next');
@@ -39,8 +46,11 @@ export default function AuthCallbackPage() {
       const code = url.searchParams.get('code');
       const tokenHash = url.searchParams.get('token_hash');
       const type = url.searchParams.get('type') as EmailLinkType | null;
-      const accessToken = hash.get('access_token'), refreshToken = hash.get('refresh_token');
-      if (accessToken && refreshToken) {
+      const accessToken = hash.get('access_token'), refreshToken = hash.get('refresh_token'), idToken = hash.get('id_token');
+      if (idToken) {
+        window.history.replaceState(null, '', url.pathname);
+        await authService.finishGoogle(idToken, hash.get('state'));
+      } else if (accessToken && refreshToken) {
         await authService.adoptSession(accessToken, refreshToken);
         // the tokens are in the address bar: drop them from the URL and the history entry
         window.history.replaceState(null, '', url.pathname + url.search);

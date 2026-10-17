@@ -11,7 +11,7 @@ import { useInAndroidApp } from '@/components/pwa/pwa-bootstrap';
 
 const PLAN_FOR: Record<string, string> = {
   payroll: 'Standard', statutory: 'Standard', lifecycle: 'Standard', expenses: 'Standard', helpdesk: 'Standard',
-  performance: 'Professional', recruitment: 'Professional', analytics: 'Professional', aiAssistant: 'Professional', biometric: 'Professional', googleSignIn: 'Professional',
+  performance: 'Professional', recruitment: 'Professional', analytics: 'Professional', aiAssistant: 'Professional', biometric: 'Professional',
 };
 
 /** Cloud edition: pages outside the plan show an upgrade panel; lapsed plans show a read-only notice. */

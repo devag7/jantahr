@@ -147,6 +147,7 @@ secret) so they match the legal name and address on your Razorpay account and GS
 | `NEXT_PUBLIC_SITE_URL` | the site's public address, e.g. `https://hr.example.in`, once you use your own domain (Vercel's production address is used until then) |
 | `BILLING_SELLER_GSTIN` | your GST number, **only if you are registered under GST** (see below) |
 | `GA_MEASUREMENT_ID` | optional: a Google Analytics 4 measurement ID (`G-…`). Public pages then ask visitors for consent and count visits only of those who allow it; nothing is sent from inside the app |
+| `GOOGLE_CLIENT_ID` | optional: the Google OAuth web client ID (public). Google sign-in then runs on the site's own address, so Google's screen names your app instead of the Supabase project address. Add `https://<site>/auth/callback` to the client's authorised redirect URIs and the same client ID to Supabase's Google provider |
 
 **GST.** Only a GST-registered seller may collect GST. JantaHR therefore adds 18% GST, prints tax lines on invoices and
 mentions GST on the site only when `BILLING_SELLER_GSTIN` is set. Without it the listed price is the amount charged,
