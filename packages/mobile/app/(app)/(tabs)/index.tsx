@@ -26,7 +26,7 @@ export default function Home() {
   const d = ess.data;
   const approvals = isApprover(user) ? d?.pendingApprovals?.total ?? 0 : 0;
   const name = user?.employee?.fullName ?? user?.email ?? '';
-  const today = new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' });
+  const today = new Date().toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' });
   const slips = (d?.latestPayslips ?? []).slice().sort((a, b) => a.year - b.year || a.month - b.month);
   const latest = slips[slips.length - 1];
   // light icons over the cobalt header while Home is showing
@@ -48,8 +48,8 @@ export default function Home() {
             <Avatar name={name} size={44} style={{ borderWidth: 2, borderColor: 'rgba(255,255,255,0.35)' }} />
           </Pressable>
           <View style={{ flex: 1 }}>
-            <Text variant="caption" style={{ color: colors.onBrandMuted }}>{today}</Text>
-            <Text variant="heading" style={{ color: colors.onBrand }} numberOfLines={1}>{greeting()}, {user?.employee?.firstName ?? 'there'}</Text>
+            <Text variant="caption" style={{ color: colors.onBrandMuted }} numberOfLines={1}>{greeting()} · {today}</Text>
+            <Text variant="heading" style={{ color: colors.onBrand }} numberOfLines={1}>{user?.employee?.firstName ?? name.split(/[ @]/)[0]}</Text>
           </View>
           <IconButton icon="notifications-outline" label="Notifications" tone={colors.onBrand} badge={notes.data?.unreadCount} onPress={() => router.push('/notifications')} />
         </View>

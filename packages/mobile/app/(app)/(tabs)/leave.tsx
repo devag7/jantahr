@@ -25,8 +25,8 @@ export default function Leave() {
   return (
     <Page title="Leave" onRefresh={() => { void balance.refetch(); void leaves.refetch(); void comp.refetch(); }} refreshing={balance.isRefetching || leaves.isRefetching}>
       <View style={{ flexDirection: 'row', gap: space.md }}>
-        <Button title="Apply for leave" icon="add" style={{ flex: 1 }} onPress={() => router.push('/apply-leave')} />
-        <Button title="Holidays" kind="secondary" icon="sunny-outline" onPress={() => router.push('/holidays')} />
+        <Button title="Apply for leave" icon="add" compact style={{ flex: 1 }} onPress={() => router.push('/apply-leave')} />
+        <Button title="Holidays" kind="secondary" compact onPress={() => router.push('/holidays')} />
       </View>
 
       <Section title="Balance">

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Image, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Image, Platform, Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as WebBrowser from 'expo-web-browser';
@@ -17,6 +17,7 @@ export default function SignIn() {
   const { status, notice, signIn, signInWithGoogle, googleAvailable, verifyTotp, signOut, bootstrap } = useAuth();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
+  const short = useWindowDimensions().height < 720;
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
   const [code, setCode] = React.useState('');
@@ -95,7 +96,7 @@ export default function SignIn() {
   const content = (
     <>
       {/* the brand moment: the mark on cobalt, with quiet rings behind it */}
-      <View style={[styles.hero, { paddingTop: insets.top + space.xxl }]}>
+      <View style={[styles.hero, { paddingTop: insets.top + (short ? space.xl : space.xxl) }]}>
         <Svg style={StyleSheet.absoluteFill} viewBox="0 0 400 360" preserveAspectRatio="xMaxYMin slice" pointerEvents="none">
           {[90, 150, 210, 270].map((r) => <Circle key={r} cx={360} cy={40} r={r} stroke="rgba(255,255,255,0.07)" strokeWidth={1.5} fill="none" />)}
         </Svg>
@@ -104,14 +105,14 @@ export default function SignIn() {
           <Text variant="display" style={{ color: colors.onBrand }} accessibilityRole="header">JantaHR</Text>
           <Text style={{ color: colors.onBrandMuted }}>Your workday in one place.</Text>
         </View>
-        <View style={styles.chips}>
+        {!short && <View style={styles.chips}>
           {([['finger-print', 'Check in'], ['calendar-outline', 'Leave'], ['wallet-outline', 'Payslips'], ['checkmark-done', 'Approvals']] as const).map(([icon, label]) => (
             <View key={label} style={styles.chip}>
               <Ionicons name={icon} size={14} color={colors.ice} />
               <Text variant="caption" style={{ color: colors.onBrand }}>{label}</Text>
             </View>
           ))}
-        </View>
+        </View>}
       </View>
       <View style={[styles.sheet, { backgroundColor: colors.background, paddingBottom: insets.bottom + space.xxl }]}>
         <View style={styles.body}>{body}</View>

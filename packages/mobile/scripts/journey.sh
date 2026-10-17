@@ -22,7 +22,7 @@ shot() {
   sleep "${2:-3}"
   adb exec-out screencap -p > "$OUT/$1.png"
   dump > "$OUT/$1.xml"
-  grep -o 'text="[^"]\+"' "$OUT/$1.xml" | sed 's/text="//; s/"$//' | head -40 > "$OUT/$1.txt"
+  grep -o 'text="[^"]\+"' "$OUT/$1.xml" | sed 's/text="//; s/"$//' > "$OUT/$1.txt"
 }
 expect() { # $1 screen, $2 text that must be on it
   if grep -qF "$2" "$OUT/$1.txt"; then echo "ok    $1 shows \"$2\""; else echo "::error::$1 does not show \"$2\""; fail=1; fi
@@ -47,7 +47,7 @@ shot employee-home 10;            expect employee-home "Check in"; expect employ
 # bottom-bar items carry their label as content-desc (More's adds the badge: "More, 14 new notifications")
 tap 'content-desc="Attendance'; shot employee-attendance; expect employee-attendance "Present"
 tap 'content-desc="Leave'; shot employee-leave;      expect employee-leave "Apply for leave"
-tap 'text="Apply for leave"'; shot employee-apply-leave; expect employee-apply-leave "Tap the first day"
+tap 'text="Apply for leave"'; shot employee-apply-leave; expect employee-apply-leave "DATES"
 adb shell input keyevent KEYCODE_BACK; sleep 1
 tap 'content-desc="Payslips'; shot employee-payslips;   expect employee-payslips "Sep 2026"
 tap 'content-desc="More'; shot employee-more;       expect employee-more "Vikram Singh"

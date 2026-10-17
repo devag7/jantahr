@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { ActivityIndicator, Platform, Pressable, StyleSheet, Switch, View } from 'react-native';
+import { ActivityIndicator, Platform, Pressable, StyleSheet, Switch, View, useWindowDimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { usePunch, usePunchStatus } from './queries';
 import { currentPosition, takeSelfie } from './device';
@@ -18,6 +18,7 @@ const hhmm = (s: number) => `${Math.floor(s / 3600)}:${String(Math.floor((s % 36
  */
 export function PunchCard({ hero }: { hero?: boolean }) {
   const { colors } = useTheme();
+  const narrow = useWindowDimensions().width < 380;
   const status = usePunchStatus();
   const punch = usePunch();
   const [selfie, setSelfie] = React.useState(false);
@@ -52,9 +53,9 @@ export function PunchCard({ hero }: { hero?: boolean }) {
   const label = step === 'locating' ? 'Locating…' : step === 'camera' ? 'Opening camera…' : s?.checkedIn ? 'Check out' : 'Check in';
 
   return (
-    <View style={[styles.wrap, !hero && { backgroundColor: colors.card, borderRadius: radius.lg, padding: space.lg }]}>
-      <ProgressRing size={128} stroke={10} progress={elapsed / DAY_SECONDS} color={ringColor} track={track}>
-        <Text variant="title" num style={{ color: fg }} accessibilityLabel={`${Math.floor(elapsed / 3600)} hours ${Math.floor((elapsed % 3600) / 60)} minutes worked today`}>{hhmm(elapsed)}</Text>
+    <View style={[styles.wrap, narrow && { gap: space.lg }, !hero && { backgroundColor: colors.card, borderRadius: radius.lg, padding: space.lg }]}>
+      <ProgressRing size={narrow ? 104 : 128} stroke={narrow ? 8 : 10} progress={elapsed / DAY_SECONDS} color={ringColor} track={track}>
+        <Text variant={narrow ? 'heading' : 'title'} num style={{ color: fg }} accessibilityLabel={`${Math.floor(elapsed / 3600)} hours ${Math.floor((elapsed % 3600) / 60)} minutes worked today`}>{hhmm(elapsed)}</Text>
         <Text variant="caption" style={{ color: muted }}>hours today</Text>
         <SuccessPop visible={done} color={colors.success} />
       </ProgressRing>
@@ -62,7 +63,7 @@ export function PunchCard({ hero }: { hero?: boolean }) {
         <View style={{ gap: 2 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.sm }}>
             <View style={[styles.dot, { backgroundColor: s?.checkedIn ? (hero ? colors.ice : colors.success) : muted }]} />
-            <Text bold style={{ color: fg, flexShrink: 1 }} numberOfLines={1}>{status.isLoading ? 'Checking…' : headline}</Text>
+            <Text bold style={{ color: fg, flexShrink: 1 }} numberOfLines={2}>{status.isLoading ? 'Checking…' : headline}</Text>
           </View>
           {s?.attendance?.lateEntry && <Text variant="caption" style={{ color: hero ? colors.ice : colors.warning }}>Marked late today</Text>}
         </View>
@@ -76,7 +77,7 @@ export function PunchCard({ hero }: { hero?: boolean }) {
         </Pressable>
         <View style={styles.selfie}>
           <Ionicons name="camera-outline" size={16} color={muted} />
-          <Text variant="caption" style={{ color: muted, flex: 1 }}>Add a selfie</Text>
+          <Text variant="caption" style={{ color: muted, flex: 1 }} numberOfLines={1}>{narrow ? 'Selfie' : 'Add a selfie'}</Text>
           <Switch value={selfie} onValueChange={setSelfie} accessibilityLabel="Add a selfie" trackColor={{ true: hero ? colors.ice : colors.primary, false: hero ? 'rgba(255,255,255,0.25)' : colors.border }} thumbColor="#FFFFFF" style={{ transform: [{ scale: 0.85 }] }} />
         </View>
       </View>

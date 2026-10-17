@@ -27,5 +27,6 @@ echo "--- crash lines"; grep -nE 'FATAL EXCEPTION' -A 25 smoke/logcat.txt | head
 
 if grep -q "FATAL EXCEPTION" smoke/logcat.txt && grep -q "Process: $PKG" smoke/logcat.txt; then echo "::error::The app crashed on start"; exit 1; fi
 if ! grep -q "$PKG" smoke/activity-20s.txt; then echo "::error::The app is not in front 20 s after start"; exit 1; fi
-if ! grep -q 'text="Sign in"' smoke/ui-20s.xml; then echo "::error::The sign-in screen did not appear"; exit 1; fi
+# the brand header's line is on screen on any phone size (the form can sit below the fold on small ones)
+if ! grep -q 'text="Your workday in one place."' smoke/ui-20s.xml; then echo "::error::The sign-in screen did not appear"; exit 1; fi
 echo "The app started and shows its sign-in screen"
