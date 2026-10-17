@@ -4,7 +4,7 @@ import { router } from 'expo-router';
 import { useCancelLeave, useLeaveBalance, useMyCompOff, useMyLeaves } from '@/features/queries';
 import { errorMessage } from '@/lib/api';
 import { formatDate, isoDate, plural } from '@/lib/format';
-import { Button, Card, EmptyState, ErrorState, Loading, Page, Row, Section, StatusBadge, Text } from '@/ui/kit';
+import { Button, Card, EmptyState, ErrorState, LinkButton, Page, Row, Section, SkeletonCard, StatusBadge, Text } from '@/ui/kit';
 import { space, useTheme } from '@/ui/theme';
 import type { LeaveApplication } from '@/types/leave';
 
@@ -22,14 +22,14 @@ export default function Leave() {
   ]);
 
   return (
-    <Page onRefresh={() => { void balance.refetch(); void leaves.refetch(); void comp.refetch(); }} refreshing={balance.isRefetching || leaves.isRefetching}>
+    <Page title="Leave" onRefresh={() => { void balance.refetch(); void leaves.refetch(); void comp.refetch(); }} refreshing={balance.isRefetching || leaves.isRefetching}>
       <View style={{ flexDirection: 'row', gap: space.md }}>
         <Button title="Apply for leave" icon="add" style={{ flex: 1 }} onPress={() => router.push('/apply-leave')} />
         <Button title="Holidays" kind="secondary" icon="sunny-outline" onPress={() => router.push('/holidays')} />
       </View>
 
       <Section title="Balance">
-        {balance.isLoading ? <Loading /> : balance.isError ? <ErrorState message={errorMessage(balance.error)} onRetry={() => void balance.refetch()} /> : (balance.data?.length ?? 0) === 0 ? (
+        {balance.isLoading ? <SkeletonCard rows={4} /> : balance.isError ? <ErrorState message={errorMessage(balance.error)} onRetry={() => void balance.refetch()} /> : (balance.data?.length ?? 0) === 0 ? (
           <EmptyState icon="calendar-outline" title="No leave policy yet" message="Your HR team has not assigned a leave policy to you." />
         ) : (
           <Card padded={false}>
@@ -44,7 +44,7 @@ export default function Leave() {
       </Section>
 
       <Section title="Your requests">
-        {leaves.isLoading ? <Loading /> : leaves.isError ? <ErrorState message={errorMessage(leaves.error)} onRetry={() => void leaves.refetch()} /> : (leaves.data?.items.length ?? 0) === 0 ? (
+        {leaves.isLoading ? <SkeletonCard rows={3} /> : leaves.isError ? <ErrorState message={errorMessage(leaves.error)} onRetry={() => void leaves.refetch()} /> : (leaves.data?.items.length ?? 0) === 0 ? (
           <EmptyState icon="airplane-outline" title="No leave taken yet" message="Requests you make show here with their approval status." />
         ) : (
           <Card padded={false}>
@@ -62,7 +62,7 @@ export default function Leave() {
         {(leaves.data?.items ?? []).some((l) => l.status === 'OPEN') && <Text variant="caption" tone="tertiary">Tap a pending request to withdraw it.</Text>}
       </Section>
 
-      <Section title="Comp-off" action={<Text variant="caption" tone="accent" onPress={() => router.push('/comp-off')}>Request</Text>}>
+      <Section title="Comp-off" action={<LinkButton title="Request" onPress={() => router.push('/comp-off')} />}>
         {(comp.data?.length ?? 0) === 0 ? (
           <Text variant="caption" tone="secondary">Worked on a holiday or weekly off? Request a comp-off and the day is added to your balance once approved.</Text>
         ) : (

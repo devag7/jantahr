@@ -5,7 +5,7 @@ import { useMySlips } from '@/features/queries';
 import { errorMessage } from '@/lib/api';
 import { webUrl } from '@/lib/config';
 import { formatINR, formatPayMonth } from '@/lib/format';
-import { Card, EmptyState, ErrorState, Loading, Page, Row, Section } from '@/ui/kit';
+import { Card, EmptyState, ErrorState, Page, Row, Section, SkeletonCard } from '@/ui/kit';
 
 /** Every payslip, newest first; each opens with its breakdown and the PDF. */
 export default function Payslips() {
@@ -14,8 +14,8 @@ export default function Payslips() {
   for (const s of (slips.data ?? []).slice().sort((a, b) => b.year - a.year || b.month - a.month)) byYear.set(s.year, [...(byYear.get(s.year) ?? []), s]);
 
   return (
-    <Page onRefresh={() => void slips.refetch()} refreshing={slips.isRefetching}>
-      {slips.isLoading ? <Loading /> : slips.isError ? <ErrorState message={errorMessage(slips.error)} onRetry={() => void slips.refetch()} /> : byYear.size === 0 ? (
+    <Page title="Payslips" onRefresh={() => void slips.refetch()} refreshing={slips.isRefetching}>
+      {slips.isLoading ? <SkeletonCard rows={5} /> : slips.isError ? <ErrorState message={errorMessage(slips.error)} onRetry={() => void slips.refetch()} /> : byYear.size === 0 ? (
         <EmptyState icon="wallet-outline" title="No payslips yet" message="Your payslip appears here once your company runs payroll for the month." />
       ) : (
         [...byYear.entries()].map(([year, list]) => (

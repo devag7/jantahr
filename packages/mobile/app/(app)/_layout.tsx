@@ -34,3 +34,6 @@ export default function AppLayout() {
     </Stack>
   );
 }
+
+// a screen that throws shows a retry instead of a blank page
+export { ScreenError as ErrorBoundary } from '@/ui/error-boundary';

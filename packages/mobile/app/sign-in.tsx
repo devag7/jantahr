@@ -1,5 +1,6 @@
 import * as React from 'react';
-import { Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Image, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as WebBrowser from 'expo-web-browser';
 import { useAuth } from '@/auth/auth';
@@ -93,11 +94,12 @@ export default function SignIn() {
         <View style={styles.mark}><Text bold style={{ color: '#fff', fontSize: 18 }}>J</Text></View>
         <Text variant="heading" style={{ color: colors.navText }}>JantaHR</Text>
       </View>
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + space.xxl }]}>
-          {body}
-        </ScrollView>
-      </KeyboardAvoidingView>
+      {Platform.OS === 'web' ? (
+        <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + space.xxl }]}>{body}</ScrollView>
+      ) : (
+        // keeps the focused field and the Sign in button above the keyboard
+        <KeyboardAwareScrollView keyboardShouldPersistTaps="handled" bottomOffset={space.xxxl + space.xxl} contentContainerStyle={[styles.body, { paddingBottom: insets.bottom + space.xxl }]}>{body}</KeyboardAwareScrollView>
+      )}
     </View>
   );
 }

@@ -4,7 +4,7 @@ import { Stack } from 'expo-router';
 import { useMyProfile, useUpdateMyProfile } from '@/features/queries';
 import { errorMessage } from '@/lib/api';
 import { formatDate } from '@/lib/format';
-import { Button, Card, ErrorState, Field, Loading, Page, Row, Section, Text } from '@/ui/kit';
+import { Button, Card, ErrorState, Field, LinkButton, Loading, Page, Row, Section, Text } from '@/ui/kit';
 import { space } from '@/ui/theme';
 import type { Employee } from '@/types/employees';
 
@@ -40,7 +40,7 @@ export default function Profile() {
   if (q.isError || !e) return <ErrorState message={errorMessage(q.error)} onRetry={() => void q.refetch()} />;
   return (
     <Page>
-      <Stack.Screen options={{ headerRight: () => (edit ? <Text tone="accent" bold onPress={save} accessibilityRole="button">{update.isPending ? 'Saving…' : 'Save'}</Text> : <Text tone="accent" onPress={start} accessibilityRole="button">Edit</Text>) }} />
+      <Stack.Screen options={{ headerRight: () => (edit ? <LinkButton title={update.isPending ? 'Saving…' : 'Save'} onPress={save} /> : <LinkButton title="Edit" onPress={start} />) }} />
       <Section title="Work">
         <Card padded={false}>
           <Row title="Employee code" value={e.employeeCode} />

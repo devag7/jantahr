@@ -39,10 +39,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     ['expo-image-picker', { cameraPermission: 'JantaHR uses the camera for your check-in selfie and to photograph expense receipts.', photosPermission: false, microphonePermission: false }],
     ['expo-local-authentication', { faceIDPermission: 'Unlock JantaHR with Face ID.' }],
     ['expo-splash-screen', { image: './assets/splash-icon.png', imageWidth: 96, backgroundColor: '#F5F5F7', dark: { backgroundColor: '#161617' } }],
-    ['expo-build-properties', { android: { minSdkVersion: 24 } }],
+    // plain HTTP only for the emulator journey build, which talks to the CI runner's own API (10.0.2.2)
+    ['expo-build-properties', { android: { minSdkVersion: 24, usesCleartextTraffic: (process.env.EXPO_PUBLIC_API_URL ?? '').startsWith('http://') } }],
     './plugins/with-release-signing',
   ],
-  experiments: { typedRoutes: true },
+  // the React Compiler memoizes components and hooks, so screens re-render only what changed
+  experiments: { typedRoutes: true, reactCompiler: true },
   extra: {
     siteUrl: SITE,
     apiUrl: process.env.EXPO_PUBLIC_API_URL ?? `${SITE}/api`,

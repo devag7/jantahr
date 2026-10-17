@@ -16,14 +16,14 @@ import { api, errorMessage } from '@/lib/api';
 import { useToast } from '@/ui/overlays';
 
 /** A write that refreshes what it changed, confirms with a toast and explains failures in plain words. */
-export function useAction<V, R>(fn: (v: V) => Promise<R>, opts: { invalidate?: QueryKey[]; success?: string | ((r: R) => string) } = {}) {
+export function useAction<V, R>(fn: (v: V) => Promise<R>, opts: { invalidate?: QueryKey[]; success?: string | ((r: R, v: V) => string) } = {}) {
   const qc = useQueryClient();
   const toast = useToast();
   return useMutation({
     mutationFn: fn,
-    onSuccess: (r) => {
+    onSuccess: (r, v) => {
       for (const key of opts.invalidate ?? []) void qc.invalidateQueries({ queryKey: key });
-      if (opts.success) toast(typeof opts.success === 'function' ? opts.success(r) : opts.success);
+      if (opts.success) toast(typeof opts.success === 'function' ? opts.success(r, v) : opts.success);
     },
     // a dialog on the phone (it must be read); the browser preview has no native dialogs
     onError: (e) => (Platform.OS === 'web' ? toast(errorMessage(e), 'error') : Alert.alert('That did not work', errorMessage(e))),
@@ -112,15 +112,15 @@ export const usePendingSeparations = (on: boolean, myEmployeeId?: string) => use
   queryFn: async () => (await api.get<Separation[]>('/lifecycle/separations')).filter((s) => s.status === 'PENDING' && s.employee.id !== myEmployeeId),
 });
 
-const decided = (d: Decision) => (d === 'approve' ? 'Approved' : 'Rejected');
+const decided = (d: Decision) => (d === 'approve' ? 'Approved. They have been told.' : 'Rejected. They have been told.');
 const decide = (path: (id: string, d: Decision) => string) => ({ id, decision, comment }: { id: string; decision: Decision; comment?: string }) =>
   api.post(path(id, decision), comment ? { comment } : {});
 const approvalsKeys: QueryKey[] = [['approvals'], ['ess'], ['manager']];
-export const useDecideLeave = () => useAction(decide((id, d) => `/leave/applications/${id}/${d}`), { invalidate: approvalsKeys, success: 'Done' });
-export const useDecideAttendance = () => useAction(decide((id, d) => `/attendance/requests/${id}/${d}`), { invalidate: approvalsKeys, success: 'Done' });
-export const useDecideClaim = () => useAction(decide((id, d) => `/expenses/claims/${id}/${d}`), { invalidate: approvalsKeys, success: 'Done' });
-export const useDecideTravel = () => useAction(decide((id, d) => `/expenses/travel/${id}/${d}`), { invalidate: approvalsKeys, success: 'Done' });
-export const useDecideCompOff = () => useAction(decide((id, d) => `/leave/comp-off/${id}/${d}`), { invalidate: approvalsKeys, success: 'Done' });
-export const useDecideGoal = () => useAction(decide((id, d) => `/performance/goals/${id}/${d}`), { invalidate: approvalsKeys, success: 'Done' });
-export const useDecideSeparation = () => useAction(decide((id, d) => `/lifecycle/separations/${id}/${d}`), { invalidate: approvalsKeys, success: 'Done' });
+export const useDecideLeave = () => useAction(decide((id, d) => `/leave/applications/${id}/${d}`), { invalidate: approvalsKeys, success: (_r, v) => decided(v.decision) });
+export const useDecideAttendance = () => useAction(decide((id, d) => `/attendance/requests/${id}/${d}`), { invalidate: approvalsKeys, success: (_r, v) => decided(v.decision) });
+export const useDecideClaim = () => useAction(decide((id, d) => `/expenses/claims/${id}/${d}`), { invalidate: approvalsKeys, success: (_r, v) => decided(v.decision) });
+export const useDecideTravel = () => useAction(decide((id, d) => `/expenses/travel/${id}/${d}`), { invalidate: approvalsKeys, success: (_r, v) => decided(v.decision) });
+export const useDecideCompOff = () => useAction(decide((id, d) => `/leave/comp-off/${id}/${d}`), { invalidate: approvalsKeys, success: (_r, v) => decided(v.decision) });
+export const useDecideGoal = () => useAction(decide((id, d) => `/performance/goals/${id}/${d}`), { invalidate: approvalsKeys, success: (_r, v) => decided(v.decision) });
+export const useDecideSeparation = () => useAction(decide((id, d) => `/lifecycle/separations/${id}/${d}`), { invalidate: approvalsKeys, success: (_r, v) => decided(v.decision) });
 export { decided };

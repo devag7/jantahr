@@ -12,17 +12,10 @@ export function PunchCard() {
   const { colors } = useTheme();
   const status = usePunchStatus();
   const punch = usePunch();
-  const [tick, setTick] = React.useState(0);
   const [selfie, setSelfie] = React.useState(false);
   const [step, setStep] = React.useState<'locating' | 'camera' | null>(null);
   const s = status.data;
 
-  React.useEffect(() => {
-    setTick(0);
-    if (!s?.checkedIn) return;
-    const t = setInterval(() => setTick((x) => x + 1), 1000);
-    return () => clearInterval(t);
-  }, [s?.checkedIn, s?.elapsedSeconds]);
 
   const onPunch = async () => {
     let photo: string | null = null;
@@ -38,7 +31,6 @@ export function PunchCard() {
     punch.mutate({ ...(pos ?? {}), source: 'MOBILE', ...(photo ? { selfie: photo } : {}) });
   };
 
-  const elapsed = (s?.elapsedSeconds ?? 0) + (s?.checkedIn ? tick : 0);
   const lastOut = s && !s.checkedIn && s.lastPunch?.type === 'OUT' ? s.lastPunch.time : null;
   const busy = punch.isPending || !!step;
   const label = step === 'locating' ? 'Finding your location' : step === 'camera' ? 'Opening the camera' : s?.checkedIn ? 'Check out' : 'Check in';
@@ -57,7 +49,10 @@ export function PunchCard() {
       <View style={styles.stats}>
         <Stat label="First in" value={s?.firstIn ? formatTime(s.firstIn) : '-'} />
         <Stat label="Last out" value={lastOut ? formatTime(lastOut) : '-'} />
-        <Stat label="Hours" value={status.isLoading ? '-' : formatDuration(elapsed).slice(0, 5)} live={s?.checkedIn} />
+        <View style={{ flex: 1, gap: 2 }}>
+          <Text variant="caption" tone="secondary">Hours</Text>
+          {status.isLoading ? <Text variant="heading">-</Text> : <Elapsed base={s?.elapsedSeconds ?? 0} running={!!s?.checkedIn} />}
+        </View>
       </View>
       <Button title={label} icon={s?.checkedIn ? 'log-out-outline' : 'log-in-outline'} kind={s?.checkedIn ? 'secondary' : 'primary'} loading={busy} disabled={status.isLoading} onPress={() => void onPunch()} />
       <View style={styles.selfie}>
@@ -69,13 +64,27 @@ export function PunchCard() {
   );
 }
 
-function Stat({ label, value, live }: { label: string; value: string; live?: boolean }) {
+function Stat({ label, value }: { label: string; value: string }) {
   return (
     <View style={{ flex: 1, gap: 2 }}>
       <Text variant="caption" tone="secondary">{label}</Text>
-      <Text variant="heading" num accessibilityLiveRegion={live ? 'none' : undefined}>{value}</Text>
+      <Text variant="heading" num>{value}</Text>
     </View>
   );
+}
+
+/** The running work time: only this text redraws each second, not the card around it. */
+function Elapsed({ base, running }: { base: number; running: boolean }) {
+  const [extra, setExtra] = React.useState(0);
+  React.useEffect(() => {
+    setExtra(0);
+    if (!running) return;
+    const started = Date.now();
+    const t = setInterval(() => setExtra(Math.floor((Date.now() - started) / 1000)), 1000);
+    return () => clearInterval(t);
+  }, [base, running]);
+  const total = base + extra;
+  return <Text variant="heading" num accessibilityLabel={`${Math.floor(total / 3600)} hours ${Math.floor((total % 3600) / 60)} minutes`}>{formatDuration(total).slice(0, 5)}</Text>;
 }
 
 const styles = StyleSheet.create({

@@ -1,8 +1,11 @@
 name: Android app on an emulator
 
-# Opens the release build of the Android app (packages/mobile; signed with the debug key) on Android 11 and 14
-# emulators and keeps logcat, the screen and screenshots as an artifact. Fails when the app crashes or does not show
-# its sign-in screen. Runs on changes to the app and on demand: check it before every Play release.
+# Two checks of the release build of the Android app (packages/mobile; signed with the debug key):
+# - smoke: opens it on Android 11 and 14 emulators; fails when it crashes or does not show its sign-in screen.
+# - journey: a build pointed at this runner's own API, GoTrue test double and demo seed (never production) signs in
+#   as an employee and as a manager on Android 14 and walks the main screens, keeping a screenshot of each.
+# Logcat, screen text and screenshots are kept as artifacts. Runs on changes to the app and on demand: check it
+# before every Play release.
 
 on:
   push:
@@ -38,6 +41,7 @@ jobs:
         working-directory: packages/mobile
         run: |
           npm ci --no-audit --no-fund
+          npx expo-modules-autolinking resolve --platform android --json | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{if(!JSON.parse(s).modules.some(x=>x.packageName==='google-id')){console.error('::error::modules/google-id is not linked');process.exit(1)}})"
           npx expo prebuild --platform android --no-install --clean
           cd android && ./gradlew --no-daemon :app:assembleRelease -PreactNativeArchitectures=x86_64
 
@@ -62,3 +66,95 @@ jobs:
         with:
           name: android-smoke-api${{ matrix.api-level }}
           path: smoke
+
+  journey:
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: jantahr
+          POSTGRES_PASSWORD: jantahr_ci
+          POSTGRES_DB: jantahr_ci
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U jantahr" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgresql://jantahr:jantahr_ci@localhost:5432/jantahr_ci?schema=public
+      JWT_SECRET: ci-only-jwt-secret-please-ignore
+      ENCRYPTION_KEY: ci-only-encryption-key
+      PORT: '3002'
+      GOTRUE_JWT_SECRET: ci-only-gotrue-jwt-secret-0123456789
+      GOTRUE_SERVICE_KEY: ci-only-service-key
+      SUPABASE_URL: http://localhost:9999
+      SUPABASE_PUBLISHABLE_KEY: anon-local
+      SUPABASE_SECRET_KEY: ci-only-service-key
+      SUPABASE_JWT_SECRET: ci-only-gotrue-jwt-secret-0123456789
+      EDITION: cloud
+      BILLING_PROVIDER: mock
+      STORAGE_DRIVER: local
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with: { version: 9.6.0 }
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Start the API on the demo seed
+        working-directory: packages/backend
+        run: |
+          pnpm install --frozen-lockfile
+          npx prisma generate && npx prisma migrate deploy && pnpm build
+          PORT=9999 nohup node test/support/gotrue-stub.mjs > gotrue.log 2>&1 &
+          pnpm prisma:seed > seed.log 2>&1 && tail -3 seed.log
+          nohup node dist/main.js > api.log 2>&1 &
+          for i in $(seq 1 30); do curl -sf localhost:3002/health && break || sleep 2; done
+
+      - name: Build the journey APK (talks to this runner)
+        working-directory: packages/mobile
+        env:
+          EXPO_PUBLIC_API_URL: http://10.0.2.2:3002
+          EXPO_PUBLIC_SUPABASE_URL: http://10.0.2.2:9999
+          EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: anon-local
+        run: |
+          npm ci --no-audit --no-fund
+          npx expo prebuild --platform android --no-install --clean
+          cd android && ./gradlew --no-daemon :app:assembleRelease -PreactNativeArchitectures=x86_64
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Sign in and walk the app on Android 14
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis_playstore
+          arch: x86_64
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot
+          script: bash packages/mobile/scripts/journey.sh packages/mobile/android/app/build/outputs/apk/release/app-release.apk
+
+      - name: API log on failure
+        if: failure()
+        run: tail -60 packages/backend/api.log || true
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: android-journey
+          path: journey

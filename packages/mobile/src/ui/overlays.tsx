@@ -28,7 +28,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     <ToastContext.Provider value={show}>
       {children}
       {toast && (
-        <Animated.View pointerEvents="none" accessibilityLiveRegion="polite" style={[styles.toast, { opacity, bottom: insets.bottom + 72, backgroundColor: colors.text }]}>
+        <Animated.View pointerEvents="none" accessibilityLiveRegion="polite" style={[styles.toast, { opacity, bottom: insets.bottom + 96, backgroundColor: colors.text }]}>
           <Ionicons name={toast.kind === 'success' ? 'checkmark-circle' : 'alert-circle'} size={20} color={toast.kind === 'success' ? colors.success : colors.danger} />
           <Text style={{ color: colors.background, flexShrink: 1 }}>{toast.message}</Text>
         </Animated.View>
@@ -41,15 +41,20 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
 export function Sheet({ open, onClose, title, children }: { open: boolean; onClose: () => void; title: string; children: React.ReactNode }) {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
+  // the scrim fades in while the sheet rises (Material's bottom sheet), rather than the whole layer sliding up
+  const rise = React.useRef(new Animated.Value(400)).current;
+  React.useEffect(() => {
+    if (open) { rise.setValue(400); Animated.spring(rise, { toValue: 0, useNativeDriver: true, damping: 22, stiffness: 220, mass: 0.9 }).start(); }
+  }, [open, rise]);
   return (
-    <Modal visible={open} transparent animationType="slide" onRequestClose={onClose} statusBarTranslucent>
+    <Modal visible={open} transparent animationType="fade" onRequestClose={onClose} statusBarTranslucent navigationBarTranslucent>
       <Pressable style={[StyleSheet.absoluteFill, { backgroundColor: colors.overlay }]} onPress={onClose} accessibilityLabel="Close" />
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.sheetWrap} pointerEvents="box-none">
-        <View style={[styles.sheet, { backgroundColor: colors.background, paddingBottom: insets.bottom + space.lg }]} accessibilityViewIsModal>
+      <KeyboardAvoidingView behavior="padding" style={styles.sheetWrap} pointerEvents="box-none">
+        <Animated.View style={[styles.sheet, { backgroundColor: colors.background, paddingBottom: insets.bottom + space.lg, transform: [{ translateY: rise }] }]} accessibilityViewIsModal>
           <View style={[styles.grabber, { backgroundColor: colors.border }]} />
           <Text variant="heading" accessibilityRole="header">{title}</Text>
           {children}
-        </View>
+        </Animated.View>
       </KeyboardAvoidingView>
     </Modal>
   );

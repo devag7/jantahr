@@ -62,7 +62,7 @@ export function CalendarPicker({ from, to, onChange, range = true, marked = [], 
 const styles = StyleSheet.create({
   head: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   grid: { flexDirection: 'row', flexWrap: 'wrap' },
-  cell: { width: `${100 / 7}%`, height: 44, alignItems: 'center', justifyContent: 'center' },
-  day: { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center' },
+  cell: { width: `${100 / 7}%`, height: 48, alignItems: 'center', justifyContent: 'center' },
+  day: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
   dot: { position: 'absolute', bottom: 3, width: 4, height: 4, borderRadius: 2 },
 });

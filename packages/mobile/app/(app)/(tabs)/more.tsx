@@ -27,7 +27,7 @@ export default function More() {
   const confirmSignOut = () => Alert.alert('Sign out of JantaHR?', undefined, [{ text: 'Cancel', style: 'cancel' }, { text: 'Sign out', style: 'destructive', onPress: () => void signOut() }]);
 
   return (
-    <Page>
+    <Page title="More">
       <Card style={styles.me}>
         <View style={[styles.avatar, { backgroundColor: colors.primarySoft }]}><Text variant="heading" tone="accent">{initials(name)}</Text></View>
         <View style={{ flex: 1, gap: 2 }}>

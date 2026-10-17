@@ -6,7 +6,7 @@ import { PunchCard } from '@/features/punch-card';
 import { useMonthLog, useMyAttendanceRequests } from '@/features/queries';
 import { errorMessage } from '@/lib/api';
 import { MONTH_NAMES, formatDate, formatTime } from '@/lib/format';
-import { Button, Card, EmptyState, ErrorState, IconButton, Loading, Page, Row, Section, StatusBadge, Text } from '@/ui/kit';
+import { Button, Card, EmptyState, ErrorState, IconButton, Page, Row, Section, SkeletonCard, StatusBadge, Text } from '@/ui/kit';
 import { space, useTheme } from '@/ui/theme';
 
 const WEEKDAY = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -25,9 +25,9 @@ export default function Attendance() {
   const days = (log.data?.days ?? []).filter((d) => d.status !== 'FUTURE').slice().reverse();
   const sum = log.data?.summary;
 
-  if (!user?.employee) return <Page><EmptyState icon="person-outline" title="No employee profile" message="Your sign-in is not linked to an employee record, so there is no attendance to show." /></Page>;
+  if (!user?.employee) return <Page title="Attendance"><EmptyState icon="person-outline" title="No employee profile" message="Your sign-in is not linked to an employee record, so there is no attendance to show." /></Page>;
   return (
-    <Page onRefresh={() => { void log.refetch(); void requests.refetch(); }} refreshing={log.isRefetching}>
+    <Page title="Attendance" onRefresh={() => { void log.refetch(); void requests.refetch(); }} refreshing={log.isRefetching}>
       <PunchCard />
       <Button title="Correct a day, or request WFH / on duty" kind="secondary" icon="create-outline" onPress={() => router.push('/attendance-request')} />
 
@@ -46,7 +46,7 @@ export default function Attendance() {
             <Total label="Hours" value={Math.round(sum.workingHours)} />
           </Card>
         )}
-        {log.isLoading ? <Loading /> : log.isError ? <ErrorState message={errorMessage(log.error)} onRetry={() => void log.refetch()} /> : days.length === 0 ? (
+        {log.isLoading ? <SkeletonCard rows={6} /> : log.isError ? <ErrorState message={errorMessage(log.error)} onRetry={() => void log.refetch()} /> : days.length === 0 ? (
           <EmptyState icon="calendar-outline" title="Nothing yet this month" />
         ) : (
           <Card padded={false}>

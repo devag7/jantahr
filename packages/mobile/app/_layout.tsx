@@ -6,6 +6,7 @@ import { StatusBar } from 'expo-status-bar';
 import * as SystemUI from 'expo-system-ui';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { QueryClient, QueryClientProvider, focusManager } from '@tanstack/react-query';
 import { AuthProvider, useAuth } from '@/auth/auth';
 import { AppLockProvider } from '@/auth/lock';
@@ -42,18 +43,26 @@ function Routes() {
   );
 }
 
+/** Keyboard insets for edge-to-edge Android (the browser preview has no native keyboard module). */
+const Keyboard = ({ children }: { children: React.ReactNode }) => (Platform.OS === 'web' ? <>{children}</> : <KeyboardProvider>{children}</KeyboardProvider>);
+
 export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <QueryClientProvider client={queryClient}>
-          <ToastProvider>
-            <AuthProvider>
-              <Routes />
-            </AuthProvider>
-          </ToastProvider>
-        </QueryClientProvider>
+        <Keyboard>
+          <QueryClientProvider client={queryClient}>
+            <ToastProvider>
+              <AuthProvider>
+                <Routes />
+              </AuthProvider>
+            </ToastProvider>
+          </QueryClientProvider>
+        </Keyboard>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );
 }
+
+// a screen that throws shows a retry instead of a blank page
+export { ScreenError as ErrorBoundary } from '@/ui/error-boundary';

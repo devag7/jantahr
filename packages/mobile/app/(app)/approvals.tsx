@@ -7,7 +7,7 @@ import {
 } from '@/features/queries';
 import { errorMessage } from '@/lib/api';
 import { formatDate, formatINR, plural } from '@/lib/format';
-import { Badge, Button, Card, EmptyState, ErrorState, Field, Loading, Page, Segmented, Text } from '@/ui/kit';
+import { Badge, Button, Card, EmptyState, ErrorState, Field, Page, Segmented, SkeletonCard, Text } from '@/ui/kit';
 import { Sheet } from '@/ui/overlays';
 import { space } from '@/ui/theme';
 
@@ -20,6 +20,8 @@ const REQ = { REGULARIZE: 'Attendance correction', ON_DUTY: 'On duty', WFH: 'Wor
 export default function Approvals() {
   const { user } = useAuth();
   const has = { expenses: useHasFeature('expenses'), performance: useHasFeature('performance'), lifecycle: useHasFeature('lifecycle') };
+  // decided items leave the list at once; one comes back only if the API refuses the decision
+  const [decidedIds, setDecidedIds] = React.useState<Set<string>>(new Set());
   const q = {
     leave: usePendingLeave(true), attendance: usePendingAttendance(true), expenses: usePendingClaims(has.expenses), travel: usePendingTravel(has.expenses),
     comp: usePendingCompOff(true), goals: usePendingGoals(has.performance), resignations: usePendingSeparations(has.lifecycle, user?.employee?.id),
@@ -28,7 +30,7 @@ export default function Approvals() {
     leave: useDecideLeave(), attendance: useDecideAttendance(), expenses: useDecideClaim(), travel: useDecideTravel(), comp: useDecideCompOff(), goals: useDecideGoal(), resignations: useDecideSeparation(),
   };
 
-  const items: Record<Kind, Item[]> = {
+  const all: Record<Kind, Item[]> = {
     leave: (q.leave.data ?? []).map((l) => ({ id: l.id, who: l.employee, title: `${l.leaveType.name} · ${plural(l.totalLeaveDays, 'day')}`, detail: range(l.fromDate, l.toDate), note: l.reason, tag: l.leaveType.isLWP ? 'Unpaid' : undefined })),
     attendance: (q.attendance.data ?? []).map((r) => ({ id: r.id, who: r.employee, title: `${REQ[r.requestType]}${r.halfDay ? ' · half day' : ''}`, detail: range(r.fromDate, r.toDate), note: r.reason })),
     expenses: (q.expenses.data ?? []).map((c) => ({ id: c.id, who: c.employee, title: `${c.title} · ${formatINR(c.totalClaimed)}`, detail: `${plural(c.items.length, 'item')}${c.submittedAt ? ` · submitted ${formatDate(c.submittedAt)}` : ''}`, note: c.items.map((i) => `${i.category}: ${formatINR(i.amount)}`).join('\n') })),
@@ -37,6 +39,7 @@ export default function Approvals() {
     goals: (q.goals.data ?? []).map((g) => ({ id: g.id, who: g.employee, title: g.title, detail: `Weight ${g.weightage}%${g.targetValue ? ` · target ${g.targetValue}` : ''} · ${range(g.startDate, g.endDate)}`, note: g.description })),
     resignations: (q.resignations.data ?? []).map((s) => ({ id: s.id, who: s.employee, title: s.separationType === 'RESIGNATION' ? 'Resignation' : s.separationType.charAt(0) + s.separationType.slice(1).toLowerCase(), detail: `Resigned ${formatDate(s.resignationDate)} · last day ${formatDate(s.lastWorkingDate)} · notice ${s.noticePeriodDays} days` })),
   };
+  const items = Object.fromEntries(Object.entries(all).map(([k, list]) => [k, list.filter((i) => !decidedIds.has(i.id))])) as Record<Kind, Item[]>;
   const tabs: { value: Kind; label: string; on: boolean }[] = [
     { value: 'leave', label: 'Leave', on: true }, { value: 'attendance', label: 'Attendance', on: true }, { value: 'expenses', label: 'Expenses', on: has.expenses },
     { value: 'travel', label: 'Travel', on: has.expenses }, { value: 'comp', label: 'Comp-off', on: true }, { value: 'goals', label: 'Goals', on: has.performance },
@@ -50,13 +53,18 @@ export default function Approvals() {
   const [rejecting, setRejecting] = React.useState<Item | null>(null);
   const [comment, setComment] = React.useState('');
 
-  const decide = (item: Item, decision: Decision, note?: string) => act[current].mutate({ id: item.id, decision, comment: note }, { onSuccess: () => { setRejecting(null); setComment(''); } });
+  const decide = (item: Item, decision: Decision, note?: string) => {
+    setDecidedIds((s) => new Set(s).add(item.id));
+    setRejecting(null);
+    setComment('');
+    act[current].mutate({ id: item.id, decision, comment: note }, { onError: () => setDecidedIds((s) => { const n = new Set(s); n.delete(item.id); return n; }) });
+  };
   const refreshAll = () => Object.values(q).forEach((x) => void x.refetch());
 
   return (
     <Page onRefresh={refreshAll} refreshing={Object.values(q).some((x) => x.isRefetching)}>
       <Segmented value={current} onChange={setKind} options={visible.map((t) => ({ value: t.value, label: t.label, count: items[t.value].length }))} />
-      {query.isLoading ? <Loading /> : query.isError ? <ErrorState message={errorMessage(query.error)} onRetry={() => void query.refetch()} /> : items[current].length === 0 ? (
+      {query.isLoading ? <SkeletonCard rows={2} /> : query.isError ? <ErrorState message={errorMessage(query.error)} onRetry={() => void query.refetch()} /> : items[current].length === 0 ? (
         <EmptyState icon="checkmark-done-outline" title="Nothing waiting" message="You are all caught up here." />
       ) : (
         items[current].map((item) => (
@@ -71,8 +79,8 @@ export default function Approvals() {
             </View>
             {!!item.note && <Text variant="caption" tone="secondary" style={{ fontStyle: 'italic' }}>{item.note}</Text>}
             <View style={{ flexDirection: 'row', gap: space.md }}>
-              <Button title="Reject" kind="danger" compact style={{ flex: 1 }} disabled={act[current].isPending} onPress={() => setRejecting(item)} />
-              <Button title="Approve" compact style={{ flex: 1 }} loading={act[current].isPending && act[current].variables?.id === item.id && act[current].variables?.decision === 'approve'} onPress={() => decide(item, 'approve')} />
+              <Button title="Reject" kind="danger" compact style={{ flex: 1 }} onPress={() => setRejecting(item)} />
+              <Button title="Approve" compact style={{ flex: 1 }} onPress={() => decide(item, 'approve')} />
             </View>
           </Card>
         ))
@@ -80,7 +88,7 @@ export default function Approvals() {
       <Sheet open={!!rejecting} onClose={() => setRejecting(null)} title="Reject this request?">
         <Text tone="secondary">{rejecting ? `${rejecting.who.firstName}'s ${rejecting.title.toLowerCase()}` : ''}</Text>
         <Field label="Reason (shown to them)" value={comment} onChangeText={setComment} multiline maxLength={300} placeholder="Team is short that week; please pick other dates" autoFocus />
-        <Button title="Reject" kind="danger" loading={act[current].isPending} onPress={() => rejecting && decide(rejecting, 'reject', comment.trim() || undefined)} />
+        <Button title="Reject" kind="danger" onPress={() => rejecting && decide(rejecting, 'reject', comment.trim() || undefined)} />
       </Sheet>
     </Page>
   );

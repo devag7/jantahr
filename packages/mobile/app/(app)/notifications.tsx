@@ -4,7 +4,7 @@ import { router, Stack } from 'expo-router';
 import { useMarkAllRead, useMarkRead, useNotifications } from '@/features/queries';
 import { errorMessage } from '@/lib/api';
 import { formatDateTime } from '@/lib/format';
-import { Card, EmptyState, ErrorState, Loading, Page, Row, Text } from '@/ui/kit';
+import { Card, EmptyState, ErrorState, LinkButton, Page, Row, SkeletonCard } from '@/ui/kit';
 import { useTheme } from '@/ui/theme';
 import type { AppNotification } from '@/types/engagement';
 
@@ -33,8 +33,8 @@ export default function Notifications() {
   const items = q.data?.items ?? [];
   return (
     <Page onRefresh={() => void q.refetch()} refreshing={q.isRefetching}>
-      <Stack.Screen options={{ headerRight: () => (q.data?.unreadCount ? <Text tone="accent" onPress={() => readAll.mutate(undefined)} accessibilityRole="button">Mark all read</Text> : null) }} />
-      {q.isLoading ? <Loading /> : q.isError ? <ErrorState message={errorMessage(q.error)} onRetry={() => void q.refetch()} /> : items.length === 0 ? (
+      <Stack.Screen options={{ headerRight: () => (q.data?.unreadCount ? <LinkButton title="Mark all read" onPress={() => readAll.mutate(undefined)} /> : null) }} />
+      {q.isLoading ? <SkeletonCard rows={5} /> : q.isError ? <ErrorState message={errorMessage(q.error)} onRetry={() => void q.refetch()} /> : items.length === 0 ? (
         <EmptyState icon="notifications-outline" title="No notifications" message="Approvals, decisions on your requests and payslips show up here." />
       ) : (
         <Card padded={false}>

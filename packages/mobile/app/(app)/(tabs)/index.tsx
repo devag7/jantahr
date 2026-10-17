@@ -4,10 +4,10 @@ import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { isApprover, useAuth } from '@/auth/auth';
 import { PunchCard } from '@/features/punch-card';
-import { useEss } from '@/features/queries';
+import { useEss, useNotifications } from '@/features/queries';
 import { errorMessage } from '@/lib/api';
 import { formatDate, formatINR, formatPayMonth, plural } from '@/lib/format';
-import { Card, ErrorState, Loading, Page, Row, Section, Text } from '@/ui/kit';
+import { Card, ErrorState, IconButton, LinkButton, Page, Row, Section, Skeleton, SkeletonCard, Text } from '@/ui/kit';
 import { radius, space, useTheme } from '@/ui/theme';
 
 const greeting = () => { const h = new Date().getHours(); return h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening'; };
@@ -17,21 +17,19 @@ export default function Home() {
   const { user } = useAuth();
   const { colors } = useTheme();
   const ess = useEss();
+  const notes = useNotifications();
   const d = ess.data;
   const approvals = isApprover(user) ? d?.pendingApprovals?.total ?? 0 : 0;
   const slip = d?.latestPayslips[0];
   const today = new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' });
 
   return (
-    <Page onRefresh={() => void ess.refetch()} refreshing={ess.isRefetching}>
-      <View style={{ gap: space.xs }}>
-        <Text variant="caption" tone="secondary">{today}</Text>
-        <Text variant="title">{greeting()}, {user?.employee?.firstName ?? 'there'}</Text>
-      </View>
+    <Page onRefresh={() => { void ess.refetch(); void notes.refetch(); }} refreshing={ess.isRefetching} subtitle={today} title={`${greeting()}, ${user?.employee?.firstName ?? 'there'}`}
+      actions={<IconButton icon="notifications-outline" label="Notifications" tone={colors.text} badge={notes.data?.unreadCount} onPress={() => router.push('/notifications')} />}>
 
       {user?.employee && <PunchCard />}
 
-      {ess.isLoading ? <Loading /> : ess.isError ? <ErrorState message={errorMessage(ess.error)} onRetry={() => void ess.refetch()} /> : d && (
+      {ess.isLoading ? <HomeSkeleton /> : ess.isError ? <ErrorState message={errorMessage(ess.error)} onRetry={() => void ess.refetch()} /> : d && (
         <>
           {approvals > 0 && (
             <Pressable onPress={() => router.push('/approvals')} accessibilityRole="button"
@@ -48,7 +46,7 @@ export default function Home() {
           )}
 
           {d.leaveBalances.length > 0 && (
-            <Section title="Leave balance" action={<Text variant="caption" tone="accent" onPress={() => router.push('/apply-leave')}>Apply</Text>}>
+            <Section title="Leave balance" action={<LinkButton title="Apply" onPress={() => router.push('/apply-leave')} />}>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: space.md }}>
                 {d.leaveBalances.filter((b) => !b.isLWP).map((b) => (
                   <Card key={b.leaveTypeId} style={styles.balance}>
@@ -88,7 +86,7 @@ export default function Home() {
           )}
 
           {d.upcomingHolidays.length > 0 && (
-            <Section title="Coming holidays" action={<Text variant="caption" tone="accent" onPress={() => router.push('/holidays')}>All</Text>}>
+            <Section title="Coming holidays" action={<LinkButton title="All" onPress={() => router.push('/holidays')} />}>
               <Card padded={false}>
                 {d.upcomingHolidays.slice(0, 3).map((h, i, a) => <Row key={h.date} icon="sunny-outline" iconTone={colors.warning} title={h.name} value={formatDate(h.date, false)} last={i === a.length - 1} />)}
               </Card>
@@ -123,6 +121,16 @@ export default function Home() {
         </>
       )}
     </Page>
+  );
+}
+
+function HomeSkeleton() {
+  return (
+    <View style={{ gap: space.xl }}>
+      <View style={{ flexDirection: 'row', gap: space.md }}>{[0, 1, 2].map((i) => <Card key={i} style={styles.balance}><Skeleton height={28} width={40} /><Skeleton height={12} width="80%" /></Card>)}</View>
+      <SkeletonCard rows={2} />
+      <SkeletonCard rows={3} />
+    </View>
   );
 }
 

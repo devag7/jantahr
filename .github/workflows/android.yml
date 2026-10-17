@@ -75,6 +75,11 @@ jobs:
       - name: Type-check
         run: npx tsc --noEmit
 
+      # 2.0.0 shipped without Google sign-in because the module's Kotlin sources were git-ignored: autolinking
+      # skipped it silently and the button hid itself
+      - name: Check the app's own native modules are linked
+        run: npx expo-modules-autolinking resolve --platform android --json | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{const m=JSON.parse(s).modules.map(x=>x.packageName);if(!m.includes('google-id')){console.error('::error::modules/google-id is not linked for Android');process.exit(1)}console.log('linked:',m.length,'modules, google-id included')})"
+
       - name: Work out the version
         id: version
         env:
