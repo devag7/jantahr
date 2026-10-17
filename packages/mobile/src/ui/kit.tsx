@@ -6,7 +6,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { Ionicons } from '@expo/vector-icons';
-import { radius, space, strong, tabular, type, useTheme } from './theme';
+import { font, radius, space, strong, tabular, type, useTheme } from './theme';
 
 export type IconName = React.ComponentProps<typeof Ionicons>['name'];
 
@@ -38,7 +38,7 @@ export function Button({ title, onPress, kind = 'primary', icon, loading, disabl
   const off = disabled || loading;
   const ripple = useRipple(kind === 'primary' ? 'rgba(255,255,255,0.24)' : undefined);
   return (
-    <View style={[s.buttonClip, compact && s.buttonCompact, { opacity: off ? 0.5 : 1 }, style]}>
+    <View style={[s.buttonClip, compact && s.buttonClipCompact, { opacity: off ? 0.5 : 1 }, style]}>
       <Pressable
         accessibilityRole="button" accessibilityLabel={accessibilityLabel ?? title} accessibilityState={{ disabled: !!off, busy: !!loading }}
         disabled={off} onPress={onPress} {...ripple}
@@ -271,9 +271,10 @@ const s = StyleSheet.create({
   buttonClip: { borderRadius: radius.pill, overflow: 'hidden', minHeight: 48 },
   button: { minHeight: 48, borderRadius: radius.pill, paddingHorizontal: space.xl, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.sm, flexGrow: 1 },
   buttonCompact: { minHeight: 44, paddingHorizontal: space.lg },
+  buttonClipCompact: { minHeight: 44 },
   iconButton: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
   dotBadge: { position: 'absolute', top: 6, right: 4, minWidth: 18, height: 18, borderRadius: 9, paddingHorizontal: 4, alignItems: 'center', justifyContent: 'center', borderWidth: 2 },
-  dotBadgeText: { color: '#fff', fontSize: 10, fontWeight: '700' },
+  dotBadgeText: { color: '#fff', fontSize: 10, fontFamily: font.semibold },
   card: { borderRadius: radius.lg, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 1, shadowRadius: 12, elevation: 1, overflow: 'hidden' },
   sectionHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: space.xs, minHeight: 24 },
   sectionTitle: { letterSpacing: 0.4 },

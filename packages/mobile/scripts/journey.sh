@@ -43,23 +43,27 @@ adb logcat -c
 
 echo "--- employee"
 sign_in employee@jantahr.com Demo@1234
-shot employee-home 10;            expect employee-home "Check in"; expect employee-home "LEAVE BALANCE"
-tap 'text="Attendance"';   shot employee-attendance; expect employee-attendance "Correct a day"
-tap 'text="Leave"';        shot employee-leave;      expect employee-leave "Apply for leave"
-tap 'content-desc="Apply for leave"' || tap 'text="Apply for leave"'; shot employee-apply-leave; expect employee-apply-leave "Tap the first day"
+shot employee-home 10;            expect employee-home "Check in"; expect employee-home "LEAVE LEFT"
+# bottom-bar items carry their label as content-desc (More's adds the badge: "More, 14 new notifications")
+tap 'content-desc="Attendance'; shot employee-attendance; expect employee-attendance "Present"
+tap 'content-desc="Leave'; shot employee-leave;      expect employee-leave "Apply for leave"
+tap 'text="Apply for leave"'; shot employee-apply-leave; expect employee-apply-leave "Tap the first day"
 adb shell input keyevent KEYCODE_BACK; sleep 1
-tap 'text="Payslips"';     shot employee-payslips;   expect employee-payslips "Sep 2026"
-tap 'text="More"';         shot employee-more;       expect employee-more "Vikram Singh"
+tap 'content-desc="Payslips'; shot employee-payslips;   expect employee-payslips "Sep 2026"
+tap 'content-desc="More'; shot employee-more;       expect employee-more "Vikram Singh"
 tap 'text="Notifications"'; shot employee-notifications
 adb shell input keyevent KEYCODE_BACK; sleep 1
-tap 'text="Home"';         shot employee-home-again 2
+tap 'content-desc="Home'; shot employee-home-again 2
 
 echo "--- manager"
 sign_in manager@jantahr.com Demo@1234
 shot manager-home 10;      expect manager-home "waiting for you"
-tap 'text="More"';         shot manager-more;        expect manager-more "Approvals"
+tap 'content-desc="More'; shot manager-more;        expect manager-more "Approvals"
 tap 'text="Approvals"';    shot manager-approvals;   expect manager-approvals "Approve"
 tap 'text="Reject"';       shot manager-reject-sheet 2; expect manager-reject-sheet "Reject this request?"
+adb shell input keyevent KEYCODE_BACK; sleep 1
+adb shell input keyevent KEYCODE_BACK; sleep 1
+tap 'text="My team"';      shot manager-team;        expect manager-team "in today"
 
 adb logcat -d > "$OUT/logcat.txt"
 if grep -q "FATAL EXCEPTION" "$OUT/logcat.txt" && grep -q "Process: $PKG" "$OUT/logcat.txt"; then echo "::error::The app crashed"; grep -A25 "FATAL EXCEPTION" "$OUT/logcat.txt" | head -40; fail=1; fi

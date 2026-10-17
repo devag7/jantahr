@@ -1,7 +1,7 @@
 import { NativeTabs } from 'expo-router/native-tabs';
 import { isApprover, useAuth } from '@/auth/auth';
 import { useEss, useNotifications } from '@/features/queries';
-import { useTheme } from '@/ui/theme';
+import { font, useTheme } from '@/ui/theme';
 
 /**
  * Android's own bottom navigation bar (Material 3: pill indicator, ripple, native switching), five destinations with
@@ -19,7 +19,7 @@ export default function TabsLayout() {
       indicatorColor={colors.primarySoft}
       rippleColor={colors.primarySoft}
       iconColor={{ default: colors.textSecondary, selected: colors.primary }}
-      labelStyle={{ default: { color: colors.textSecondary, fontSize: 12 }, selected: { color: colors.text, fontSize: 12, fontWeight: '600' } }}
+      labelStyle={{ default: { color: colors.textSecondary, fontSize: 12, fontFamily: font.regular }, selected: { color: colors.text, fontSize: 12, fontFamily: font.semibold } }}
       badgeBackgroundColor={colors.danger}
       labelVisibilityMode="labeled"
       backBehavior="initialRoute"

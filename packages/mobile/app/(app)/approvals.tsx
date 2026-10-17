@@ -9,7 +9,8 @@ import { errorMessage } from '@/lib/api';
 import { formatDate, formatINR, plural } from '@/lib/format';
 import { Badge, Button, Card, EmptyState, ErrorState, Field, Page, Segmented, SkeletonCard, Text } from '@/ui/kit';
 import { Sheet } from '@/ui/overlays';
-import { space } from '@/ui/theme';
+import { Avatar } from '@/ui/visual';
+import { radius, space, useTheme } from '@/ui/theme';
 
 type Kind = 'leave' | 'attendance' | 'expenses' | 'travel' | 'comp' | 'goals' | 'resignations';
 interface Item { id: string; who: { firstName: string; lastName: string; employeeCode: string }; title: string; detail: string; note?: string | null; tag?: string }
@@ -19,6 +20,7 @@ const REQ = { REGULARIZE: 'Attendance correction', ON_DUTY: 'On duty', WFH: 'Wor
 /** Everything waiting for this person's decision, one kind at a time. Reject asks for a reason the requester sees. */
 export default function Approvals() {
   const { user } = useAuth();
+  const { colors } = useTheme();
   const has = { expenses: useHasFeature('expenses'), performance: useHasFeature('performance'), lifecycle: useHasFeature('lifecycle') };
   // decided items leave the list at once; one comes back only if the API refuses the decision
   const [decidedIds, setDecidedIds] = React.useState<Set<string>>(new Set());
@@ -65,19 +67,27 @@ export default function Approvals() {
     <Page onRefresh={refreshAll} refreshing={Object.values(q).some((x) => x.isRefetching)}>
       <Segmented value={current} onChange={setKind} options={visible.map((t) => ({ value: t.value, label: t.label, count: items[t.value].length }))} />
       {query.isLoading ? <SkeletonCard rows={2} /> : query.isError ? <ErrorState message={errorMessage(query.error)} onRetry={() => void query.refetch()} /> : items[current].length === 0 ? (
-        <EmptyState icon="checkmark-done-outline" title="Nothing waiting" message="You are all caught up here." />
+        <EmptyState icon="checkmark-done-circle-outline" title="All caught up" message="Nothing is waiting for you here. New requests show up as they come in." />
       ) : (
         items[current].map((item) => (
           <Card key={item.id} style={{ gap: space.md }}>
-            <View style={{ gap: 2 }}>
-              <Text variant="caption" tone="secondary">{item.who.firstName} {item.who.lastName} · {item.who.employeeCode}</Text>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.sm }}>
-                <Text bold style={{ flex: 1 }}>{item.title}</Text>
-                {item.tag && <Badge label={item.tag} tone="warning" />}
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.md }}>
+              <Avatar name={`${item.who.firstName} ${item.who.lastName}`} size={44} />
+              <View style={{ flex: 1, gap: 2 }}>
+                <Text bold numberOfLines={1}>{item.who.firstName} {item.who.lastName}</Text>
+                <Text variant="caption" tone="tertiary">{item.who.employeeCode}</Text>
               </View>
+              {item.tag && <Badge label={item.tag} tone="warning" />}
+            </View>
+            <View style={{ gap: 2 }}>
+              <Text variant="heading">{item.title}</Text>
               <Text tone="secondary">{item.detail}</Text>
             </View>
-            {!!item.note && <Text variant="caption" tone="secondary" style={{ fontStyle: 'italic' }}>{item.note}</Text>}
+            {!!item.note && (
+              <View style={{ backgroundColor: colors.raised, borderRadius: radius.md, padding: space.md }}>
+                <Text variant="caption" tone="secondary">{item.note}</Text>
+              </View>
+            )}
             <View style={{ flexDirection: 'row', gap: space.md }}>
               <Button title="Reject" kind="danger" compact style={{ flex: 1 }} onPress={() => setRejecting(item)} />
               <Button title="Approve" compact style={{ flex: 1 }} onPress={() => decide(item, 'approve')} />

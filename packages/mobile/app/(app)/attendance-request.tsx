@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { Switch } from 'react-native';
+import { useLocalSearchParams } from 'expo-router';
 import { closeForm } from '@/lib/nav';
 import { useCreateAttendanceRequest } from '@/features/queries';
 import { isoDate } from '@/lib/format';
@@ -18,9 +19,11 @@ const KINDS: { value: RequestType; label: string; hint: string }[] = [
 export default function AttendanceRequest() {
   const { colors } = useTheme();
   const create = useCreateAttendanceRequest();
+  // "Correct this day" on the Attendance calendar opens this with the day filled in
+  const { date } = useLocalSearchParams<{ date?: string }>();
   const [kind, setKind] = React.useState<RequestType>('REGULARIZE');
-  const [from, setFrom] = React.useState<string | null>(null);
-  const [to, setTo] = React.useState<string | null>(null);
+  const [from, setFrom] = React.useState<string | null>(date ?? null);
+  const [to, setTo] = React.useState<string | null>(date ?? null);
   const [halfDay, setHalfDay] = React.useState(false);
   const [reason, setReason] = React.useState('');
   const today = isoDate(new Date());

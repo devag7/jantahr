@@ -17,11 +17,11 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   orientation: 'portrait',
   userInterfaceStyle: 'automatic',
   icon: './assets/icon.png',
-  backgroundColor: '#F5F5F7',
+  backgroundColor: '#F4F6FB',
   android: {
     package: 'com.devshipit.jantahr',
     versionCode: Number(process.env.APP_VERSION_CODE ?? 20000),
-    adaptiveIcon: { foregroundImage: './assets/adaptive-icon.png', monochromeImage: './assets/monochrome-icon.png', backgroundColor: '#1260BD' },
+    adaptiveIcon: { foregroundImage: './assets/adaptive-icon.png', monochromeImage: './assets/monochrome-icon.png', backgroundColor: '#2350E8' },
     permissions: ['android.permission.ACCESS_COARSE_LOCATION', 'android.permission.ACCESS_FINE_LOCATION', 'android.permission.CAMERA', 'android.permission.USE_BIOMETRIC'],
     // nothing in the app records audio or reads the photo library: keep these out of the Play listing
     blockedPermissions: [
@@ -38,7 +38,10 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     ['expo-location', { locationWhenInUsePermission: 'JantaHR uses your location when you check in, to confirm you are at an office your company has set up.' }],
     ['expo-image-picker', { cameraPermission: 'JantaHR uses the camera for your check-in selfie and to photograph expense receipts.', photosPermission: false, microphonePermission: false }],
     ['expo-local-authentication', { faceIDPermission: 'Unlock JantaHR with Face ID.' }],
-    ['expo-splash-screen', { image: './assets/splash-icon.png', imageWidth: 96, backgroundColor: '#F5F5F7', dark: { backgroundColor: '#161617' } }],
+    // the brand moment at launch: the mark on cobalt
+    ['expo-splash-screen', { image: './assets/splash-icon.png', imageWidth: 140, backgroundColor: '#2350E8', dark: { image: './assets/splash-icon.png', backgroundColor: '#1A3BB8' } }],
+    // Inter, embedded in the app (no download at start): regular and semibold
+    ['expo-font', { fonts: ['./assets/fonts/Inter_400Regular.ttf', './assets/fonts/Inter_600SemiBold.ttf'] }],
     // plain HTTP only for the emulator journey build, which talks to the CI runner's own API (10.0.2.2)
     ['expo-build-properties', { android: { minSdkVersion: 24, usesCleartextTraffic: (process.env.EXPO_PUBLIC_API_URL ?? '').startsWith('http://') } }],
     './plugins/with-release-signing',

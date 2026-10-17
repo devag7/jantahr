@@ -2,6 +2,7 @@ import * as React from 'react';
 import { AppState, Platform } from 'react-native';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
+import { useFonts } from 'expo-font';
 import { StatusBar } from 'expo-status-bar';
 import * as SystemUI from 'expo-system-ui';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -24,9 +25,15 @@ if (Platform.OS !== 'web') AppState.addEventListener('change', (s) => focusManag
 function Routes() {
   const { status } = useAuth();
   const { colors, dark } = useTheme();
+  // embedded in the Android build by the expo-font plugin; this also loads them for the browser preview
+  const [fontsLoaded, fontError] = useFonts({
+    Inter_400Regular: require('../assets/fonts/Inter_400Regular.ttf'),
+    Inter_600SemiBold: require('../assets/fonts/Inter_600SemiBold.ttf'),
+  });
+  const ready = status !== 'loading' && (fontsLoaded || !!fontError);
   React.useEffect(() => { void SystemUI.setBackgroundColorAsync(colors.background); }, [colors.background]);
-  React.useEffect(() => { if (status !== 'loading') void SplashScreen.hideAsync().catch(() => undefined); }, [status]);
-  if (status === 'loading') return null;
+  React.useEffect(() => { if (ready) void SplashScreen.hideAsync().catch(() => undefined); }, [ready]);
+  if (!ready) return null;
   const signedIn = status === 'authenticated';
   return (
     <AppLockProvider active={signedIn}>

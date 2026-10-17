@@ -1,5 +1,5 @@
 import { Stack } from 'expo-router';
-import { type, useTheme } from '@/ui/theme';
+import { font, type, useTheme } from '@/ui/theme';
 
 /** Signed-in screens: the tabs, then details and forms pushed over them (forms slide up as sheets). */
 export default function AppLayout() {
@@ -10,7 +10,7 @@ export default function AppLayout() {
       screenOptions={{
         headerStyle: { backgroundColor: colors.background },
         headerTintColor: colors.primary,
-        headerTitleStyle: { ...type.body, fontWeight: '600', color: colors.text },
+        headerTitleStyle: { ...type.body, fontFamily: font.semibold, color: colors.text },
         headerShadowVisible: false,
         headerBackButtonDisplayMode: 'minimal',
         contentStyle: { backgroundColor: colors.background },
