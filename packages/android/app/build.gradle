@@ -73,6 +73,8 @@ android {
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt')
             if (keystore) signingConfig signingConfigs.upload
+            // -PdebugSigned: an installable release build for the emulator check (android-smoke.yml), never for Play
+            else if (project.hasProperty('debugSigned')) signingConfig signingConfigs.debug
         }
     }
 
