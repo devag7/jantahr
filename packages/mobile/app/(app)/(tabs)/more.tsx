@@ -5,12 +5,12 @@ import * as WebBrowser from 'expo-web-browser';
 import Constants from 'expo-constants';
 import { isApprover, isBackOffice, useAuth } from '@/auth/auth';
 import { useEss, useHasFeature, useNotifications } from '@/features/queries';
-import { SITE_URL, SUPPORT_EMAIL } from '@/lib/config';
+import { SUPPORT_EMAIL, webUrl } from '@/lib/config';
 import { initials } from '@/lib/format';
 import { Badge, Card, Page, Row, Section, Text } from '@/ui/kit';
 import { space, useTheme } from '@/ui/theme';
 
-const web = (path: string) => () => void WebBrowser.openBrowserAsync(`${SITE_URL}${path}`);
+const web = (path: string) => () => void WebBrowser.openBrowserAsync(webUrl(path));
 
 /** Everything else: approvals and team for managers, expenses, documents, settings, and the website for HR work. */
 export default function More() {

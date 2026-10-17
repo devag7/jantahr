@@ -3,7 +3,7 @@ import { router } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { useMySlips } from '@/features/queries';
 import { errorMessage } from '@/lib/api';
-import { SITE_URL } from '@/lib/config';
+import { webUrl } from '@/lib/config';
 import { formatINR, formatPayMonth } from '@/lib/format';
 import { Card, EmptyState, ErrorState, Loading, Page, Row, Section } from '@/ui/kit';
 
@@ -31,7 +31,7 @@ export default function Payslips() {
       )}
       <Section title="Tax">
         <Card padded={false}>
-          <Row icon="calculator-outline" title="Tax declaration and Form 16" subtitle="Opens the website" onPress={() => void WebBrowser.openBrowserAsync(`${SITE_URL}/me/tax`)} last />
+          <Row icon="calculator-outline" title="Tax declaration and Form 16" subtitle="Opens the website" onPress={() => void WebBrowser.openBrowserAsync(webUrl('/me/tax'))} last />
         </Card>
       </Section>
     </Page>

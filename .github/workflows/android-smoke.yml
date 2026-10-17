@@ -1,19 +1,19 @@
 name: Android app on an emulator
 
-# Opens the release build of the Android app (R8-shrunk, as on Play, but signed with a debug key) on Android
-# emulators that have Chrome, and keeps logcat, the screen and screenshots as an artifact. Answers "does the app
-# start?" without a phone. Runs on changes to the Android project and on demand.
+# Opens the release build of the Android app (packages/mobile; signed with the debug key) on Android 11 and 14
+# emulators and keeps logcat, the screen and screenshots as an artifact. Fails when the app crashes or does not show
+# its sign-in screen. Runs on changes to the app and on demand: check it before every Play release.
 
 on:
   push:
     branches: [main]
-    paths: ['packages/android/**', '.github/workflows/android-smoke.yml']
+    paths: ['packages/mobile/**', 'packages/frontend/src/types/**', 'packages/frontend/src/lib/format/**', '.github/workflows/android-smoke.yml']
   workflow_dispatch:
 
 jobs:
   smoke:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
@@ -21,17 +21,25 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: packages/mobile/package-lock.json
+
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
 
       - uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: '8.11.1'
 
-      - name: Build the release APK (debug-signed)
-        run: gradle --no-daemon -p packages/android assembleRelease -PdebugSigned -PversionName=0.0.0-smoke -PversionCode=1
+      - name: Build the release APK (debug-signed, x86_64 for the emulator)
+        working-directory: packages/mobile
+        run: |
+          npm ci --no-audit --no-fund
+          npx expo prebuild --platform android --no-install --clean
+          cd android && ./gradlew --no-daemon :app:assembleRelease -PreactNativeArchitectures=x86_64
 
       - name: Enable KVM
         run: |
@@ -47,7 +55,7 @@ jobs:
           arch: x86_64
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot
-          script: bash packages/android/scripts/smoke.sh packages/android/app/build/outputs/apk/release/app-release.apk
+          script: bash packages/mobile/scripts/smoke.sh packages/mobile/android/app/build/outputs/apk/release/app-release.apk
 
       - uses: actions/upload-artifact@v4
         if: always()

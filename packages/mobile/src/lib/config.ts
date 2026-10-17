@@ -10,3 +10,9 @@ export const SUPABASE_URL = extra.supabaseUrl ?? '';
 export const SUPABASE_KEY = extra.supabaseKey ?? '';
 export const GOOGLE_WEB_CLIENT_ID = extra.googleWebClientId ?? '';
 export const SUPPORT_EMAIL = 'jantahr@devshipit.com';
+
+/**
+ * A page of the website, opened from the app. `source=android-app` makes the site hide plan purchases for the
+ * session, as Google Play's payments policy requires of anything reached from a Play app.
+ */
+export const webUrl = (path: string) => `${SITE_URL}${path}${path.includes('?') ? '&' : '?'}source=android-app`;

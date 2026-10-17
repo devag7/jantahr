@@ -3,11 +3,11 @@ import { Alert, Switch } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
 import { useAuth } from '@/auth/auth';
 import { useAppLock } from '@/auth/lock';
-import { SITE_URL } from '@/lib/config';
+import { webUrl } from '@/lib/config';
 import { Card, Page, Row, Section, Text } from '@/ui/kit';
 import { useTheme } from '@/ui/theme';
 
-const web = (path: string) => () => void WebBrowser.openBrowserAsync(`${SITE_URL}${path}`);
+const web = (path: string) => () => void WebBrowser.openBrowserAsync(webUrl(path));
 
 export default function Settings() {
   const { colors } = useTheme();

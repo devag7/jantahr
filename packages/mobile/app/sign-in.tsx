@@ -3,7 +3,7 @@ import { Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleShee
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as WebBrowser from 'expo-web-browser';
 import { useAuth } from '@/auth/auth';
-import { SITE_URL } from '@/lib/config';
+import { webUrl } from '@/lib/config';
 import { Button, Field, Text, type InputRef } from '@/ui/kit';
 import { radius, space, useTheme } from '@/ui/theme';
 
@@ -48,7 +48,7 @@ export default function SignIn() {
         <Heading title="No JantaHR account" subtitle={notice ?? 'This sign-in is not linked to an employee in any JantaHR company.'} />
         <Text tone="secondary">Ask your HR team to add you with this email address, or create a company workspace on the website.</Text>
         <Button title="Use a different account" onPress={() => void signOut()} />
-        <Button title="Create a workspace" kind="secondary" onPress={() => void WebBrowser.openBrowserAsync(`${SITE_URL}/signup`)} />
+        <Button title="Create a workspace" kind="secondary" onPress={() => void WebBrowser.openBrowserAsync(webUrl('/signup'))} />
       </>
     );
   } else if (status === 'offline') {
@@ -68,7 +68,7 @@ export default function SignIn() {
         <Field ref={passwordRef} label="Password" value={password} onChangeText={setPassword} secureTextEntry autoComplete="current-password" textContentType="password" returnKeyType="go" onSubmitEditing={submit} />
         {!!message && <Text tone="danger" accessibilityLiveRegion="polite">{message}</Text>}
         <Button title="Sign in" loading={busy === 'password'} disabled={!!busy} onPress={submit} />
-        <Pressable onPress={() => void WebBrowser.openBrowserAsync(`${SITE_URL}/forgot-password`)} hitSlop={12} style={{ alignSelf: 'center' }} accessibilityRole="link">
+        <Pressable onPress={() => void WebBrowser.openBrowserAsync(webUrl('/forgot-password'))} hitSlop={12} style={{ alignSelf: 'center' }} accessibilityRole="link">
           <Text tone="accent">Forgot password?</Text>
         </Pressable>
         {googleAvailable && (
