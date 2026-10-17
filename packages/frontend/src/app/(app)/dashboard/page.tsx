@@ -2,6 +2,7 @@
 import { AdminDashboard } from '@/components/dashboard/admin-dashboard';
 import { EssDashboard } from '@/components/dashboard/ess-dashboard';
 import { PageHeader } from '@/components/common/page-header';
+import { InstallBanner } from '@/components/pwa/install-banner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/auth/use-auth';
 import { READ_ALL } from '@/lib/permissions';
@@ -13,6 +14,7 @@ export default function DashboardPage() {
   return (
     <>
       <PageHeader title={`${greeting}, ${user?.employee?.firstName ?? 'there'}`} description={[user?.employee?.designation?.name, user?.employee?.department?.name, user?.employee?.employeeCode].filter(Boolean).join(' · ') || undefined} />
+      <InstallBanner />
       {backOffice ? (
         <Tabs defaultValue="company">
           <TabsList><TabsTrigger value="company">Company overview</TabsTrigger>{user?.employee && <TabsTrigger value="me">My day</TabsTrigger>}</TabsList>

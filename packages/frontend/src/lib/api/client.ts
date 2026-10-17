@@ -90,6 +90,9 @@ export async function upload<T>(url: string, form: FormData, signUrl: string = E
   return (await http.post<T>(url, form, { headers: { 'Content-Type': 'multipart/form-data' } })).data;
 }
 
+/** The iPhone home-screen app: `navigator.standalone` exists only in Safari on iOS, and is true once installed. */
+const iosHomeScreenApp = () => typeof navigator !== 'undefined' && (navigator as Navigator & { standalone?: boolean }).standalone === true;
+
 /** Fetches a protected file and hands it to the browser as a download / new tab. */
 export async function downloadFile(url: string, params?: object, fallbackName = 'download', openInTab = false): Promise<void> {
   // Stored files can exceed the serverless 4.5 MB response cap, so on the cloud edition the API may answer with a
@@ -104,12 +107,27 @@ export async function downloadFile(url: string, params?: object, fallbackName = 
   }
   const disposition = res.headers['content-disposition'] as string | undefined;
   const name = /filename="?([^";]+)"?/.exec(disposition || '')?.[1];
+  const fileName = name ? decodeURIComponent(name) : fallbackName;
+  // The iPhone home-screen app has no tabs or back button: a PDF opened in it cannot be closed. Hand the file to the
+  // share sheet instead (Save to Files, Print, Mail, WhatsApp), as a native app would.
+  if (iosHomeScreenApp()) {
+    const file = new File([res.data], fileName, { type: res.data.type || 'application/octet-stream' });
+    if (navigator.canShare?.({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file], title: fileName });
+        return;
+      } catch (e) {
+        if ((e as Error).name === 'AbortError') return; // the person closed the sheet
+        // NotAllowedError: Safari wants the share right after a tap, and a slow download can outlast that; download instead
+      }
+    }
+  }
   const objectUrl = URL.createObjectURL(res.data);
   if (openInTab) window.open(objectUrl, '_blank');
   else {
     const a = document.createElement('a');
     a.href = objectUrl;
-    a.download = name ? decodeURIComponent(name) : fallbackName;
+    a.download = fileName;
     document.body.appendChild(a);
     a.click();
     a.remove();

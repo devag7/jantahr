@@ -6,6 +6,8 @@ import { Modal } from '@/components/common/modal';
 import { installPrompt, isAndroid, isIos } from '@/components/pwa/pwa';
 
 const ANDROID_PACKAGE = process.env.NEXT_PUBLIC_ANDROID_PACKAGE_NAME;
+// the Play listing link only once the app is public (ANDROID_PLAY_LIVE=true); closed-test apps are "not found" to others
+const PLAY_URL = ANDROID_PACKAGE && process.env.NEXT_PUBLIC_ANDROID_PLAY_LIVE === 'true' ? `https://play.google.com/store/apps/details?id=${ANDROID_PACKAGE}` : null;
 
 /** How to install JantaHR on this device: the Play Store app on Android, Add to Home Screen on iPhone, the browser's install elsewhere. */
 export function InstallAppDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
@@ -29,12 +31,12 @@ export function InstallAppDialog({ open, onOpenChange }: { open: boolean; onOpen
         </ol>
       ) : (
         <div className="space-y-4 text-caption">
-          {android && ANDROID_PACKAGE && (
-            <Button asChild className="w-full"><a href={`https://play.google.com/store/apps/details?id=${ANDROID_PACKAGE}`} target="_blank" rel="noopener">Get it on Google Play</a></Button>
+          {android && PLAY_URL && (
+            <Button asChild className="w-full"><a href={PLAY_URL} target="_blank" rel="noopener">Get it on Google Play</a></Button>
           )}
           {prompt ? (
-            <Button variant={android && ANDROID_PACKAGE ? 'outline' : 'default'} className="w-full" onClick={install}>Install from the browser</Button>
-          ) : !(android && ANDROID_PACKAGE) && (
+            <Button variant={android && PLAY_URL ? 'outline' : 'default'} className="w-full" onClick={install}>Install from the browser</Button>
+          ) : !(android && PLAY_URL) && (
             <p className="text-muted-foreground">In Chrome or Edge, open the browser menu and choose <strong>Install JantaHR</strong> (or <strong>Add to Home screen</strong> on a phone).</p>
           )}
         </div>
