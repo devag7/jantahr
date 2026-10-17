@@ -22,6 +22,8 @@ const fromShared = {
   NEXT_PUBLIC_ANDROID_PACKAGE_NAME: process.env.NEXT_PUBLIC_ANDROID_PACKAGE_NAME ?? process.env.ANDROID_PACKAGE_NAME,
   // 'true' once the Android app is public on Google Play: until then the Play links would open "item not found"
   NEXT_PUBLIC_ANDROID_PLAY_LIVE: process.env.NEXT_PUBLIC_ANDROID_PLAY_LIVE ?? process.env.ANDROID_PLAY_LIVE,
+  // Google Analytics 4 for the public pages, after the visitor's consent (components/analytics)
+  NEXT_PUBLIC_GA_MEASUREMENT_ID: process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID ?? process.env.GA_MEASUREMENT_ID,
 };
 
 // The public site exists only in the cloud edition. There, a request that names text/markdown in Accept is answered by

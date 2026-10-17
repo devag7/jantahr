@@ -146,6 +146,7 @@ secret) so they match the legal name and address on your Razorpay account and GS
 | `SUPPORT_PHONE` | contact phone, with country code |
 | `NEXT_PUBLIC_SITE_URL` | the site's public address, e.g. `https://hr.example.in`, once you use your own domain (Vercel's production address is used until then) |
 | `BILLING_SELLER_GSTIN` | your GST number, **only if you are registered under GST** (see below) |
+| `GA_MEASUREMENT_ID` | optional: a Google Analytics 4 measurement ID (`G-…`). Public pages then ask visitors for consent and count visits only of those who allow it; nothing is sent from inside the app |
 
 **GST.** Only a GST-registered seller may collect GST. JantaHR therefore adds 18% GST, prints tax lines on invoices and
 mentions GST on the site only when `BILLING_SELLER_GSTIN` is set. Without it the listed price is the amount charged,

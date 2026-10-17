@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
+import { SiteAnalytics } from '@/components/analytics/site-analytics';
 import { AuthLinkForwarder } from '@/components/auth/auth-link-forwarder';
 import { PwaBootstrap } from '@/components/pwa/pwa-bootstrap';
 import { ThemeProvider } from '@/components/providers/theme-provider';
@@ -42,6 +43,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <AuthLinkForwarder />
           <PwaBootstrap />
           {children}
+          {isCloudWeb && <SiteAnalytics />}
         </ThemeProvider>
       </body>
     </html>

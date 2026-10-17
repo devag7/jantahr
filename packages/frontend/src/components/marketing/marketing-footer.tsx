@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { CookieSettingsButton } from '@/components/analytics/site-analytics';
 import { CHARGES_GST, OPERATOR } from '@/lib/operator';
 
 const COLS: { title: string; links: { label: string; href: string }[] }[] = [
@@ -30,6 +31,7 @@ export function MarketingFooter() {
               <li><Link href="/about" className={LINK}>About</Link></li>
               <li><Link href="/contact" className={LINK}>Contact us</Link></li>
               <li><a href={`mailto:${OPERATOR.email}`} className={`${LINK} [overflow-wrap:anywhere]`}>{OPERATOR.email}</a></li>
+              <li><CookieSettingsButton className={`${LINK} text-left`} /></li>
             </ul>
           </div>
         </div>
