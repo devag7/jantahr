@@ -40,6 +40,12 @@ Play's Data safety form asks for an account deletion link: `https://<your domain
 Version numbers come from the tag: `android-v1.2.3` is version name `1.2.3` and version code `10203`, so each
 release must have a higher number than the last.
 
+Before a release, check that the **Android app on an emulator** workflow passed for that commit (it runs on every
+change to `packages/android`, or with **Run workflow**). It opens the release build on Android 11 and 14 emulators with
+Chrome and fails if the app crashes or does not open the site in Chrome; its artifact holds logcat and screenshots.
+Version 1.0.2 crashed on every start (a component missing from the manifest) and nothing caught it until a tester
+installed it.
+
 ## One-time setup
 
 The upload key and its password are already GitHub secrets (`ANDROID_UPLOAD_KEYSTORE_BASE64`,
