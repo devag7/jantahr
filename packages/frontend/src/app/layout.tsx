@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   // the manifest comes from app/manifest.ts; iPhones need a PNG for the Home Screen icon
   icons: { icon: [{ url: '/icon.svg', type: 'image/svg+xml' }, { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' }], apple: '/icons/apple-touch-icon.png' },
   // iPhone home-screen app: black status bar over the black top bar (as the Android app), and the same launch screen
-  // as Android (icon on #F2F4F7) instead of a blank white one while the first page loads
+  // as the Android app (the J-HR mark on cobalt) instead of a blank white one while the first page loads
   appleWebApp: { capable: true, title: 'JantaHR', statusBarStyle: 'black', startupImage: IPHONE_LAUNCH_IMAGES },
   // the public site (cloud edition) has an address of its own, so its pages carry absolute links and a share card
   ...(isCloudWeb ? {

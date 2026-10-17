@@ -21,7 +21,11 @@ export function OgCard({ title, lead, children }: { title: string[]; lead: strin
   return (
     <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: '#f5f5f7', color: '#1d1d1f', padding: '72px 80px', fontFamily: 'Inter' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-        <div style={{ width: 48, height: 48, borderRadius: 10, background: '#1d1d1f', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, fontWeight: 600 }}>JH</div>
+        <svg width="48" height="48" viewBox="0 0 1024 1024">
+          <rect width="1024" height="1024" rx="224" fill="#2350E8" />
+          <path d="M478 252 V598 A124 124 0 0 1 230 598 V586" transform="translate(512 518) scale(0.72) translate(-534 -518)" fill="none" stroke="#FFFFFF" strokeWidth="124" />
+          <path d="M586 252 V452 M720 252 V452 M586 352 H720 M770 452 V275 H836 A52 52 0 0 1 836 379 H770 M818 379 L880 452" transform="translate(512 518) scale(0.72) translate(-534 -518)" fill="none" stroke="#A9E7FF" strokeWidth="46" />
+        </svg>
         <div style={{ fontSize: 30, fontWeight: 600 }}>JantaHR</div>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column' }}>
