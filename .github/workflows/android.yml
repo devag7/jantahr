@@ -28,7 +28,9 @@ on:
       track:
         description: 'Play track'
         type: choice
-        options: [internal, alpha, beta, production]
+        # "internal,alpha": one build to both. Internal testing is not reviewed, so a fix reaches internal testers
+        # within minutes while the closed test (alpha) waits for Google's review.
+        options: [internal, alpha, 'internal,alpha', beta, production]
         default: alpha
 
 concurrency:
