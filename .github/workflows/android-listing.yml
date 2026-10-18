@@ -60,5 +60,7 @@ jobs:
           }
           put icon docs/android/store/play-icon-512.png
           put featureGraphic docs/android/store/feature-graphic-1024x500.png
-          curl -sfS -X POST "${auth[@]}" "$api/$edit:commit" | jq -c '{id}'
+          res=$(curl -sS -w '\n%{http_code}' -X POST "${auth[@]}" "$api/$edit:commit")
+          code=$(printf '%s' "$res" | tail -1)
+          if [ "$code" != 200 ]; then printf '%s\n' "$res" | sed '$d' | jq -c '.error | {code, status, message}'; exit 1; fi
           echo "Committed: Play sends the listing change for review"
