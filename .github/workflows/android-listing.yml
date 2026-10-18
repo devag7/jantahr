@@ -1,0 +1,52 @@
+name: Play store art
+
+# Replaces the Play store listing's app icon and feature graphic with docs/android/store/play-icon-512.png and
+# docs/android/store/feature-graphic-1024x500.png, through the Play Developer API (the same service account as the
+# release upload). Run it by hand from the Actions tab, and not while a release upload is running: Play keeps one
+# open edit per app, and the second commit fails.
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: play-edits
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  PACKAGE_NAME: com.devshipit.jantahr
+
+jobs:
+  art:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          token_format: access_token
+          access_token_scopes: https://www.googleapis.com/auth/androidpublisher
+
+      - name: Upload the icon and the feature graphic
+        env:
+          TOKEN: ${{ steps.auth.outputs.access_token }}
+        run: |
+          set -euo pipefail
+          api="https://androidpublisher.googleapis.com/androidpublisher/v3/applications/$PACKAGE_NAME/edits"
+          upload="https://androidpublisher.googleapis.com/upload/androidpublisher/v3/applications/$PACKAGE_NAME/edits"
+          auth=(-H "Authorization: Bearer $TOKEN")
+          edit=$(curl -sfS -X POST "${auth[@]}" "$api" | jq -r .id)
+          lang=$(curl -sfS "${auth[@]}" "$api/$edit/details" | jq -r .defaultLanguage)
+          echo "Listing language: $lang"
+          put() { # $1 image type, $2 file
+            curl -sfS -X DELETE "${auth[@]}" "$api/$edit/listings/$lang/$1" > /dev/null
+            curl -sfS -X POST "${auth[@]}" -H "Content-Type: image/png" --data-binary "@$2" "$upload/$edit/listings/$lang/$1?uploadType=media" | jq -c '.image | {id, sha256}'
+          }
+          put icon docs/android/store/play-icon-512.png
+          put featureGraphic docs/android/store/feature-graphic-1024x500.png
+          curl -sfS -X POST "${auth[@]}" "$api/$edit:commit" | jq -c '{id}'
+          echo "Committed: Play sends the listing change for review"
