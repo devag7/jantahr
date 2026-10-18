@@ -33,6 +33,9 @@ on:
         # within minutes while the closed test (alpha) waits for Google's review.
         options: [internal, alpha, 'internal,alpha', beta, production]
         default: alpha
+      notes:
+        description: "Play's What's new text (up to 500 characters)"
+        required: false
 
 concurrency:
   group: android-${{ github.ref }}
@@ -152,7 +155,7 @@ jobs:
         if: steps.version.outputs.ship == 'true'
         working-directory: .
         env:
-          NOTES: ${{ github.event.release.body }}
+          NOTES: ${{ github.event.release.body || inputs.notes }}
         run: |
           mkdir -p whatsnew
           text="${NOTES:-Improvements and fixes.}"
