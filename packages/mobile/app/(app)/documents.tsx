@@ -6,10 +6,12 @@ import { openFile } from '@/lib/files';
 import { formatDate } from '@/lib/format';
 import { Badge, Card, EmptyState, ErrorState, Loading, Page, Row } from '@/ui/kit';
 import { useToast } from '@/ui/overlays';
+import { useTheme } from '@/ui/theme';
 
 /** Offer letter, ID proofs and the rest HR keeps on file; tap one to open or share it. */
 export default function Documents() {
   const { user } = useAuth();
+  const { colors } = useTheme();
   const q = useMyDocuments(user?.employee?.id);
   const toast = useToast();
   const [opening, setOpening] = React.useState<string | null>(null);
@@ -24,7 +26,7 @@ export default function Documents() {
       ) : (
         <Card padded={false}>
           {q.data!.map((d, i) => (
-            <Row key={d.id} icon="document-outline" title={d.documentName} subtitle={`${d.documentType}${d.expiryDate ? ` · expires ${formatDate(d.expiryDate)}` : ''}${opening === d.id ? ' · opening…' : ''}`}
+            <Row key={d.id} icon="document-text-outline" iconTone={d.verifiedAt ? colors.success : colors.holiday} title={d.documentName} subtitle={`${d.documentType}${d.expiryDate ? ` · expires ${formatDate(d.expiryDate)}` : ''}${opening === d.id ? ' · opening…' : ''}`}
               right={d.verifiedAt ? <Badge label="Verified" tone="success" /> : undefined} onPress={() => void open(d.id, d.documentName)} last={i === q.data!.length - 1} />
           ))}
         </Card>

@@ -6,12 +6,13 @@ import { errorMessage } from '@/lib/api';
 import { formatDate, plural } from '@/lib/format';
 import { CalendarPicker } from '@/ui/calendar';
 import { Button, Card, ErrorState, Field, Loading, Page, Section, Segmented, Text } from '@/ui/kit';
-import { space, useTheme } from '@/ui/theme';
+import { ProgressRing } from '@/ui/visual';
+import { leaveHue, space, useTheme } from '@/ui/theme';
 import type { LeavePreview } from '@/types/leave';
 
 /** Pick the type, the days (holidays are dotted), see how many days it costs, then send it to your manager. */
 export default function ApplyLeave() {
-  const { colors } = useTheme();
+  const { colors, dark } = useTheme();
   const balance = useLeaveBalance();
   const year = new Date().getFullYear();
   const holidays = [...(useHolidays(year).data ?? []), ...(useHolidays(year + 1).data ?? [])];
@@ -68,14 +69,23 @@ export default function ApplyLeave() {
       </Section>
 
       {from && to && (
-        <Card style={{ gap: space.xs, backgroundColor: short ? colors.dangerSoft : colors.primarySoft }}>
-          <Text bold>{formatDate(from)}{from !== to ? ` to ${formatDate(to)}` : ''}</Text>
-          {preview?.data ? (
-            <>
-              <Text>{plural(preview.data.totalDays, 'day')} of {preview.data.leaveType}{preview.data.excludedDates.length ? ` (${plural(preview.data.excludedDates.length, 'holiday or weekly off', 'holidays or weekly offs')} not counted)` : ''}</Text>
-              {!selected?.isLWP && <Text variant="caption" tone={short ? 'danger' : 'secondary'}>{short ? `Only ${preview.data.available} available` : `${preview.data.available} available`}</Text>}
-            </>
-          ) : preview?.error ? <Text variant="caption" tone="danger">{preview.error}</Text> : <Text variant="caption" tone="secondary">Counting days…</Text>}
+        <Card style={{ flexDirection: 'row', alignItems: 'center', gap: space.lg, backgroundColor: short ? colors.dangerSoft : colors.primarySoft }}>
+          {/* what is left once this is approved, in the leave type's colour */}
+          {preview?.data && selected && !selected.isLWP && (
+            <ProgressRing size={60} stroke={6} progress={(selected.allocated + selected.carryForwarded) ? Math.max(0, preview.data.available - preview.data.totalDays) / (selected.allocated + selected.carryForwarded) : 0}
+              color={short ? colors.danger : leaveHue(selected.leaveType, dark)} track={colors.card}>
+              <Text bold num style={{ fontSize: 16 }}>{short ? '!' : Math.max(0, preview.data.available - preview.data.totalDays)}</Text>
+            </ProgressRing>
+          )}
+          <View style={{ flex: 1, gap: space.xs }}>
+            <Text bold>{formatDate(from)}{from !== to ? ` to ${formatDate(to)}` : ''}</Text>
+            {preview?.data ? (
+              <>
+                <Text>{plural(preview.data.totalDays, 'day')} of {preview.data.leaveType}{preview.data.excludedDates.length ? ` (${plural(preview.data.excludedDates.length, 'holiday or weekly off', 'holidays or weekly offs')} not counted)` : ''}</Text>
+                {!selected?.isLWP && <Text variant="caption" tone={short ? 'danger' : 'secondary'}>{short ? `Only ${preview.data.available} available` : `${plural(Math.max(0, preview.data.available - preview.data.totalDays), 'day')} left after this`}</Text>}
+              </>
+            ) : preview?.error ? <Text variant="caption" tone="danger">{preview.error}</Text> : <Text variant="caption" tone="secondary">Counting days…</Text>}
+          </View>
         </Card>
       )}
 

@@ -4,19 +4,32 @@ import { useAcknowledge, usePolicies } from '@/features/queries';
 import { errorMessage } from '@/lib/api';
 import { formatDate } from '@/lib/format';
 import { Badge, Button, Card, EmptyState, ErrorState, Loading, Page, Text } from '@/ui/kit';
-import { space } from '@/ui/theme';
+import { ProgressRing } from '@/ui/visual';
+import { space, useTheme } from '@/ui/theme';
 
 /** Company policies to read; the ones you have not acknowledged come first with the button to do it. */
 export default function Policies() {
+  const { colors } = useTheme();
   const q = usePolicies();
   const ack = useAcknowledge();
   const [open, setOpen] = React.useState<string | null>(null);
   const list = (q.data ?? []).filter((p) => p.isActive).sort((a, b) => Number(a.acknowledged) - Number(b.acknowledged));
+  const read = list.filter((p) => p.acknowledged).length;
   return (
     <Page onRefresh={() => void q.refetch()} refreshing={q.isRefetching}>
       {q.isLoading ? <Loading /> : q.isError ? <ErrorState message={errorMessage(q.error)} onRetry={() => void q.refetch()} /> : list.length === 0 ? (
         <EmptyState icon="reader-outline" title="No policies yet" />
-      ) : list.map((p) => (
+      ) : [
+        <Card key="summary" style={{ flexDirection: 'row', alignItems: 'center', gap: space.lg }}>
+          <ProgressRing size={56} stroke={6} progress={read / list.length} color={read === list.length ? colors.success : colors.warning} track={colors.divider}>
+            <Text bold num>{read}/{list.length}</Text>
+          </ProgressRing>
+          <View style={{ flex: 1, gap: 2 }}>
+            <Text bold>{read === list.length ? 'All read' : `${list.length - read} to read`}</Text>
+            <Text variant="caption" tone="secondary">{read === list.length ? 'You have acknowledged every policy.' : 'Open one and tap "I have read this" at the end.'}</Text>
+          </View>
+        </Card>,
+        ...list.map((p) => (
         <Card key={p.id} style={{ gap: space.sm }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.sm }}>
             <Text bold style={{ flex: 1 }} onPress={() => setOpen(open === p.id ? null : p.id)}>{p.title}</Text>
@@ -27,7 +40,7 @@ export default function Policies() {
           {open !== p.id && <Text variant="caption" tone="accent" onPress={() => setOpen(p.id)}>Read all</Text>}
           {!p.acknowledged && open === p.id && <Button title="I have read this" compact loading={ack.isPending && ack.variables === p.id} onPress={() => ack.mutate(p.id)} />}
         </Card>
-      ))}
+      ))]}
     </Page>
   );
 }

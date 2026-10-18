@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Animated, KeyboardAvoidingView, Modal, Platform, Pressable, StyleSheet, View } from 'react-native';
+import { AccessibilityInfo, Animated, KeyboardAvoidingView, Modal, Platform, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
@@ -44,7 +44,13 @@ export function Sheet({ open, onClose, title, children }: { open: boolean; onClo
   // the scrim fades in while the sheet rises (Material's bottom sheet), rather than the whole layer sliding up
   const rise = React.useRef(new Animated.Value(400)).current;
   React.useEffect(() => {
-    if (open) { rise.setValue(400); Animated.spring(rise, { toValue: 0, useNativeDriver: true, damping: 22, stiffness: 220, mass: 0.9 }).start(); }
+    if (!open) return;
+    rise.setValue(400);
+    // with Android's "Remove animations" on, the sheet is simply there
+    void AccessibilityInfo.isReduceMotionEnabled().then((reduce) => {
+      if (reduce) rise.setValue(0);
+      else Animated.spring(rise, { toValue: 0, useNativeDriver: true, damping: 22, stiffness: 220, mass: 0.9 }).start();
+    });
   }, [open, rise]);
   return (
     <Modal visible={open} transparent animationType="fade" onRequestClose={onClose} statusBarTranslucent navigationBarTranslucent>

@@ -21,16 +21,16 @@ export default function Settings() {
     <Page>
       <Section title="Security">
         <Card padded={false}>
-          <Row icon="finger-print" title="App lock" subtitle="Ask for your fingerprint, face or PIN when JantaHR opens"
+          <Row icon="finger-print" iconTone={colors.primary} title="App lock" subtitle="Ask for your fingerprint, face or PIN when JantaHR opens"
             right={<Switch value={lock.enabled} onValueChange={(v) => void toggle(v)} accessibilityLabel="App lock" trackColor={{ true: colors.primary, false: colors.border }} thumbColor="#fff" />} />
-          <Row icon="key-outline" title="Change password" subtitle="Opens the website" onPress={web('/me/profile')} />
-          <Row icon="shield-checkmark-outline" title="Two-factor sign-in" subtitle={user?.mfaEnabled ? 'On' : 'Off · set it up on the website'} onPress={web('/me/profile')} last />
+          <Row icon="key-outline" iconTone={colors.warning} title="Change password" subtitle="Opens the website" onPress={web('/me/profile')} />
+          <Row icon="shield-checkmark-outline" iconTone={colors.success} title="Two-factor sign-in" subtitle={user?.mfaEnabled ? 'On' : 'Off · set it up on the website'} onPress={web('/me/profile')} last />
         </Card>
       </Section>
       <Section title="About">
         <Card padded={false}>
-          <Row icon="lock-closed-outline" title="Privacy notice" onPress={web('/legal/privacy')} />
-          <Row icon="document-text-outline" title="Terms of service" onPress={web('/legal/terms')} />
+          <Row icon="lock-closed-outline" iconTone={colors.leave} title="Privacy notice" onPress={web('/legal/privacy')} />
+          <Row icon="document-text-outline" iconTone={colors.holiday} title="Terms of service" onPress={web('/legal/terms')} />
           <Row icon="trash-outline" iconTone={colors.danger} title="Delete my account" subtitle="How it works and what is kept" onPress={web('/legal/delete-account')} last />
         </Card>
       </Section>

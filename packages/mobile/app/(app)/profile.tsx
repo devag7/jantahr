@@ -3,8 +3,9 @@ import { View } from 'react-native';
 import { Stack } from 'expo-router';
 import { useMyProfile, useUpdateMyProfile } from '@/features/queries';
 import { errorMessage } from '@/lib/api';
-import { formatDate } from '@/lib/format';
+import { formatDate, plural } from '@/lib/format';
 import { Button, Card, ErrorState, Field, LinkButton, Loading, Page, Row, Section, Text } from '@/ui/kit';
+import { Avatar } from '@/ui/visual';
 import { space } from '@/ui/theme';
 import type { Employee } from '@/types/employees';
 
@@ -22,6 +23,15 @@ const EDITABLE = [
   { key: 'emergencyContactRelation', label: 'Relationship' },
 ] as const;
 type Key = (typeof EDITABLE)[number]['key'];
+
+/** "2 years 3 months at the company" from the joining date. */
+function tenure(joined: string) {
+  const d = new Date(joined), now = new Date();
+  const months = (now.getFullYear() - d.getFullYear()) * 12 + now.getMonth() - d.getMonth() - (now.getDate() < d.getDate() ? 1 : 0);
+  if (months < 1) return 'Joined this month';
+  const y = Math.floor(months / 12), m = months % 12;
+  return `${[y && plural(y, 'year'), m && plural(m, 'month')].filter(Boolean).join(' ')} at the company`;
+}
 
 export default function Profile() {
   const q = useMyProfile();
@@ -41,12 +51,23 @@ export default function Profile() {
   return (
     <Page>
       <Stack.Screen options={{ headerRight: () => (edit ? <LinkButton title={update.isPending ? 'Saving…' : 'Save'} onPress={save} /> : <LinkButton title="Edit" onPress={start} />) }} />
+      {!edit && (
+        <Card style={{ alignItems: 'center', gap: space.sm, paddingVertical: space.xl }}>
+          <Avatar name={e.fullName} size={84} />
+          <View style={{ alignItems: 'center', gap: 2 }}>
+            <Text variant="heading" style={{ textAlign: 'center' }}>{e.fullName}</Text>
+            <Text tone="secondary" style={{ textAlign: 'center' }}>{[e.designation?.name, e.department?.name].filter(Boolean).join(' · ')}</Text>
+            <Text variant="caption" tone="tertiary">{tenure(e.dateOfJoining)}</Text>
+          </View>
+        </Card>
+      )}
       <Section title="Work">
         <Card padded={false}>
           <Row title="Employee code" value={e.employeeCode} />
           <Row title="Work email" subtitle={e.email} />
           <Row title="Department" value={e.department?.name ?? '-'} />
           <Row title="Designation" value={e.designation?.name ?? '-'} />
+          {e.reportingManager && <Row title="Reports to" value={`${e.reportingManager.firstName} ${e.reportingManager.lastName}`} />}
           <Row title="Joined" value={formatDate(e.dateOfJoining)} last />
         </Card>
       </Section>
