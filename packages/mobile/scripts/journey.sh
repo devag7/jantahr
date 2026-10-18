@@ -40,6 +40,11 @@ sign_in() {
 
 adb install -r "$APK" >/dev/null
 adb logcat -c
+# a clean status bar for the screenshots (Android's demo mode: fixed time, full battery and signal, no notifications)
+adb shell settings put global sysui_demo_allowed 1
+demo() { adb shell am broadcast -a com.android.systemui.demo -e command "$@" >/dev/null; }
+demo enter; demo clock -e hhmm 0941; demo battery -e level 100 -e plugged false; demo network -e wifi show -e level 4
+demo network -e mobile show -e datatype none -e level 4; demo notifications -e visible false
 
 echo "--- employee"
 sign_in employee@jantahr.com Demo@1234
@@ -50,6 +55,8 @@ tap 'content-desc="Leave'; shot employee-leave;      expect employee-leave "Appl
 tap 'text="Apply for leave"'; shot employee-apply-leave; expect employee-apply-leave "DATES"
 adb shell input keyevent KEYCODE_BACK; sleep 1
 tap 'content-desc="Payslips'; shot employee-payslips;   expect employee-payslips "Sep 2026"
+tap 'text="Sep 2026"'; shot employee-payslip;    expect employee-payslip "Take-home for"
+adb shell input keyevent KEYCODE_BACK; sleep 1
 tap 'content-desc="More'; shot employee-more;       expect employee-more "Vikram Singh"
 tap 'text="Notifications"'; shot employee-notifications
 adb shell input keyevent KEYCODE_BACK; sleep 1

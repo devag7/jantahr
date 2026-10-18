@@ -145,6 +145,9 @@ jobs:
           api-level: 34
           target: google_apis_playstore
           arch: x86_64
+          # a full-size phone (1080x2400, 411dp wide): the smoke jobs cover the small default screen, and these
+          # screenshots are sharp enough for the store listing
+          profile: pixel_6
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot
           script: bash packages/mobile/scripts/journey.sh packages/mobile/android/app/build/outputs/apk/release/app-release.apk
