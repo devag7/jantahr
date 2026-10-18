@@ -24,16 +24,28 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - id: auth
-        uses: google-github-actions/auth@v2
-        with:
-          credentials_json: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
-          token_format: access_token
-          access_token_scopes: https://www.googleapis.com/auth/androidpublisher
+      - name: Get a Play API token
+        env:
+          PLAY_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          # OAuth with the service account key directly (a signed JWT), as the release upload does
+          set -euo pipefail
+          umask 077
+          key=$(mktemp)
+          printf '%s' "$PLAY_JSON" | jq -r .private_key > "$key"
+          b64() { openssl base64 -A | tr '+/' '-_' | tr -d '='; }
+          now=$(date +%s)
+          header=$(printf '{"alg":"RS256","typ":"JWT"}' | b64)
+          claims=$(jq -nc --arg iss "$(printf '%s' "$PLAY_JSON" | jq -r .client_email)" --argjson now "$now" \
+            '{iss: $iss, scope: "https://www.googleapis.com/auth/androidpublisher", aud: "https://oauth2.googleapis.com/token", iat: $now, exp: ($now + 600)}' | b64)
+          sig=$(printf '%s.%s' "$header" "$claims" | openssl dgst -sha256 -sign "$key" | b64)
+          rm -f "$key"
+          token=$(curl -sfS https://oauth2.googleapis.com/token -d grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer -d "assertion=$header.$claims.$sig" | jq -r .access_token)
+          echo "::add-mask::$token"
+          # masked values are dropped from step outputs, so the next step reads it from the job environment
+          echo "TOKEN=$token" >> "$GITHUB_ENV"
 
       - name: Upload the icon and the feature graphic
-        env:
-          TOKEN: ${{ steps.auth.outputs.access_token }}
         run: |
           set -euo pipefail
           api="https://androidpublisher.googleapis.com/androidpublisher/v3/applications/$PACKAGE_NAME/edits"
