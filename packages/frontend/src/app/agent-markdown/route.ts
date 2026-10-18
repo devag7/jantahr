@@ -22,7 +22,7 @@ export async function GET(request: Request) {
   // a rewritten request may show its original address or the rewritten one, depending on the host
   const asked = url.searchParams.get('path') ?? url.pathname;
   const path = sitePath(asked);
-  if (!path || path.startsWith('/agent-markdown')) return markdown(notFoundMarkdown(asked ?? '/agent-markdown', origin), 404);
+  if (!path || path.startsWith('/agent-markdown')) return markdown(notFoundMarkdown(origin), 404);
 
   if (!prefersMarkdown(request.headers.get('accept'))) {
     const html = await fetchHtml(request, path);
@@ -32,7 +32,7 @@ export async function GET(request: Request) {
   const page = await readPage(request, path);
   switch (page.kind) {
     case 'markdown': return markdown(page.markdown);
-    case 'not-found': return markdown(notFoundMarkdown(path, origin), 404);
+    case 'not-found': return markdown(notFoundMarkdown(origin), 404);
     case 'redirect': return new Response(null, { status: page.status, headers: { Location: page.location, Vary: 'Accept' } });
     case 'unreachable': return markdown(`# Temporarily unavailable\n\nThis page could not be loaded as Markdown just now. Try again, or read [llms.txt](${origin}/llms.txt).\n`, 503);
     case 'other': {

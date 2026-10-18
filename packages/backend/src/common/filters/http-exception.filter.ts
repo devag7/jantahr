@@ -1,4 +1,4 @@
-import { ArgumentsHost, Catch, ExceptionFilter, HttpException, HttpStatus, Logger } from '@nestjs/common';
+import { ArgumentsHost, Catch, ExceptionFilter, HttpException, HttpStatus, Logger, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { Response } from 'express';
 
@@ -22,6 +22,8 @@ export class AllExceptionsFilter implements ExceptionFilter {
       error = typeof body === 'string' ? exception.name : body.error ?? exception.name;
       // machine-readable fields (e.g. code: PLAN_REQUIRED | SEAT_LIMIT, feature) for the web app
       if (typeof body === 'object' && body) { if (body.code) extra.code = body.code; if (body.feature) extra.feature = body.feature; }
+      // The router's own 404 says "Cannot GET <path>". Never repeat the request path: it would let anyone make the domain display their text.
+      if (exception instanceof NotFoundException && typeof message === 'string' && /^Cannot [A-Z]+ /.test(message)) message = 'There is no API endpoint at this address.';
     } else if (exception instanceof Prisma.PrismaClientKnownRequestError) {
       switch (exception.code) {
         case 'P2002':
@@ -51,6 +53,6 @@ export class AllExceptionsFilter implements ExceptionFilter {
       this.logger.error(`${req.method} ${req.url}`, (exception as Error)?.stack);
     }
 
-    res.status(status).json({ statusCode: status, error, message, ...extra, path: req.url, timestamp: new Date().toISOString() });
+    res.status(status).json({ statusCode: status, error, message, ...extra, timestamp: new Date().toISOString() });
   }
 }

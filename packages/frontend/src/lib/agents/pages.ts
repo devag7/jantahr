@@ -13,9 +13,10 @@ export function sitePath(raw: string | null | undefined): string | null {
   } catch { return null; }
 }
 
-export const notFoundMarkdown = (path: string, origin: string) => `# 404: page not found
+// Never repeat the requested path: echoing it would let anyone make jantahr.devshipit.com display their own text.
+export const notFoundMarkdown = (origin: string) => `# 404: page not found
 
-There is no page at \`${path.replace(/`/g, '')}\` on JantaHR. The address may be mistyped, or the page may have moved.
+There is no page at this address on JantaHR. The address may be mistyped, or the page may have moved.
 
 Where to go instead:
 
