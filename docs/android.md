@@ -42,11 +42,15 @@ Play's Data safety form asks for an account deletion link: `https://<your domain
 Version numbers come from the tag: `android-v2.1.3` is version name `2.1.3` and version code `20103`, so each
 release must have a higher number than the last. **Run workflow** with track `internal,alpha` sends one build to
 internal testing (not reviewed, on testers' phones within minutes) and to the closed test (after Google's review).
+Its optional **notes** field is the Play "What's new" text (a GitHub release uses the release notes instead).
 
 Before a release, check that the **Android app on an emulator** workflow passed for that commit (it runs on every
 change to `packages/mobile`, or with **Run workflow**). It opens the release build on Android 11 and 14 emulators and
 fails if the app crashes or does not show its sign-in screen; its artifact holds logcat, the screen's text and
-screenshots. Version 1.0.2 crashed on every start and nothing caught it until a tester installed it.
+screenshots. Version 1.0.2 crashed on every start and nothing caught it until a tester installed it. Its `journey`
+job then signs in as the demo employee and manager on a Pixel 6 emulator against the runner's own API and seed
+(`packages/mobile/scripts/journey.sh`) and walks every main screen; the `android-journey` artifact has a 1080x2400
+screenshot of each, with a clean status bar, and those are what the store screenshots are made from.
 
 ## One-time setup
 
@@ -64,8 +68,11 @@ key, but it takes days.
    18+, data safety (see below), category Business, contact email `jantahr@devshipit.com`, website
    `https://jantahr.devshipit.com`.
 3. **Store listing**: short and full description, the icon `docs/android/store/play-icon-512.png`, the feature
-   graphic `docs/android/store/feature-graphic-1024x500.png`, and the phone screenshots in
-   `docs/android/store/phone/` (1080x1920, the seeded demo company on a local stack, 360x640 at 3x).
+   graphic `docs/android/store/feature-graphic-1024x500.png`, and the seven phone screenshots in
+   `docs/android/store/phone/` (1080x1920: a caption on cobalt above a screen from the emulator journey). The
+   **Play store art** workflow (`android-listing.yml`) can upload the icon and feature graphic through the Play API,
+   but only once the CI service account has store listing permission in Play Console > **Users and permissions**
+   (today it can release but not edit the listing, so Play refuses the change); until then upload them by hand.
 
 Data safety, as submitted: no data shared with third parties (Supabase, Vercel, Resend and Razorpay process it on
 our behalf); encrypted in transit; account deletion at `/legal/delete-account`, partial deletion through erasure
