@@ -3,6 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { Role } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { MailService } from './mail.service';
+import { PushService } from './push.service';
 
 export interface NotifyInput {
   title: string;
@@ -14,7 +15,7 @@ export interface NotifyInput {
 
 @Injectable()
 export class NotificationsService {
-  constructor(private prisma: PrismaService, private mail: MailService, private supabase: SupabaseService) {}
+  constructor(private prisma: PrismaService, private mail: MailService, private supabase: SupabaseService, private push: PushService) {}
 
   async notifyUser(userId: string, input: NotifyInput) {
     const n = await this.prisma.notification.create({
@@ -22,6 +23,8 @@ export class NotificationsService {
       include: { user: { select: { email: true } } },
     });
     void this.supabase.pingUser(userId); // live update for open tabs (no-op without Supabase Realtime)
+    // the phone, if the user has the app with notifications on (awaited: a serverless function may stop after replying)
+    await this.push.toUser(userId, { title: n.title, message: n.message, link: n.link, id: n.id });
     if (input.email) await this.mail.send(n.user.email, input.title, `<p>${input.message}</p>`);
     return n;
   }
@@ -59,6 +62,16 @@ export class NotificationsService {
 
   markRead(userId: string, id: string) {
     return this.prisma.notification.updateMany({ where: { id, userId }, data: { isRead: true } });
+  }
+
+  /** Remembers a phone for push; a token moves to whoever signed in on that phone last. */
+  registerDevice(userId: string, token: string, platform: string) {
+    return this.prisma.pushDevice.upsert({ where: { token }, create: { userId, token, platform }, update: { userId, platform, lastSeenAt: new Date() } });
+  }
+
+  /** Signing out on a phone stops its pushes. */
+  removeDevice(userId: string, token: string) {
+    return this.prisma.pushDevice.deleteMany({ where: { userId, token } });
   }
 
   markAllRead(userId: string) {

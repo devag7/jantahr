@@ -118,6 +118,14 @@ jobs:
           echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/upload.p12"
           echo "ANDROID_KEYSTORE_PATH=$RUNNER_TEMP/upload.p12" >> "$GITHUB_ENV"
 
+      - name: Firebase config for push notifications
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        # without it the app builds and works the same, only without push
+        run: |
+          if [ -n "$GOOGLE_SERVICES_JSON" ]; then printf '%s' "$GOOGLE_SERVICES_JSON" > google-services.json; echo "Push notifications: on" >> "$GITHUB_STEP_SUMMARY"
+          else echo "::notice::GOOGLE_SERVICES_JSON is not set, so this build has no push notifications (docs/android.md)"; fi
+
       - name: Generate the Android project
         env:
           APP_VERSION: ${{ steps.version.outputs.name }}

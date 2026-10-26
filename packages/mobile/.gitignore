@@ -10,3 +10,6 @@ expo-env.d.ts
 *.p12
 *.keystore
 !debug.keystore
+
+# Firebase config for push; CI writes it from the GOOGLE_SERVICES_JSON secret
+google-services.json

@@ -7,6 +7,7 @@ import GoogleId from '../../modules/google-id/src/GoogleIdModule';
 import { ApiError, api, setAuthProblemHandler } from '@/lib/api';
 import { GOOGLE_WEB_CLIENT_ID } from '@/lib/config';
 import { supabase } from '@/lib/supabase';
+import { forgetDevice } from '@/features/push';
 
 /**
  * - loading: working out the state at start
@@ -121,6 +122,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [bootstrap]);
 
   const signOut = React.useCallback(async () => {
+    await forgetDevice(); // while still signed in: this phone stops getting the account's notifications
     await supabase.auth.signOut().catch(() => undefined);
     queryClient.clear();
     setState({ status: 'anonymous', user: null, notice: null });

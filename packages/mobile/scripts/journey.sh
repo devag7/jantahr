@@ -49,6 +49,8 @@ demo network -e mobile show -e datatype none -e level 4; demo notifications -e v
 echo "--- employee"
 sign_in employee@jantahr.com Demo@1234
 shot employee-home 10;            expect employee-home "Check in"; expect employee-home "LEAVE LEFT"
+# the notifications card: "Turn on" brings Android's permission prompt (this build has no Firebase, so no token)
+tap 'text="Turn on"' && sleep 2 && { tap 'text="Allow"' || true; }; shot employee-push 3
 # bottom-bar items carry their label as content-desc (More's adds the badge: "More, 14 new notifications")
 tap 'content-desc="Attendance'; shot employee-attendance; expect employee-attendance "Present"
 tap 'content-desc="Leave'; shot employee-leave;      expect employee-leave "Apply for leave"

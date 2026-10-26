@@ -5,20 +5,9 @@ import { useMarkAllRead, useMarkRead, useNotifications } from '@/features/querie
 import { errorMessage } from '@/lib/api';
 import { formatDateTime } from '@/lib/format';
 import { Card, EmptyState, ErrorState, LinkButton, Page, Row, Section, SkeletonCard, type IconName } from '@/ui/kit';
+import { screenFor } from '@/lib/nav';
 import { useTheme } from '@/ui/theme';
 import type { AppNotification } from '@/types/engagement';
-
-/** Web links in notifications that have a screen in the app. */
-function screenFor(link: string | null): string | null {
-  if (!link) return null;
-  if (link.startsWith('/approvals')) return '/approvals';
-  if (link.startsWith('/me/leave') || link.startsWith('/leave')) return '/leave';
-  if (link.startsWith('/me/attendance') || link.startsWith('/attendance')) return '/attendance';
-  if (link.startsWith('/me/payslips') || link.startsWith('/payroll/payslips')) return '/payslips';
-  if (link.startsWith('/me/expenses') || link.startsWith('/expenses')) return '/expenses';
-  if (link.startsWith('/me/policies') || link.startsWith('/policies')) return '/policies';
-  return null;
-}
 
 /** An icon and colour per kind, read from where the notification points. */
 function look(link: string | null, title: string, colors: ReturnType<typeof useTheme>['colors']): { icon: IconName; tone: string } {

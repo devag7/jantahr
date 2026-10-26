@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { isApprover, useAuth } from '@/auth/auth';
 import { PunchCard } from '@/features/punch-card';
+import { PushPrompt } from '@/features/push-prompt';
 import { useEss, useHasFeature, useNotifications } from '@/features/queries';
 import { errorMessage } from '@/lib/api';
 import { MONTH_SHORT, formatDate, formatINR, formatPayMonth, plural } from '@/lib/format';
@@ -65,6 +66,8 @@ export default function Home() {
             ? <QuickAction icon="receipt-outline" label="Expenses" color={dark ? '#F5A524' : '#B45309'} onPress={() => router.push('/expenses')} />
             : <QuickAction icon="sunny-outline" label="Holidays" color={dark ? '#F5A524' : '#B45309'} onPress={() => router.push('/holidays')} />}
         </View>
+
+        <PushPrompt manager={isApprover(user)} />
 
         {ess.isLoading ? <HomeSkeleton /> : ess.isError ? <ErrorState message={errorMessage(ess.error)} onRetry={() => void ess.refetch()} /> : d && (
           <>

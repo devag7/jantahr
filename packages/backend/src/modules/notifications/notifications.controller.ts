@@ -1,6 +1,7 @@
-import { Controller, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Param, Patch, Post, Query } from '@nestjs/common';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { AuthUser } from '../../common/types';
+import { DeviceDto, RemoveDeviceDto } from './notifications.dto';
 import { NotificationsService } from './notifications.service';
 
 @Controller('notifications')
@@ -21,6 +22,21 @@ export class NotificationsController {
   @Post('read-all')
   async readAll(@CurrentUser() user: AuthUser) {
     await this.service.markAllRead(user.userId);
+    return { ok: true };
+  }
+
+  /** The Android app registers its FCM token after the user allows notifications. */
+  @Post('devices')
+  @HttpCode(200)
+  async addDevice(@CurrentUser() user: AuthUser, @Body() dto: DeviceDto) {
+    await this.service.registerDevice(user.userId, dto.token, dto.platform ?? 'android');
+    return { ok: true };
+  }
+
+  @Post('devices/remove')
+  @HttpCode(200)
+  async removeDevice(@CurrentUser() user: AuthUser, @Body() dto: RemoveDeviceDto) {
+    await this.service.removeDevice(user.userId, dto.token);
     return { ok: true };
   }
 

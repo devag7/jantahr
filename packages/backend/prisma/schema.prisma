@@ -175,6 +175,7 @@ model User {
   employee      Employee?
   auditLogs     AuditLog[]
   notifications Notification[]
+  pushDevices   PushDevice[]
 
   @@index([companyId])
 }
@@ -1369,6 +1370,20 @@ model Notification {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, isRead])
+}
+
+/// A phone that gets push notifications for a user (an FCM registration token from the Android app).
+model PushDevice {
+  id         String   @id @default(uuid())
+  userId     String
+  token      String   @unique @db.VarChar(512)
+  platform   String   @default("android") @db.VarChar(20)
+  createdAt  DateTime @default(now())
+  lastSeenAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model HelpdeskTicket {

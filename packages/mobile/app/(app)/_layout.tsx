@@ -1,9 +1,11 @@
 import { Stack } from 'expo-router';
+import { usePushNotifications } from '@/features/push';
 import { font, type, useTheme } from '@/ui/theme';
 
 /** Signed-in screens: the tabs, then details and forms pushed over them (forms slide up as sheets). */
 export default function AppLayout() {
   const { colors } = useTheme();
+  usePushNotifications();
   const sheet = { presentation: 'modal' as const, animation: 'slide_from_bottom' as const };
   return (
     <Stack

@@ -135,7 +135,24 @@ then redeploy and check `https://jantahr.devshipit.com/.well-known/assetlinks.js
 [Statement List Tester](https://developers.google.com/digital-asset-links/tools/generator) should report the link
 as valid.
 
-### 5. Testers, then production
+### 5. Push notifications
+
+Every in-app notification (a request waiting for approval, a decision, a payslip) is also pushed to the person's
+phone through Firebase Cloud Messaging, once they tap **Turn on** on Home or in Settings. The app never asks at first
+launch. Two pieces, both from the Firebase console for the Google Cloud project that already holds the sign-in clients:
+
+1. **Add Firebase** to that project, then **Add app > Android** with package `com.devshipit.jantahr`. Download
+   `google-services.json` and store it as the GitHub secret `GOOGLE_SERVICES_JSON` (the whole file):
+   `gh secret set GOOGLE_SERVICES_JSON < google-services.json`. The release workflow writes it into the build; a build
+   without it works the same, only without push. Keep the file out of git (`packages/mobile/.gitignore`).
+2. **Project settings > Service accounts > Generate new private key**, and put the whole JSON file into the web
+   deployment's environment as `FCM_SERVICE_ACCOUNT_JSON`, then redeploy. The API signs its own FCM tokens with it
+   (`modules/notifications/push.service.ts`); without it the API simply skips pushes.
+
+Phones register their token at `POST /api/notifications/devices` (table `PushDevice`); signing out removes it, and
+tokens FCM reports as gone are deleted on the next send.
+
+### 6. Testers, then production
 
 New personal developer accounts must run a **closed test with at least 12 testers, opted in for 14 days in a row**,
 before Play lets them apply for production access. In **Closed testing > Testers**, add an email list (Google
