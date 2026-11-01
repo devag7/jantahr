@@ -1,0 +1,50 @@
+{
+  "name": "jantahr-video",
+  "version": "1.0.0",
+  "description": "JantaHR pitch video (Remotion). Not part of the app builds.",
+  "repository": {},
+  "license": "UNLICENSED",
+  "engines": {
+    "node": "^20.19.0 || ^22.13.0 || >=24"
+  },
+  "private": true,
+  "dependencies": {
+    "@remotion/captions": "4.0.539",
+    "@remotion/cli": "4.0.539",
+    "@remotion/fonts": "4.0.539",
+    "@remotion/install-whisper-cpp": "4.0.539",
+    "@remotion/media": "4.0.539",
+    "@remotion/paths": "4.0.539",
+    "@remotion/shapes": "4.0.539",
+    "@remotion/transitions": "4.0.539",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "remotion": "4.0.539",
+    "zod": "4.5.4"
+  },
+  "devDependencies": {
+    "@remotion/eslint-config-flat": "4.0.539",
+    "@types/react": "19.2.7",
+    "@types/web": "0.0.166",
+    "eslint": "10.12.0",
+    "prettier": "3.8.1",
+    "typescript": "5.9.3"
+  },
+  "scripts": {
+    "dev": "remotion studio",
+    "lint": "eslint src && tsc",
+    "bundle": "remotion bundle src/index.ts --out-dir build",
+    "stills": "scripts/stills.sh",
+    "vo:transcribe": "node scripts/transcribe.mjs",
+    "vo:split": "node scripts/split-vo.mjs",
+    "srt": "node scripts/srt.mjs out/jantahr-pitch.srt",
+    "render:16x9": "remotion render src/index.ts Pitch16x9 out/jantahr-pitch-16x9.mp4 --props='{\"audio\":true}' --crf=18 --audio-bitrate=192k",
+    "render:9x16": "remotion render src/index.ts Pitch9x16 out/jantahr-pitch-9x16.mp4 --props='{\"audio\":true}' --crf=18 --audio-bitrate=192k",
+    "render:teaser": "remotion render src/index.ts Teaser16x9 out/jantahr-teaser-15s-16x9.mp4 --props='{\"audio\":true}' --crf=18 && remotion render src/index.ts Teaser9x16 out/jantahr-teaser-15s-9x16.mp4 --props='{\"audio\":true}' --crf=18",
+    "render:poster": "remotion still src/index.ts Pitch16x9 out/jantahr-poster.png --frame=600",
+    "master": "node scripts/master-audio.mjs out/jantahr-pitch-16x9.mp4 out/jantahr-pitch-9x16.mp4 out/jantahr-teaser-15s-16x9.mp4 out/jantahr-teaser-15s-9x16.mp4"
+  },
+  "allowScripts": {
+    "esbuild": false
+  }
+}
