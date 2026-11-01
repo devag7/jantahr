@@ -8,7 +8,7 @@ import { defaultClaims } from './script';
 const fonts = delayRender('Inter');
 fontsReady.then(() => continueRender(fonts));
 
-const base: PitchProps = { ...defaultClaims, audio: false, durations: {}, musicVolume: 0.16 };
+const base: PitchProps = { ...defaultClaims, audio: false, durations: {}, musicVolume: 0.17, musicGap: 0.5 };
 
 /** Reads the measured voiceover durations (written by scripts/measure-vo.mjs), so captions follow the real audio. */
 const withDurations = async ({ props }: { props: PitchProps }) => {

@@ -1,9 +1,11 @@
 import React from 'react';
-import { AbsoluteFill, Sequence, Series, staticFile } from 'remotion';
+import { AbsoluteFill, Sequence, staticFile } from 'remotion';
 import { Audio } from '@remotion/media';
+import { TransitionSeries, linearTiming } from '@remotion/transitions';
+import { fade } from '@remotion/transitions/fade';
 import { z } from 'zod';
-import { FPS, sec } from './theme';
-import { SCENES, VO } from './script';
+import { FPS, sec, easeInOut } from './theme';
+import { SCENES, TOTAL_SECONDS, VO, sceneFrames, type SceneKey } from './script';
 import { Captions } from './captions';
 import { buildCues } from './cues';
 import { Hook } from './scenes/Hook';
@@ -11,7 +13,8 @@ import { Logo } from './scenes/Logo';
 import { Employee } from './scenes/Employee';
 import { Manager } from './scenes/Manager';
 import { Web } from './scenes/Web';
-import { Trust } from './scenes/Trust';
+import { Platform } from './scenes/Platform';
+import { Proof } from './scenes/Proof';
 import { Cta } from './scenes/Cta';
 
 export const pitchSchema = z.object({
@@ -22,53 +25,84 @@ export const pitchSchema = z.object({
   audio: z.boolean(),
   /** seconds per voiceover line, measured from the files (public/audio/vo-durations.json) */
   durations: z.record(z.string(), z.number()),
+  /** music gain while the voice speaks; between lines it rises to `musicGap` */
   musicVolume: z.number(),
+  musicGap: z.number(),
 });
 export type PitchProps = z.infer<typeof pitchSchema>;
 
-const len = (k: keyof typeof SCENES) => sec(SCENES[k][1] - SCENES[k][0]);
-export const PITCH_FRAMES = sec(120);
+export const PITCH_FRAMES = sec(TOTAL_SECONDS);
+/** Every join is a 15-frame cross-fade. The outgoing scene runs 15 frames longer, so each scene still starts on its cue. */
+export const XFADE = 15;
 
-/** Quiet interface sounds at the moments something is done (docs/PRODUCT.md: delight only at completions). */
+/** Quiet interface sounds at completions only (docs/PRODUCT.md). Times are absolute seconds. */
 const SFX: { at: number; src: string; volume: number }[] = [
-  { at: 9.1, src: 'audio/sfx/whoosh.mp3', volume: 0.35 },
-  { at: 20 + 70 / FPS, src: 'audio/sfx/tap.mp3', volume: 0.45 },
-  { at: 20 + 86 / FPS, src: 'audio/sfx/chime.mp3', volume: 0.2 },
-  { at: 50 + 112 / FPS, src: 'audio/sfx/tap.mp3', volume: 0.4 },
-  { at: 50 + 236 / FPS, src: 'audio/sfx/tap.mp3', volume: 0.45 },
-  { at: 50 + 250 / FPS, src: 'audio/sfx/chime.mp3', volume: 0.25 },
+  { at: 9.7, src: 'audio/sfx/whoosh.mp3', volume: 0.22 },
+  { at: SCENES.employee[0] + 70 / FPS, src: 'audio/sfx/tap.mp3', volume: 0.9 },
+  { at: SCENES.employee[0] + 84 / FPS, src: 'audio/sfx/chime.mp3', volume: 0.22 },
+  { at: SCENES.manager[0] + 40 / FPS, src: 'audio/sfx/tap.mp3', volume: 0.8 },
+  { at: SCENES.manager[0] + 112 / FPS, src: 'audio/sfx/tap.mp3', volume: 0.9 },
+  { at: SCENES.manager[0] + 124 / FPS, src: 'audio/sfx/chime.mp3', volume: 0.26 },
 ];
 
-/** Music sits at `level` under the voice and rises to 2x between lines, with 10-frame ramps. */
-const musicVolume = (f: number, level: number, durations: Record<string, number>) => {
-  const t = f / FPS;
-  const under = Math.max(0, ...VO.map((l) => {
-    const d = durations[l.id] ?? 0;
-    const into = Math.min(1, (t - (l.at - 0.35)) / 0.35);
-    const out = Math.min(1, (l.at + d + 0.4 - t) / 0.4);
-    return Math.max(0, Math.min(into, out));
-  }));
-  const edge = Math.min(1, f / 30) * Math.min(1, (PITCH_FRAMES - f) / 75);
-  return level * (2 - under) * edge;
+/** Spoken blocks: lines less than 1.5 s apart count as one, so the music never pumps in short pauses. */
+const speechBlocks = (durations: Record<string, number>) => {
+  const blocks: [number, number][] = [];
+  for (const l of VO) {
+    const s = l.at;
+    const e = l.at + (durations[l.id] ?? l.text.split(' ').length / 2.5);
+    const last = blocks[blocks.length - 1];
+    if (last && s - last[1] < 1.5) last[1] = Math.max(last[1], e);
+    else blocks.push([s, e]);
+  }
+  return blocks;
 };
 
+/** Music gain: `under` while speaking (duck 0.3 s ahead), easing up to `gap` over 0.9 s after a block ends. */
+const musicGain = (f: number, under: number, gap: number, blocks: [number, number][]) => {
+  const t = f / FPS;
+  let speaking = 0;
+  for (const [s, e] of blocks) {
+    const attack = Math.min(1, Math.max(0, (t - (s - 0.3)) / 0.3));
+    const release = Math.min(1, Math.max(0, (e + 0.9 - t) / 0.9));
+    speaking = Math.max(speaking, Math.min(attack, release));
+  }
+  const shaped = easeInOut(speaking);
+  const edge = Math.min(1, f / 20) * Math.min(1, (PITCH_FRAMES - f) / 15);
+  return (gap + (under - gap) * shaped) * edge;
+};
+
+const ORDER: { key: SceneKey; name: string; el: (p: PitchProps) => React.ReactNode }[] = [
+  { key: 'hook', name: 'Hook', el: () => <Hook /> },
+  { key: 'logo', name: 'Logo and modules', el: () => <Logo /> },
+  { key: 'employee', name: 'Employee app', el: () => <Employee /> },
+  { key: 'manager', name: 'Manager', el: () => <Manager /> },
+  { key: 'web', name: 'Payroll on the web', el: () => <Web /> },
+  { key: 'platform', name: 'Whole platform', el: () => <Platform /> },
+  { key: 'proof', name: 'Proof and open source', el: (p) => <Proof claims={p} /> },
+  { key: 'cta', name: 'CTA', el: (p) => <Cta claims={p} /> },
+];
+
 export const Pitch: React.FC<PitchProps> = (p) => {
-  const claims = { playLive: p.playLive, gstInvoices: p.gstInvoices, captions: p.captions };
+  const blocks = speechBlocks(p.durations);
   return (
     <AbsoluteFill style={{ backgroundColor: '#121A33' }}>
-      <Series>
-        <Series.Sequence name="Hook" durationInFrames={len('hook')}><Hook /></Series.Sequence>
-        <Series.Sequence name="Logo" durationInFrames={len('logo')}><Logo /></Series.Sequence>
-        <Series.Sequence name="Employee app" durationInFrames={len('employee')}><Employee /></Series.Sequence>
-        <Series.Sequence name="Manager" durationInFrames={len('manager')}><Manager /></Series.Sequence>
-        <Series.Sequence name="HR on the web" durationInFrames={len('web')}><Web /></Series.Sequence>
-        <Series.Sequence name="Trust" durationInFrames={len('trust')}><Trust claims={claims} /></Series.Sequence>
-        <Series.Sequence name="CTA" durationInFrames={len('cta')}><Cta claims={claims} /></Series.Sequence>
-      </Series>
+      <TransitionSeries>
+        {ORDER.flatMap((s, i) => {
+          const last = i === ORDER.length - 1;
+          const items = [
+            <TransitionSeries.Sequence key={s.key} name={s.name} durationInFrames={sceneFrames(s.key) + (last ? 0 : XFADE)}>
+              {s.el(p)}
+            </TransitionSeries.Sequence>,
+          ];
+          if (!last) items.push(<TransitionSeries.Transition key={`${s.key}-x`} presentation={fade()} timing={linearTiming({ durationInFrames: XFADE })} />);
+          return items;
+        })}
+      </TransitionSeries>
       {p.captions && <Captions cues={buildCues(p.durations)} />}
       {p.audio && (
         <>
-          <Audio src={staticFile('audio/music.mp3')} volume={(f) => musicVolume(f, p.musicVolume, p.durations)} />
+          <Audio src={staticFile('audio/music.mp3')} volume={(f) => musicGain(f, p.musicVolume, p.musicGap, blocks)} />
           {VO.map((l) => (
             <Sequence key={l.id} name={`VO ${l.id}`} from={sec(l.at)} layout="none">
               <Audio src={staticFile(`audio/vo/${l.id}.mp3`)} />

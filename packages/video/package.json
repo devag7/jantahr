@@ -41,7 +41,8 @@
     "render:16x9": "remotion render src/index.ts Pitch16x9 out/jantahr-pitch-16x9.mp4 --props='{\"audio\":true}' --crf=18 --audio-bitrate=192k",
     "render:9x16": "remotion render src/index.ts Pitch9x16 out/jantahr-pitch-9x16.mp4 --props='{\"audio\":true}' --crf=18 --audio-bitrate=192k",
     "render:teaser": "remotion render src/index.ts Teaser16x9 out/jantahr-teaser-15s-16x9.mp4 --props='{\"audio\":true}' --crf=18 && remotion render src/index.ts Teaser9x16 out/jantahr-teaser-15s-9x16.mp4 --props='{\"audio\":true}' --crf=18",
-    "render:poster": "remotion still src/index.ts Pitch16x9 out/jantahr-poster.png --frame=560"
+    "render:poster": "remotion still src/index.ts Pitch16x9 out/jantahr-poster.png --frame=600",
+    "master": "node scripts/master-audio.mjs out/jantahr-pitch-16x9.mp4 out/jantahr-pitch-9x16.mp4 out/jantahr-teaser-15s-16x9.mp4 out/jantahr-teaser-15s-9x16.mp4"
   },
   "allowScripts": {
     "esbuild": false

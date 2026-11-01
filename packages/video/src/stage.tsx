@@ -74,7 +74,8 @@ export const StageBackground: React.FC<{ fromCobalt?: boolean }> = ({ fromCobalt
 export const PhoneOnStage: React.FC<{ children: React.ReactNode; enter?: boolean }> = ({ children, enter }) => {
   const st = usePhoneStage();
   const frame = useCurrentFrame();
-  const dy = enter ? tween(frame, 4, 40, st.H * 0.7, 0) : 0;
+  // starts fully below the frame, so the first frame of the scene is clean
+  const dy = enter ? tween(frame, 0, 40, st.H - st.y + 40, 0) : 0;
   return (
     <Phone x={st.x} y={st.y} h={st.h} style={{ translate: `0px ${dy}px` }}>
       {children}
