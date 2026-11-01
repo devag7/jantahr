@@ -3,7 +3,7 @@ import { VO, type Line } from './script';
 export type Cue = { start: number; end: number; text: string };
 
 /** Spoken form to written form for subtitles. */
-const display = (t: string) => t.replace('jantahr dot devshipit dot com', 'jantahr.devshipit.com').replace('fourteen-day', '14-day');
+const display = (t: string) => t.replace('jantahr dot devshipit dot com', 'jantahr.devshipit.com').replace('fourteen-day', '14-day').replace('Eighteen MIS', '18 MIS').replace('two hundred', '200');
 
 /** Seconds each line lasts. Measured from the voiceover files when they exist (public/audio/vo-durations.json). */
 export type Durations = Record<string, number>;
