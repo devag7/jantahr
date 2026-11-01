@@ -1,3 +1,4 @@
 packages:
   - 'packages/*'
   - '!packages/mobile' # Expo app: managed with npm, outside the pnpm workspace
+  - '!packages/video' # Remotion pitch video: managed with npm, not part of the app builds
