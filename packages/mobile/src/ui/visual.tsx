@@ -110,11 +110,13 @@ export function SuccessPop({ visible, color }: { visible: boolean; color: string
 }
 
 /** A coloured dot and a word, for legends. */
+/** A colour key laid out in even columns, so a long list never leaves one item alone on the last line. */
 export function Legend({ items }: { items: { color: string; label: string }[] }) {
+  const columns = items.length <= 3 ? items.length : Math.ceil(items.length / 2);
   return (
-    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.md }}>
+    <View style={{ flexDirection: 'row', flexWrap: 'wrap', rowGap: space.sm }}>
       {items.map((i) => (
-        <View key={i.label} style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+        <View key={i.label} style={{ width: `${100 / columns}%`, flexDirection: 'row', alignItems: 'center', gap: 6, paddingRight: space.xs }}>
           <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: i.color }} />
           <Text variant="caption" tone="secondary">{i.label}</Text>
         </View>
