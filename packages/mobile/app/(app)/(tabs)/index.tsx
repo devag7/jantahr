@@ -99,7 +99,7 @@ export default function Home() {
                           <Text bold num style={{ fontSize: 18 }}>{b.available % 1 === 0 ? b.available : b.available.toFixed(1)}</Text>
                         </ProgressRing>
                         <View style={{ gap: 2 }}>
-                          <Text variant="caption" bold numberOfLines={1}>{b.leaveType.replace(/ Leave$/, '')}</Text>
+                          <Text variant="caption" bold numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>{b.leaveType.replace(/ Leave$/, '')}</Text>
                           <Text variant="caption" tone="tertiary">{b.pending ? `${b.pending} pending` : `of ${total} days`}</Text>
                         </View>
                       </Card>

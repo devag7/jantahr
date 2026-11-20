@@ -14,6 +14,18 @@ import { space, useTheme } from '@/ui/theme';
 
 const web = (path: string) => () => void WebBrowser.openBrowserAsync(webUrl(path));
 
+/** Opens an email to the team with the app and phone details filled in, so a report can be acted on. */
+const sendFeedback = () => {
+  const device = Platform.OS === 'android' ? (Platform.constants as { Brand?: string; Model?: string }) : {};
+  const details = [
+    `App: JantaHR ${Constants.expoConfig?.version ?? ''}`,
+    `Phone: ${[device.Brand, device.Model].filter(Boolean).join(' ') || Platform.OS}`,
+    `${Platform.OS === 'android' ? 'Android API' : 'OS'}: ${Platform.Version}`,
+  ].join('\n');
+  const body = `What happened, or what would you like?\n\n\n---\n${details}`;
+  void Linking.openURL(`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent('JantaHR app feedback')}&body=${encodeURIComponent(body)}`);
+};
+
 /** Everything else: approvals and team for managers, expenses, documents, settings, and the website for HR work. */
 export default function More() {
   const { user, signOut } = useAuth();
@@ -85,6 +97,7 @@ export default function More() {
       <Section title="App">
         <Card padded={false}>
           <Row icon="settings-outline" iconTone={colors.textSecondary} title="Settings" subtitle="App lock, password, two-factor" onPress={() => router.push('/settings')} />
+          <Row icon="chatbubble-ellipses-outline" iconTone={colors.primary} title="Send feedback" subtitle="Tell us what to fix or add" onPress={sendFeedback} />
           <Row icon="mail-outline" iconTone={colors.holiday} title="Contact support" subtitle={SUPPORT_EMAIL} onPress={() => void Linking.openURL(`mailto:${SUPPORT_EMAIL}?subject=JantaHR%20app`)} />
           <Row icon="log-out-outline" iconTone={colors.danger} title="Sign out" onPress={confirmSignOut} chevron={false} last />
         </Card>
